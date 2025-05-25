@@ -37,7 +37,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'daphne',
     'channels',
-    'turnos.apps.TurnosConfig',
+    'apps.turns.apps.TurnsConfig',  # Ruta completa incluyendo el paquete 'apps'
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -84,12 +84,13 @@ WSGI_APPLICATION = 'digiturno.wsgi.application'
 
 DATABASES = {
     'default': {
+        # Configuración para PostgreSQL
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'NAME': 'sistema_digiturno',
+        'USER': 'postgres',
+        'PASSWORD': 'ciarentcity2',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
