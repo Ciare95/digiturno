@@ -8,9 +8,28 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/
 """
 
 import os
-
 from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+from channels.security.websocket import AllowedHostsOriginValidator
 
+# Configurar el entorno de Django antes de importar módulos que dependan de la configuración
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'digiturno.settings')
 
-application = get_asgi_application()
+# Importamos las rutas de WebSocket después de configurar el entorno
+import digiturno.routing
+
+# Configuración de la aplicación ASGI con soporte para HTTP y WebSocket
+application = ProtocolTypeRouter({
+    # Django maneja las solicitudes HTTP de forma predeterminada
+    'http': get_asgi_application(),
+    
+    # Manejo de conexiones WebSocket con autenticación
+    'websocket': AllowedHostsOriginValidator(
+        AuthMiddlewareStack(
+            URLRouter(
+                digiturno.routing.websocket_urlpatterns
+            )
+        )
+    ),
+})
