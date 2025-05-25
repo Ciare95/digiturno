@@ -3,6 +3,7 @@
 import os
 import sys
 
+sys.path.append('c:\\laragon\\www\\digiturno\\backend')
 
 def ejecutar_tareas_administrativas():
     """Ejecutar tareas administrativas principales."""
