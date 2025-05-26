@@ -8,11 +8,11 @@ from django.urls import path
 from channels.routing import URLRouter
 
 # Aquí importaremos los consumidores de WebSocket cuando los creemos
-# Por ejemplo: from apps.turns.consumers import TurnoConsumer
+from apps.turns.consumidores import ConsumidorTurnos
 
 # Patrones de URL para WebSockets
 websocket_urlpatterns = [
     # Ejemplos de rutas de WebSocket:
-    # path('ws/turnos/', TurnoConsumer.as_asgi()),
+    path('ws/turnos/', ConsumidorTurnos.as_asgi()),
     # path('ws/notificaciones/', NotificacionConsumer.as_asgi()),
 ]

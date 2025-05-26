@@ -29,7 +29,8 @@ SECRET_KEY = 'django-insecure-@ww19(01%!-55x5z1l5i$lv5n_ekeocw*no5rqy!sbs^z_l@$b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Hosts permitidos para desarrollo
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -137,11 +138,10 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración de Channels
+# Usamos el backend en memoria para desarrollo y pruebas
+# Para producción, se recomienda usar Redis instalando channels_redis
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
-        },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }

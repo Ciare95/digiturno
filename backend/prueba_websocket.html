@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de WebSocket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #mensajes {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .enviado {
+            color: blue;
+        }
+        .recibido {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .info {
+            color: gray;
+        }
+        button, input {
+            padding: 8px;
+            margin: 5px 0;
+        }
+        #mensaje {
+            width: 70%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de WebSocket para Digiturno</h1>
+    
+    <div id="mensajes"></div>
+    
+    <div>
+        <input type="text" id="mensaje" placeholder="Escribe un mensaje...">
+        <button id="enviar">Enviar</button>
+        <button id="conectar">Conectar</button>
+        <button id="desconectar">Desconectar</button>
+    </div>
+    
+    <script>
+        // Elementos del DOM
+        const mensajesDiv = document.getElementById('mensajes');
+        const mensajeInput = document.getElementById('mensaje');
+        const enviarBtn = document.getElementById('enviar');
+        const conectarBtn = document.getElementById('conectar');
+        const desconectarBtn = document.getElementById('desconectar');
+        
+        // Variables para WebSocket
+        let socket = null;
+        
+        // Función para agregar mensajes al div
+        function agregarMensaje(texto, tipo) {
+            const mensaje = document.createElement('div');
+            mensaje.textContent = texto;
+            mensaje.className = tipo;
+            mensajesDiv.appendChild(mensaje);
+            mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
+        }
+        
+        // Función para conectar al WebSocket
+        function conectarWebSocket() {
+            if (socket && socket.readyState !== WebSocket.CLOSED) {
+                agregarMensaje('Ya existe una conexión activa', 'info');
+                return;
+            }
+            
+            try {
+                // Crear nueva conexión WebSocket
+                socket = new WebSocket('ws://localhost:8000/ws/turnos/');
+                
+                // Evento de conexión establecida
+                socket.onopen = function(e) {
+                    agregarMensaje('Conexión establecida', 'info');
+                };
+                
+                // Evento de mensaje recibido
+                socket.onmessage = function(e) {
+                    agregarMensaje(`Mensaje recibido: ${e.data}`, 'recibido');
+                };
+                
+                // Evento de error
+                socket.onerror = function(e) {
+                    agregarMensaje('Error en la conexión', 'error');
+                    console.error('Error WebSocket:', e);
+                };
+                
+                // Evento de cierre de conexión
+                socket.onclose = function(e) {
+                    agregarMensaje(`Conexión cerrada. Código: ${e.code}`, 'info');
+                };
+            } catch (error) {
+                agregarMensaje(`Error al crear conexión: ${error.message}`, 'error');
+            }
+        }
+        
+        // Función para enviar mensaje
+        function enviarMensaje() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                agregarMensaje('No hay conexión activa', 'error');
+                return;
+            }
+            
+            const mensaje = mensajeInput.value.trim();
+            if (mensaje) {
+                socket.send(mensaje);
+                agregarMensaje(`Mensaje enviado: ${mensaje}`, 'enviado');
+                mensajeInput.value = '';
+            }
+        }
+        
+        // Función para desconectar
+        function desconectarWebSocket() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                agregarMensaje('No hay conexión activa para desconectar', 'info');
+                return;
+            }
+            
+            socket.close();
+            agregarMensaje('Desconexión iniciada', 'info');
+        }
+        
+        // Eventos de botones
+        conectarBtn.addEventListener('click', conectarWebSocket);
+        desconectarBtn.addEventListener('click', desconectarWebSocket);
+        enviarBtn.addEventListener('click', enviarMensaje);
+        
+        // Enviar mensaje con Enter
+        mensajeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                enviarMensaje();
+            }
+        });
+        
+        // Mensaje inicial
+        agregarMensaje('Página cargada. Haz clic en "Conectar" para iniciar la conexión WebSocket', 'info');
+    </script>
+</body>
+</html>
