@@ -20,13 +20,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'digiturno.settings')
 import digiturno.routing
 
 # Configuración de la aplicación ASGI con soporte para HTTP y WebSocket
-# Configuración simplificada para pruebas (sin validador de origen)
 application = ProtocolTypeRouter({
-    # Django maneja las solicitudes HTTP de forma predeterminada
+
     'http': get_asgi_application(),
     
-    # Configuración simplificada para pruebas
-    # Omitimos AllowedHostsOriginValidator temporalmente
     'websocket': AuthMiddlewareStack(
         URLRouter(
             digiturno.routing.websocket_urlpatterns

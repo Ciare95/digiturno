@@ -3,8 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ConsumidorTurnos(AsyncWebsocketConsumer):
-    # Django Channels busca estos nombres específicos de métodos
-    # pero mantenemos la lógica en español
+
     async def connect(self):
         logger.info('Nueva conexión WebSocket')
         await self.accept()
