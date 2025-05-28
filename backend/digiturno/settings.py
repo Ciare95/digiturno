@@ -31,9 +31,12 @@ DEBUG = True
 
 # Hosts permitidos para desarrollo
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+TAILWIND_APP_NAME = 'theme'
 
 
 INSTALLED_APPS = [
+    'tailwind',
+    'theme',
     'daphne',
     'channels',
     'apps.turns.apps.TurnsConfig',  

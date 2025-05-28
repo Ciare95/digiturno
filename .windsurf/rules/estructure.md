@@ -3,18 +3,12 @@ trigger: manual
 ---
 
 digiturno/
-├── .gitignore
-├── db_postgresql.sql
-├── requirements.txt
-├── venv/
-├── windsurf/
+├── .windsurf/
 │   └── rules/
 │       ├── estructure.md
 │       └── peps-8.md
 ├── backend/
-│   ├── manage.py
 │   ├── apps/
-│   │   ├── __pycache__/
 │   │   ├── core/
 │   │   │   ├── __pycache__/
 │   │   │   ├── migrations/
@@ -29,9 +23,12 @@ digiturno/
 │   │   ├── reports/
 │   │   │   ├── __init__.py
 │   │   │   ├── serializers.py
-│   │   │   └── urls.py
+│   │   │   ├── urls.py
+│   │   │   └── views.py
 │   │   ├── turns/
-│   │   │   ├── __pycache__/
+│   │   │   ├── migrations/
+│   │   │   │   ├── __pycache__/
+│   │   │   │   └── 0001_initial.py
 │   │   │   ├── __init__.py
 │   │   │   ├── admin.py
 │   │   │   ├── apps.py
@@ -53,7 +50,6 @@ digiturno/
 │   │       ├── urls.py
 │   │       └── views.py
 │   ├── digiturno/
-│   │   ├── __pycache__/
 │   │   ├── __init__.py
 │   │   ├── asgi.py
 │   │   ├── routing.py
@@ -67,50 +63,68 @@ digiturno/
 │   │   └── test_unit/
 │   │       ├── test_core_models.py
 │   │       ├── test_turns_logic.py
-│   │       ├── test_users_auth.py
-│   │       └── __init__.py
+│   │       └── test_users_auth.py
+│   ├── __init__.py
+│   ├── manage.py
 │   └── prueba_websocket.html
-└── frontend/
-    ├── public/
-    │   └── index.html
-    └── src/
-        ├── assets/
-        ├── components/
-        │   ├── common/
-        │   └── layout/
-        │       └── TurnNotification.vue
-        ├── router/
-        │   └── index.js
-        ├── services/
-        ├── store/
-        ├── views/
-        │   ├── admin/
-        │   │   ├── AdminLayout.vue
-        │   │   ├── AdvanceStatsView.vue
-        │   │   ├── BranchManagementView.vue
-        │   │   ├── DashboardView.vue
-        │   │   ├── GeneralConfigView.vue
-        │   │   ├── ModulesView.vue
-        │   │   └── UserManagementView.vue
-        │   ├── employee/
-        │   │   ├── AttentionPanelView.vue
-        │   │   ├── EmployeeLayout.vue
-        │   │   ├── EmployeeStatsView.vue
-        │   │   ├── QueueStatusView.vue
-        │   │   └── TurnManagementView.vue
-        │   └── user/
-        │       ├── ServiceRatingView.vue
-        │       ├── ServiceSelectionView.vue
-        │       ├── TurnHistoryView.vue
-        │       ├── TurnSchedulingView.vue
-        │       ├── TurnStatusView.vue
-        │       └── UserLayout.vue
-        ├── AuthView.vue
-        ├── App.vue
-        ├── main.js
-        ├── tests/
-        │   ├── e2e/
-        │   └── unit/
-        ├── package.json
-        ├── tailwind.config.js
-        └── vue.config.js
+├── frontend/
+│   ├── node_modules/
+│   ├── public/
+│   │   ├── favicon.ico
+│   │   └── index.html
+│   ├── src/
+│   │   ├── assets/
+│   │   │   ├── css/
+│   │   │   │   └── hero-image.svg
+│   │   │   └── logo.png
+│   │   ├── componentes/
+│   │   │   ├── Cargador.vue
+│   │   │   └── HelloWorld.vue
+│   │   ├── enrutador/
+│   │   │   └── index.js
+│   │   ├── layouts/
+│   │   │   ├── LayoutAutenticado.vue
+│   │   │   └── LayoutPrincipal.vue
+│   │   ├── servicios/
+│   │   │   └── tienda/
+│   │   │       └── index.js
+│   │   ├── utilidades/
+│   │   └── vistas/
+│   │       ├── administrador/
+│   │       │   ├── Configuracion.vue
+│   │       │   ├── Estadisticas.vue
+│   │       │   ├── GestionEmpleados.vue
+│   │       │   ├── GestionServicios.vue
+│   │       │   ├── GestionSucursales.vue
+│   │       │   ├── GestionUsuarios.vue
+│   │       │   └── Panel.vue
+│   │       ├── empleado/
+│   │       │   ├── Estadisticas.vue
+│   │       │   ├── GestionTurnos.vue
+│   │       │   └── Panel.vue
+│   │       └── usuario/
+│   │           ├── IniciarSesion.vue
+│   │           ├── Inicio.vue
+│   │           ├── NoEncontrado.vue
+│   │           ├── Panel.vue
+│   │           ├── Perfil.vue
+│   │           ├── Registro.vue
+│   │           └── Turnos.vue
+│   │   ├── App.vue
+│   │   └── main.js
+│   ├── .gitignore
+│   ├── babel.config.js
+│   ├── jsconfig.json
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── README.md
+│   ├── tailwind.config.js
+│   └── vue.config.js
+├── node_modules/
+├── venv/
+├── .gitignore
+├── db_postgresql.sql
+├── package-lock.json
+├── package.json
+└── requirements.txt
