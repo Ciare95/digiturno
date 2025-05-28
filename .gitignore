@@ -1,8 +1,82 @@
-node_modules/
-.env
-.DS_Store
-logs
-npm-debug.log*
-.venv
+# ========================
+# PYTHON
+# ========================
 __pycache__/
 *.py[cod]
+*$py.class
+
+# Archivos de entorno virtual (como venv, .venv, env)
+venv/
+.env/
+.venv/
+env/
+
+# Archivos de configuración del intérprete
+python*.dll
+
+# ========================
+# DJANGO
+# ========================
+*.log
+*.pot
+*.pyc
+*.pyo
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+local_settings.py
+.env
+.env.*
+
+# ========================
+# WINDOWS
+# ========================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ========================
+# SISTEMAS DE ARCHIVOS
+# ========================
+.DS_Store
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# ========================
+# NODE.JS / FRONTEND (si usas npm, vite, etc.)
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# MIGRACIONES TEMPORALES (opcional)
+# ========================
+*/migrations/*.pyc
+*/migrations/__pycache__/
+# Si deseas ignorar migraciones generadas, descomenta esta línea:
+# */migrations/*.py
+
+# ========================
+# COVERAGE / TESTS / BUILD
+# ========================
+htmlcov/
+.coverage
+.tox/
+.pytest_cache/
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# ========================
+# DOCKER
+# ========================
+*.pid
+*.pid.lock
+
+
