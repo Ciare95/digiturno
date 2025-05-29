@@ -5,12 +5,20 @@
         <component :is="Component" />
       </transition>
     </router-view>
+    
+    <!-- Selector de roles para desarrollo -->
+    <SelectorDesarrollo />
   </div>
 </template>
 
 <script>
+import SelectorDesarrollo from './componentes/SelectorDesarrollo.vue';
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: {
+    SelectorDesarrollo
+  }
 }
 </script>
 

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { tienda } from '../tienda';
+
 
 // Importación de layouts
 const LayoutPrincipal = () => import('../layouts/LayoutPrincipal.vue');
@@ -152,33 +152,82 @@ const enrutador = createRouter({
   routes: rutas
 });
 
-// Guardia de navegación para proteger rutas según roles
-enrutador.beforeEach((to, from, next) => {
-  const requiereAutenticacion = to.matched.some(record => record.meta.requiereAutenticacion);
-  const usuario = tienda.state.usuario;
-  const estaAutenticado = !!usuario;
+// Modo de desarrollo para permitir acceso sin backend
+const MODO_DESARROLLO = true; // Cambiar a false cuando el backend esté listo
+
+// Función para simular usuario en modo desarrollo
+const simularUsuarioParaRuta = (ruta) => {
+  // Extraer el rol de la ruta
+  let rolSimulado = 'usuario';
   
-  if (requiereAutenticacion && !estaAutenticado) {
-    next({ name: 'iniciar-sesion', query: { redirect: to.fullPath } });
-  } else if (requiereAutenticacion && estaAutenticado) {
-    const rolRequerido = to.matched.find(record => record.meta.rol)?.meta.rol;
-    
-    if (rolRequerido && usuario.rol !== rolRequerido) {
-      // Redirigir al panel correspondiente según el rol del usuario
-      if (usuario.rol === 'usuario') {
-        next({ name: 'panel-usuario' });
-      } else if (usuario.rol === 'empleado') {
-        next({ name: 'panel-empleado' });
-      } else if (usuario.rol === 'administrador') {
-        next({ name: 'panel-admin' });
-      } else {
-        next({ name: 'inicio' });
-      }
+  if (ruta.startsWith('/admin')) {
+    rolSimulado = 'administrador';
+  } else if (ruta.startsWith('/empleado')) {
+    rolSimulado = 'empleado';
+  } else if (ruta.startsWith('/usuario')) {
+    rolSimulado = 'usuario';
+  }
+  
+  // Crear usuario simulado según el rol
+  return {
+    id: 1,
+    first_name: 'Usuario',
+    last_name: 'Simulado',
+    email: `${rolSimulado}@ejemplo.com`,
+    rol: rolSimulado
+  };
+};
+
+// Guardia de navegación para verificar autenticación
+enrutador.beforeEach((to, from, next) => {
+  if (MODO_DESARROLLO) {
+    // En modo desarrollo, simular autenticación según la ruta
+    if (to.matched.some(record => record.meta.requiereAutenticacion)) {
+      const usuarioSimulado = simularUsuarioParaRuta(to.path);
+      
+      // Guardar en localStorage para que la aplicación funcione
+      localStorage.setItem('usuario', JSON.stringify(usuarioSimulado));
+      localStorage.setItem('token', 'token-simulado-desarrollo');
+      
+      // Permitir acceso
+      next();
     } else {
       next();
     }
   } else {
-    next();
+    // Modo producción: verificación real de autenticación
+    const token = localStorage.getItem('token');
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    const estaAutenticado = !!token && !!usuario;
+    
+    // Verificar si la ruta requiere autenticación
+    if (to.matched.some(record => record.meta.requiereAutenticacion)) {
+      // Si no está autenticado, redirigir a inicio de sesión
+      if (!estaAutenticado) {
+        next({ name: 'iniciar-sesion' });
+      } else {
+        // Verificar rol si es necesario
+        const rolRequerido = to.matched.find(record => record.meta.rol)?.meta.rol;
+        if (rolRequerido && usuario.rol !== rolRequerido) {
+          // Si el usuario no tiene el rol adecuado, redirigir según su rol
+          if (usuario.rol === 'usuario') {
+            next({ path: '/usuario' });
+          } else if (usuario.rol === 'empleado') {
+            next({ path: '/empleado' });
+          } else if (usuario.rol === 'administrador') {
+            next({ path: '/admin' });
+          } else {
+            next({ name: 'iniciar-sesion' });
+          }
+        } else {
+          // Usuario autenticado y con rol correcto
+          next();
+        }
+      }
+    } else {
+      // Ruta pública, permitir acceso
+      next();
+    }
   }
 });
 

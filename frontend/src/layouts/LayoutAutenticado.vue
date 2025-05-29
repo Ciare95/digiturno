@@ -65,7 +65,7 @@
       <aside class="w-64 bg-gray-800 text-white">
         <div class="p-4 border-b border-gray-700">
           <div class="font-medium">{{ rolUsuario }}</div>
-          <div class="text-sm text-gray-400">{{ usuario.email }}</div>
+          <div class="text-sm text-gray-400">{{ usuario ? usuario.email : 'No autenticado' }}</div>
         </div>
         
         <!-- Menú para Usuario -->
@@ -204,7 +204,7 @@ export default {
       'esAdministrador'
     ]),
     nombreUsuario() {
-      return this.usuario ? `${this.usuario.first_name} ${this.usuario.last_name}` : '';
+      return this.usuario ? `${this.usuario.first_name || ''} ${this.usuario.last_name || ''}` : 'Usuario';
     },
     rolUsuario() {
       if (this.esAdministrador) return 'Administrador';
