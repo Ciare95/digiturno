@@ -1,0 +1,368 @@
+FASE 0: Configuración Inicial Simplificada
+Objetivo: Establecer las bases del proyecto, entorno de trabajo y arquitectura inicial de forma eficiente.
+________________________________________
+• Tarea 0.1: Definir Requisitos Detallados y Refinamiento del Alcance
+•	Revisar el modelo C4 y elaborar cada funcionalidad e historia de usuario.
+•	Clarificar ambigüedades y finalizar el alcance de la primera versión.
+•	Definir criterios de aceptación para funcionalidades clave.
+________________________________________
+• Tarea 0.2: Configurar Gestión de Proyecto y Control de Versiones
+•	Elegir herramienta de gestión de proyectos (ej. Trello, Jira).
+•	Inicializar repositorio Git (ej. GitHub).
+•	Definir estrategia de ramificación (ej. Gitflow).
+________________________________________
+• Tarea 0.3: Configurar Entorno de Desarrollo
+o Tarea 0.3.1: Instalar Python y Crear Entorno Virtual
+•	Asegurar que Python (última versión estable compatible con Django) esté instalado.
+•	Crear un directorio para el proyecto.
+•	Crear entorno virtual: python -m venv venv.
+•	Activar entorno virtual.
+•	Crear archivo requirements.txt con paquetes iniciales (Django).
+o Tarea 0.3.2: Instalar PostgreSQL y Configurar
+•	Instalar servidor PostgreSQL.
+•	Crear una base de datos para el proyecto.
+•	Crear usuario de base de datos con permisos adecuados.
+o Tarea 0.3.3: Instalar Node.js y Vue CLI
+•	Instalar Node.js.
+•	Instalar Vue CLI globalmente (npm install -g @vue/cli).
+
+• Tarea 0.4: Configuración Inicial del Proyecto Backend con Django
+o Tarea 0.4.1: Crear Proyecto Django y Aplicación Principal (Core)
+•	Instalar Django y dependencias:
+pip install django djangorestframework psycopg2-binary daphne channels
+•	Crear nuevo proyecto Django.
+•	Crear aplicaciones iniciales (ej. usuarios, turnos).
+o Tarea 0.4.2: Configurar Conexión a Base de Datos (PostgreSQL)
+•	Editar settings.py con credenciales de la base de datos PostgreSQL.
+o Tarea 0.4.3: Configurar Django Channels para WebSockets
+•	Configurar settings.py y asgi.py para Channels.
+•	Definir rutas básicas para WebSockets.
+• Tarea 0.5: Diseñar Esquema de Base de Datos
+•	Definir modelos Django según el modelo C4.
+•	Planificar relaciones entre modelos.
+•	Ejecutar migraciones iniciales (python manage.py makemigrations && migrate).
+• Tarea 0.6: Configurar Estructura de la Aplicación Web (Frontend Unificado)
+•	Crear un único proyecto Vue.js responsivo usando Vue CLI.
+•	Implementar rutas protegidas según roles de usuario: Usuario, Empleado, Administrador.
+•	Añadir Tailwind CSS durante la configuración.
+•	Estructurar carpetas de vistas y componentes según los roles.
+________________________________________
+
+FASE 1: Desarrollo del Backend (Django + DRF) SIMPLIFICADO 
+
+1.1 Autenticación y Autorización de Usuarios
+•	Modelos con roles: Usuario, Empleado, Administrador.
+•	Registro e inicio de sesión.
+•	Permisos por rol.
+1.2 Modelos Principales
+•	Turno, Servicio/Módulo, Sucursal, CalificacionServicio, Configuracion.
+•	Migraciones aplicadas.
+1.3 APIs para Aplicación Web Unificada
+1.3.1 Registro e Inicio de Sesión
+•	/api/auth/registro/
+•	/api/auth/iniciar-sesion/
+1.3.2 Selección de Servicio
+•	/api/servicios/ (listar)
+•	/api/turnos/ (crear turno)
+1.3.3 Estado del Turno
+•	/api/turnos/mio/ (estado actual)
+•	/api/turnos/mio/ (DELETE para cancelar)
+1.3.4 Calificación de Servicio
+•	/api/calificaciones/
+1.3.5 Agenda de Turnos
+•	/api/turnos/agenda/
+1.3.6 Historial de Turnos
+•	/api/turnos/historial/
+________________________________________
+1.5 APIs para Atención del Empleado
+1.5.1 Inicio de Sesión
+•	/api/auth/empleado/iniciar-sesion/
+1.5.2 Gestión de Turnos
+•	/api/empleado/turnos/siguiente/
+•	/api/empleado/turnos/{id_turno}/completar/
+•	/api/empleado/turnos/{id_turno}/transferir/
+1.5.3 Panel de Atención
+•	/api/empleado/turnos/actual/
+1.5.4 Cola de Turnos
+•	/api/empleado/colas/
+1.5.5 Estadísticas del Empleado
+•	/api/empleado/estadisticas/
+________________________________________
+1.6 APIs para el Administrador
+1.6.1 Inicio de Sesión Admin
+•	/api/auth/admin/iniciar-sesion/
+1.6.2 Dashboard
+•	/api/admin/panel/
+1.6.3 Gestión de Módulos/Servicios
+•	/api/admin/servicios/
+1.6.4 Estadísticas Avanzadas
+•	/api/admin/reportes/
+1.6.5 Gestión de Usuarios
+•	/api/admin/usuarios/
+1.6.6 Gestión de Sucursales
+•	/api/admin/sucursales/
+1.6.7 Configuración General
+•	/api/admin/configuracion/
+
+________________________________________
+1.7 Lógica de Negocio Principal 
+Implementación de las reglas clave del sistema, enfocadas en la gestión eficiente de los turnos.
+Algoritmos de Turnos y Colas
+•	Asignación automática del turno:
+Basado en disponibilidad del servicio, sucursal y orden de llegada.
+•	Priorización:
+Posible implementación futura de prioridades por tipo de usuario.
+•	Evitar duplicados:
+Reglas para impedir múltiples turnos activos por usuario.
+Cálculo de Tiempo de Espera
+•	Basado en:
+o	Cantidad de turnos en cola por servicio.
+o	Tiempo promedio de atención de ese servicio.
+•	Retorno estimado de espera en minutos para mostrar al usuario.
+Notificaciones Simuladas con Polling
+•	La app cliente consulta periódicamente a /api/turns/me/ para:
+o	Saber si su turno fue llamado.
+o	Ver cambios de estado: esperando, en atención, completado.
+Reasignación o Transferencia de Turnos (Empleado)
+•	Permitir a los empleados transferir turnos entre servicios/módulos.
+•	Actualiza la cola destino manteniendo el orden cronológico.
+________________________________________
+1.8 Panel de Administración Django 
+Utilizado principalmente por el equipo técnico para gestión rápida de datos en desarrollo y pruebas.
+Modelos Registrados en el admin.py
+•	Usuario (con roles).
+•	Sucursal y Servicio.
+•	Turno y AgendaTurno.
+•	CalificacionServicio.
+•	Configuracion del sistema.
+•	Logs de actividad (si se implementan).
+Personalizaciones Útiles
+•	Filtros por fecha, sucursal o estado del turno.
+•	Visualización rápida de:
+o	Usuarios con más turnos.
+o	Turnos activos y en cola.
+•	Edición inline de configuraciones (ej. tiempo máximo de espera).
+________________________________________
+1.9 Pruebas Backend 
+Garantiza que las funciones del backend operen correctamente antes del despliegue.
+Pruebas Unitarias
+•	Modelo Turno:
+o	Creación y cambio de estado.
+o	Validación de reglas de negocio (no duplicar turnos, etc.).
+•	Modelo Servicio:
+o	Relación con sucursales y empleados.
+•	Cálculo de espera: funciones auxiliares para estimar tiempo correctamente.
+Pruebas de Integración
+•	Registro e inicio de sesión:
+o	Pruebas con tokens y autenticación.
+•	Flujo completo de turnos:
+o	Crear turno → avanzar en cola → completar.
+•	Gestión de empleados:
+o	Siguiente turno → completar → ver estadísticas.
+🔧 Herramientas y Frameworks
+•	Django TestCase para pruebas rápidas.
+•	pytest + pytest-django si se busca un entorno más potente.
+•	Posible uso de FactoryBoy para generar datos de prueba.
+________________________________________
+FASE 2: Desarrollo Frontend - Aplicación Web Unificada (Vue.js, Tailwind CSS) 
+
+Tarea 2.1: Configuración del Proyecto
+•	Inicializar con Vue CLI: vue create sistema-digiturno
+•	Integrar Tailwind CSS para estilos.
+•	Configurar Vue Router (estructura con rutas protegidas).
+•	Implementar gestión de estado con Pinia o Vuex.
+•	Crear estructura base de carpetas por roles:
+o	/views/user/
+o	/views/employee/
+o	/views/admin/
+o	/components/common/
+
+Tarea 2.2: Diseño UI/UX
+•	Convertir componentes del modelo C4 en interfaces responsivas.
+•	Diseñar y desarrollar componentes reutilizables con Tailwind CSS.
+•	Prototipos simples en Figma o similares (opcional pero recomendado).
+
+Tarea 2.3: Módulo de Registro e Inicio de Sesión (AuthView)
+•	Formularios para registro e inicio de sesión por rol.
+•	Validación de campos, mensajes de error claros.
+•	Integración con APIs de autenticación.
+•	Guardar token y redireccionar según rol.
+
+Tarea 2.4: Selección de Servicio (ServiceSelectionView)
+•	Mostrar lista de servicios desde API.
+•	Permitir al usuario seleccionar servicio y crear turno.
+
+Tarea 2.5: Estado del Turno (TurnStatusView)
+•	Mostrar:
+o	Número de turno.
+o	Progreso y tiempo estimado.
+•	Se usa polling cada X segundos para actualizaciones.
+•	Botón para cancelar turno.
+
+Tarea 2.6: Notificación de Turno (TurnNotification)
+•	Mostrar alerta visual/audible cuando el turno es llamado.
+•	Indicar ventanilla/módulo.
+•	También implementado mediante polling, no WebSocket.
+
+Tarea 2.7: Calificación del Servicio (ServiceRatingView)
+•	Formulario de calificación con estrellas/comentarios.
+•	Enviar datos a API.
+
+Tarea 2.8: Agenda de Turnos (TurnSchedulingView)
+•	Permitir agendar turno seleccionando fecha, hora y servicio.
+•	Enviar datos a backend.
+
+Tarea 2.9: Historial de Turnos (TurnHistoryView)
+•	Mostrar historial completo de turnos.
+•	Agrupar por fecha y estado (atendido, cancelado, agendado).
+
+Tarea 2.10: Diseño Responsivo
+•	Usar utilidades de Tailwind para adaptación móvil/tablet.
+•	Pruebas en diferentes breakpoints.
+
+Tarea 2.11: Pruebas Frontend
+•	Usar Vue Test Utils + Jest o Vitest.
+•	Probar componentes, validaciones, lógica condicional (rutas por rol, carga de datos, etc.).
+
+________________________________________
+FASE 3: Pruebas (Enfocadas y Progresivas) 
+Objetivo
+Asegurar la calidad del sistema mediante pruebas unitarias y de integración ligera, sin pruebas End-to-End ni de rendimiento a gran escala.
+________________________________________
+Tarea 3.1: Integración Ligera del Sistema
+•	Verificar que el backend y frontend unificado se comuniquen correctamente.
+•	Probar manualmente los flujos más importantes (solicitud y atención de turno).
+•	Asegurar que las rutas protegidas por rol se comporten como se espera.
+________________________________________
+Tarea 3.2: Pruebas Unitarias de Backend
+•	Probar:
+o	Modelos: validaciones, relaciones, métodos.
+o	Serializadores: campos obligatorios, transformaciones, reglas.
+o	Vistas/API: comportamiento esperado ante inputs válidos/erróneos.
+•	Herramientas recomendadas: pytest, pytest-django, factory_boy.
+________________________________________
+Tarea 3.3: Pruebas de Componentes Frontend (Vue)
+•	Probar renderizado y comportamiento de componentes con datos simulados.
+•	Validar:
+o	Interacción del usuario con formularios (login, registro, creación de turno...).
+o	Visualización de estado del turno.
+o	Acciones de botones y navegación.
+•	Herramientas sugeridas: Vitest o Jest, Vue Test Utils.
+________________________________________
+Tarea 3.4: Pruebas de Seguridad Básica
+•	Validar manualmente:
+o	Restricciones de acceso por rol.
+o	Autenticación protegida (tokens, sesiones).
+o	No exposición de datos sensibles en respuestas o errores.
+________________________________________
+Tarea 3.5: Revisión Manual y Validación Funcional
+•	Realizar pruebas básicas con usuarios simulados (usuario, empleado, admin).
+•	Validar que el flujo de uso completo sea funcional en condiciones comunes:
+o	Registro → Solicitud de turno → Atención → Calificación.
+________________________________________
+Tarea 3.6: Corrección de Errores y Ajustes UI/UX
+•	Documentar bugs encontrados durante las pruebas.
+•	Refinar la interfaz, mensajes de error, retroalimentación visual.
+
+________________________________________
+FASE 4: Despliegue Inicial Simplificado 
+Objetivo: Poner en línea el sistema utilizando una solución PaaS que reduzca la complejidad técnica del despliegue y permita iterar rápidamente.
+________________________________________
+🔧 Tarea 4.1: Selección y Preparación de Plataforma
+•	Elegir una PaaS:
+o	Backend: Render, Railway, Heroku
+o	Frontend: Vercel, Netlify
+•	Configurar repositorios:
+o	Separar backend y frontend si no lo están.
+o	Verificar archivos de configuración (requirements.txt, Procfile, vercel.json, etc.).
+________________________________________
+Tarea 4.2: Configuración del Backend (Django)
+•	Desplegar en Render / Railway / Heroku:
+o	Conectar el repositorio desde GitHub.
+o	Configurar variables de entorno desde el panel.
+o	Asegurarse de usar base de datos PostgreSQL (proporcionada por la PaaS).
+o	Verificar comandos de migración:
+________________________________________
+Tarea 4.3: Configuración del Frontend
+•	Desplegar app móvil web y paneles en Vercel o Netlify:
+o	Ejecutar npm run build o yarn build.
+o	Conectar repositorio Git.
+o	Configurar variables de entorno (ej. VITE_API_URL o similares).
+o	Verificar rutas y assets correctamente construidos.
+o	Para múltiples apps:
+	Panel Admin: admin.miapp.com
+	Staff: staff.miapp.com
+	Usuario: dominio principal o subruta
+________________________________________
+Tarea 4.4: Seguridad y Configuraciones
+•	Variables sensibles:
+o	Backend: SECRET_KEY, DATABASE_URL, DEBUG=False
+o	Frontend: Solo exponer lo necesario (VITE_ o NEXT_PUBLIC_)
+•	Autenticación y roles:
+o	Validar restricciones de acceso a APIs y rutas.
+________________________________________
+Tarea 4.5: Pruebas en Producción (Smoke Testing)
+•	Verificar:
+o	Acceso HTTPS funcional.
+o	Conexión entre frontend y backend.
+o	Login y funcionalidades principales.
+o	Comunicación WebSocket (si aplica).
+o	Redirecciones correctas, errores bien manejados.
+________________________________________
+Tarea 4.6: Lanzamiento Inicial y Feedback
+•	Lanzamiento beta:
+o	Compartir URLs con grupo reducido de usuarios.
+o	Recolectar retroalimentación inicial.
+o	Corregir errores menores rápidamente gracias al despliegue continuo.
+________________________________________
+Tarea 4.7: Documentación Básica y Soporte
+•	Manual rápido de uso por rol (usuario, staff, admin).
+•	Documentación técnica mínima:
+o	Enlace al repositorio
+o	Variables y comandos de despliegue
+o	Rutas principales y estructura del proyecto
+
+________________________________________
+FASE 5: QA y Mejoras Futuras 
+Objetivo: Garantizar la calidad continua del sistema en producción, planificar mejoras y preparar la evolución hacia una infraestructura más robusta cuando sea necesario.
+Tarea 5.1: Monitoreo y Calidad
+•	Implementar herramientas de monitoreo (según plataforma):
+o	Errores: Sentry (frontend y backend).
+o	Logs: Integraciones básicas como Railway Logs o Render Logs.
+o	Rendimiento: Herramientas ligeras como Upptime o servicios APM si es necesario.
+•	Verificar comportamiento en producción:
+o	Tiempos de respuesta.
+o	Flujo de usuarios.
+o	Caídas o excepciones recurrentes.
+Tarea 5.2: Feedback de Usuarios
+•	Recopilar retroalimentación:
+o	Encuestas breves dentro del sistema o por correo.
+o	Formularios de sugerencias o chats integrados.
+o	Soporte vía WhatsApp, Telegram, etc.
+•	Analizar resultados:
+o	Identificar puntos de fricción.
+o	Clasificar sugerencias en usabilidad, nuevas funciones y errores.
+Tarea 5.3: Planeación de Mejoras y Escalabilidad
+•	Próximas funcionalidades:
+o	WebSockets: Implementar Django Channels + Redis para tiempo real.
+o	Versión de Escritorio: Usar Electron si se necesita una app instalable.
+o	Infraestructura Escalable: Migrar gradualmente a AWS (EC2, RDS, S3).
+•	Mantenimiento continuo:
+o	Planificar sprints de desarrollo iterativo.
+o	Establecer ciclos de releases semanales o quincenales.
+Tarea 5.4: Backups y Seguridad
+•	Copias de seguridad:
+o	Asegurar que la PaaS (Heroku, Railway, Render) tenga backups automáticos activados.
+o	Exportaciones periódicas manuales si es necesario.
+•	Auditorías básicas de seguridad:
+o	Revisar acceso a variables sensibles y tokens.
+o	Rotar claves periódicamente si hay sospechas.
+o	Validar que no haya archivos .env o secretos en los repositorios públicos.
+Tarea 5.5: Pruebas Técnicas Avanzadas
+•	Pruebas End-to-End (E2E):
+o	Usar herramientas como Cypress o Playwright para validar flujos clave.
+•	Pruebas de rendimiento y estrés:
+o	Usar Apache Bench, k6, o herramientas similares para anticipar cuellos de botella.
+•	Pruebas de seguridad:
+o	Analizar posibles vulnerabilidades con herramientas como OWASP ZAP o snyk.
+
