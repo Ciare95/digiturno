@@ -19,6 +19,9 @@ digiturno/
 │   │   │   ├── apps.py
 │   │   │   ├── logic.py
 │   │   │   ├── models.py
+│   │   │   ├── serializers.py  
+│   │   │   ├── urls.py         
+│   │   │   ├── views.py        
 │   │   │   └── utils.py
 │   │   ├── reports/
 │   │   │   ├── __init__.py
@@ -46,7 +49,7 @@ digiturno/
 │   │       ├── admin.py
 │   │       ├── apps.py
 │   │       ├── models.py
-│   │       ├── permisos.py  
+│   │       ├── permisos.py
 │   │       ├── serializers.py
 │   │       ├── urls.py
 │   │       └── views.py
