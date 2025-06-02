@@ -9,3 +9,4 @@ El Principio de Responsabilidad Única dice que una clase debe hacer una cosa y,
 Para enunciar este principio más técnicamente: Solo un cambio potencial (lógica de base de datos, lógica de registro, etc.) en la especificación del software debería poder afectar la especificación de la clase.
 
 Esto significa que si una clase es un contenedor de datos, como una clase Libro o una clase Estudiante, y tiene algunos campos relacionados con esa entidad, debería cambiar solo cuando cambiamos el modelo de datos.
+Aplica tambien el principio DRY (Dont Repeat Yourself) al código

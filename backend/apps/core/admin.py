@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Sucursal, Servicio
+from .models import Sucursal, Servicio, Configuracion
 
 
 @admin.register(Sucursal)
@@ -35,5 +35,22 @@ class ServicioAdmin(admin.ModelAdmin):
         }),
         ('Configuración', {
             'fields': ('tiempo_estimado_atencion', 'color_identificacion', 'icono')
+        }),
+    )
+
+
+@admin.register(Configuracion)
+class ConfiguracionAdmin(admin.ModelAdmin):
+    """Configuración del administrador para el modelo Configuracion"""
+    list_display = ('clave', 'categoria', 'es_global', 'sucursal', 'fecha_actualizacion')
+    list_filter = ('categoria', 'es_global', 'sucursal')
+    search_fields = ('clave', 'descripcion')
+    ordering = ('categoria', 'clave')
+    fieldsets = (
+        ('Información básica', {
+            'fields': ('clave', 'valor', 'descripcion')
+        }),
+        ('Categorización', {
+            'fields': ('categoria', 'es_global', 'sucursal')
         }),
     )

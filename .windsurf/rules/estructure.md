@@ -46,6 +46,7 @@ digiturno/
 │   │       ├── admin.py
 │   │       ├── apps.py
 │   │       ├── models.py
+│   │       ├── permisos.py  
 │   │       ├── serializers.py
 │   │       ├── urls.py
 │   │       └── views.py
@@ -127,4 +128,5 @@ digiturno/
 ├── db_postgresql.sql
 ├── package-lock.json
 ├── package.json
-└── requirements.txt
+├── requirements.txt
+└── step_by_step.txt
