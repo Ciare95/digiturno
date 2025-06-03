@@ -144,3 +144,82 @@ class DetalleTurnoUsuarioView(generics.RetrieveUpdateDestroyAPIView):
                 cola.save()
         except ColaTurnos.DoesNotExist:
             pass  # El turno no estaba en la cola activa
+
+
+class CrearCalificacionView(generics.CreateAPIView):
+    """Vista para crear una calificación de servicio"""
+    serializer_class = CalificacionServicioSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        """Asigna el usuario autenticado a la calificación"""
+        serializer.save(
+            usuario=self.request.user,
+            fecha_calificacion=timezone.now()
+        )
+
+
+class ListarCalificacionesUsuarioView(generics.ListAPIView):
+    """Vista para listar las calificaciones realizadas por el usuario autenticado"""
+    serializer_class = CalificacionServicioSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['turno', 'servicio', 'empleado', 'calificacion']
+    ordering_fields = ['fecha_calificacion', 'calificacion']
+    ordering = ['-fecha_calificacion']
+    
+    def get_queryset(self):
+        """Devuelve solo las calificaciones del usuario autenticado"""
+        return CalificacionServicio.objects.filter(usuario=self.request.user)
+
+
+class DetalleCalificacionView(generics.RetrieveAPIView):
+    """Vista para ver el detalle de una calificación específica"""
+    serializer_class = CalificacionServicioSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Devuelve solo las calificaciones del usuario autenticado"""
+        return CalificacionServicio.objects.filter(usuario=self.request.user)
+
+
+class ListarTurnosAgendadosView(generics.ListAPIView):
+    """Vista para listar los turnos agendados (futuros) del usuario autenticado"""
+    serializer_class = TurnoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['servicio', 'sucursal']
+    ordering_fields = ['fecha_agendada', 'fecha_creacion']
+    ordering = ['fecha_agendada']
+    
+    def get_queryset(self):
+        """Devuelve solo los turnos agendados futuros del usuario autenticado"""
+        # Obtener la fecha y hora actual
+        ahora = timezone.now()
+        
+        # Filtrar turnos agendados con fecha futura
+        queryset = Turno.objects.filter(
+            usuario=self.request.user,
+            es_agendado=True,
+            fecha_agendada__gte=ahora
+        )
+        
+        # Filtro adicional por rango de fechas si se proporciona
+        fecha_desde = self.request.query_params.get('fecha_desde')
+        fecha_hasta = self.request.query_params.get('fecha_hasta')
+        
+        if fecha_desde:
+            try:
+                fecha_desde = timezone.datetime.strptime(fecha_desde, '%Y-%m-%d').date()
+                queryset = queryset.filter(fecha_agendada__date__gte=fecha_desde)
+            except ValueError:
+                pass
+        
+        if fecha_hasta:
+            try:
+                fecha_hasta = timezone.datetime.strptime(fecha_hasta, '%Y-%m-%d').date()
+                queryset = queryset.filter(fecha_agendada__date__lte=fecha_hasta)
+            except ValueError:
+                pass
+        
+        return queryset

@@ -61,12 +61,44 @@ class CalificacionServicioSerializer(serializers.ModelSerializer):
     servicio_nombre = serializers.CharField(source='servicio.nombre', read_only=True)
     empleado_nombre = serializers.CharField(source='empleado.usuario.get_full_name', read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.get_full_name', read_only=True)
+    fecha_calificacion_formateada = serializers.DateTimeField(source='fecha_calificacion', format='%d/%m/%Y %H:%M', read_only=True)
     
     class Meta:
         model = CalificacionServicio
         fields = [
-            'id', 'turno', 'turno_numero', 'usuario', 'usuario_nombre',
-            'empleado', 'empleado_nombre', 'servicio', 'servicio_nombre',
-            'calificacion', 'comentario', 'aspectos_evaluados', 'fecha_calificacion'
+            'id', 'turno', 'turno_numero', 'usuario', 'usuario_nombre', 'empleado', 'empleado_nombre',
+            'servicio', 'servicio_nombre', 'calificacion', 'comentario',
+            'aspectos_evaluados', 'fecha_calificacion', 'fecha_calificacion_formateada'
         ]
-        read_only_fields = ['fecha_calificacion']
+        read_only_fields = ['usuario', 'fecha_calificacion']
+    
+    def validate_calificacion(self, value):
+        """Validar que la calificación esté entre 1 y 5"""
+        if value < 1 or value > 5:
+            raise serializers.ValidationError('La calificación debe estar entre 1 y 5')
+        return value
+    
+    def validate_turno(self, value):
+        """Validar que el turno esté finalizado"""
+        if value.estado != 'finalizado':
+            raise serializers.ValidationError('Solo se pueden calificar turnos finalizados')
+        return value
+    
+    def validate(self, attrs):
+        """Validaciones adicionales"""
+        # Verificar que el turno corresponda al servicio y empleado indicados
+        turno = attrs.get('turno')
+        servicio = attrs.get('servicio')
+        empleado = attrs.get('empleado')
+        
+        if turno and servicio and turno.servicio.id != servicio.id:
+            raise serializers.ValidationError({
+                'servicio': 'El servicio no corresponde al turno indicado'
+            })
+        
+        if turno and empleado and turno.empleado and turno.empleado.id != empleado.id:
+            raise serializers.ValidationError({
+                'empleado': 'El empleado no corresponde al turno indicado'
+            })
+        
+        return attrs
