@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     CrearTurnoView, ListarTurnosUsuarioView, DetalleTurnoUsuarioView,
     CrearCalificacionView, ListarCalificacionesUsuarioView, DetalleCalificacionView,
-    ListarTurnosAgendadosView
+    ListarTurnosAgendadosView, HistorialTurnosView
 )
 
 urlpatterns = [
@@ -11,6 +11,7 @@ urlpatterns = [
     path('mis-turnos/', ListarTurnosUsuarioView.as_view(), name='listar_turnos_usuario'),
     path('mis-turnos/<int:pk>/', DetalleTurnoUsuarioView.as_view(), name='detalle_turno_usuario'),
     path('turnos/agenda/', ListarTurnosAgendadosView.as_view(), name='listar_turnos_agenda'),
+    path('turnos/historial/', HistorialTurnosView.as_view(), name='historial_turnos'),
     
     # Rutas para calificaciones
     path('calificaciones/', ListarCalificacionesUsuarioView.as_view(), name='listar_calificaciones'),
