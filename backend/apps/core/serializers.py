@@ -22,7 +22,7 @@ class ServicioSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'nombre', 'codigo_servicio', 'sucursal', 
             'sucursal_nombre', 'tiempo_estimado_atencion',
-            'color_identificacion', 'icono'
+            'color_identificacion', 'icono', 'activo'
         ]
 
 
