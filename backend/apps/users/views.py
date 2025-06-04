@@ -7,10 +7,11 @@ from .serializers import (
     RegistroUsuarioSerializer, 
     InicioSesionSerializer, 
     UsuarioSerializer,
-    EmpleadoSerializer,
+    EmpleadoLoginSerializer as EmpleadoSerializer,
+    EmpleadoLoginSerializer as InicioSesionEmpleadoSerializer,
     AdministradorSerializer,
-    InicioSesionEmpleadoSerializer,
-    InicioSesionAdminSerializer
+    InicioSesionAdminSerializer,
+    RegistroEmpleadoSerializer
 )
 
 class RegistroUsuarioView(APIView):
@@ -118,6 +119,23 @@ class InicioSesionAdminView(APIView):
                 'access': str(refresh.access_token),
             })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RegistroEmpleadoView(APIView):
+    """Vista para el registro de nuevos empleados"""
+    permission_classes = [permissions.IsAdminUser]  # Solo administradores pueden crear empleados
+
+    def post(self, request):
+        serializer = RegistroEmpleadoSerializer(data=request.data)
+        if serializer.is_valid():
+            usuario = serializer.save()
+            # No es necesario devolver el token aquí, ya que es un administrador quien está creando el empleado
+            return Response({
+                'usuario': UsuarioSerializer(usuario).data,
+                'mensaje': 'Empleado registrado exitosamente',
+                'empleado_id': usuario.perfil_empleado.id
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class VerificarRolView(APIView):
     """Vista para verificar el rol del usuario autenticado"""

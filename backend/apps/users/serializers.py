@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 from .models import Usuario, Empleado, Administrador
+from apps.core.models import Sucursal, Servicio
 
 class RegistroUsuarioSerializer(serializers.ModelSerializer):
     """Serializador para el registro de nuevos usuarios"""
@@ -77,38 +78,32 @@ class AdministradorSerializer(serializers.ModelSerializer):
         model = Administrador
         fields = ['usuario', 'nivel_acceso', 'permisos', 'sucursal']
 
-class InicioSesionEmpleadoSerializer(serializers.Serializer):
+class EmpleadoLoginSerializer(serializers.Serializer):
     """Serializador para el inicio de sesión de empleados"""
-    username = serializers.CharField(required=True)
-    password = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
-    codigo_empleado = serializers.CharField(required=True)
-    
-    def validate(self, attrs):
-        username = attrs.get('username')
-        password = attrs.get('password')
-        codigo_empleado = attrs.get('codigo_empleado')
-        
-        if username and password and codigo_empleado:
-            # Autenticar al usuario
-            usuario = authenticate(request=self.context.get('request'), username=username, password=password)
-            
-            if not usuario:
-                msg = _('No se pudo iniciar sesión con las credenciales proporcionadas.')
-                raise serializers.ValidationError(msg, code='authorization')
-            
-            # Verificar que el usuario es un empleado y tiene el código correcto
-            try:
-                empleado = Empleado.objects.get(usuario=usuario, codigo_empleado=codigo_empleado)
-            except Empleado.DoesNotExist:
-                msg = _('Este usuario no es un empleado o el código de empleado es incorrecto.')
-                raise serializers.ValidationError(msg, code='authorization')
-        else:
-            msg = _('Debe incluir "username", "password" y "codigo_empleado".')
-            raise serializers.ValidationError(msg, code='authorization')
-        
-        attrs['usuario'] = usuario
-        attrs['empleado'] = empleado
-        return attrs
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        # Buscar el usuario por email
+        try:
+            user = Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            raise serializers.ValidationError('No se puede iniciar sesión con las credenciales proporcionadas.', code='authorization')
+
+        # Autenticar usando username
+        user_auth = authenticate(request=self.context.get('request'), username=user.username, password=password)
+        if not user_auth:
+            raise serializers.ValidationError('No se puede iniciar sesión con las credenciales proporcionadas.', code='authorization')
+
+        if not hasattr(user_auth, 'perfil_empleado'):
+            raise serializers.ValidationError('Este usuario no tiene perfil de empleado.', code='authorization')
+
+        data['usuario'] = user_auth
+        data['empleado'] = user_auth.perfil_empleado
+        return data
 
 class InicioSesionAdminSerializer(serializers.Serializer):
     """Serializador para el inicio de sesión de administradores"""
@@ -140,3 +135,76 @@ class InicioSesionAdminSerializer(serializers.Serializer):
         attrs['usuario'] = usuario
         attrs['admin'] = admin
         return attrs
+
+
+class RegistroEmpleadoSerializer(serializers.ModelSerializer):
+    """Serializador para el registro de nuevos empleados"""
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    codigo_empleado = serializers.CharField(required=True, max_length=20)
+    sucursal_id = serializers.PrimaryKeyRelatedField(
+        queryset=Sucursal.objects.all(),
+        source='sucursal',
+        required=True
+    )
+    servicios = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Servicio.objects.all(),
+        required=False
+    )
+
+    class Meta:
+        model = Usuario
+        fields = [
+            'username', 'email', 'password', 'first_name', 'last_name',
+            'codigo_empleado', 'sucursal_id', 'servicios', 'telefono', 'cedula'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True}
+        }
+
+    def validate_username(self, value):
+        if Usuario.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Este nombre de usuario ya está en uso.")
+        return value
+
+    def validate_email(self, value):
+        if Usuario.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Este correo electrónico ya está registrado.")
+        return value
+
+    def validate_codigo_empleado(self, value):
+        if Empleado.objects.filter(codigo_empleado=value).exists():
+            raise serializers.ValidationError("Este código de empleado ya está en uso.")
+        return value
+
+    def create(self, validated_data):
+        # Extraer datos específicos de empleado
+        codigo_empleado = validated_data.pop('codigo_empleado')
+        sucursal = validated_data.pop('sucursal')
+        servicios = validated_data.pop('servicios', [])
+
+        # Crear usuario
+        user = Usuario(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            telefono=validated_data.get('telefono', ''),
+            cedula=validated_data.get('cedula', '')
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+
+        # Crear perfil de empleado
+        empleado = Empleado.objects.create(
+            usuario=user,
+            codigo_empleado=codigo_empleado,
+            sucursal=sucursal
+        )
+        if servicios:
+            empleado.servicios.set(servicios)
+
+        return user

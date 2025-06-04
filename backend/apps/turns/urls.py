@@ -2,7 +2,10 @@ from django.urls import path
 from .views import (
     CrearTurnoView, ListarTurnosUsuarioView, DetalleTurnoUsuarioView,
     CrearCalificacionView, ListarCalificacionesUsuarioView, DetalleCalificacionView,
-    ListarTurnosAgendadosView, HistorialTurnosView
+    ListarTurnosAgendadosView, HistorialTurnosView,
+    # Vistas de gestión de turnos para empleados
+    SiguienteTurnoEmpleadoView, CompletarTurnoEmpleadoView, TransferirTurnoEmpleadoView,
+    TurnoActualEmpleadoView, ListarColaTurnosEmpleadoView, EstadisticasEmpleadoView
 )
 
 urlpatterns = [
@@ -17,4 +20,12 @@ urlpatterns = [
     path('calificaciones/', ListarCalificacionesUsuarioView.as_view(), name='listar_calificaciones'),
     path('calificaciones/crear/', CrearCalificacionView.as_view(), name='crear_calificacion'),
     path('calificaciones/<int:pk>/', DetalleCalificacionView.as_view(), name='detalle_calificacion'),
+
+    # Rutas para la gestión de turnos por empleados
+    path('empleado/turnos/siguiente/', SiguienteTurnoEmpleadoView.as_view(), name='siguiente_turno_empleado'),
+    path('empleado/turnos/<int:turno_id>/completar/', CompletarTurnoEmpleadoView.as_view(), name='completar_turno_empleado'),
+    path('empleado/turnos/<int:turno_id>/transferir/', TransferirTurnoEmpleadoView.as_view(), name='transferir_turno_empleado'),
+    path('empleado/turnos/actual/', TurnoActualEmpleadoView.as_view(), name='turno_actual_empleado'),
+    path('empleado/colas/', ListarColaTurnosEmpleadoView.as_view(), name='listar_cola_turnos_empleado'),
+    path('empleado/estadisticas/', EstadisticasEmpleadoView.as_view(), name='estadisticas_empleado'),
 ]

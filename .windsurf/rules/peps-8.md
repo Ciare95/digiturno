@@ -2,11 +2,36 @@
 trigger: manual
 ---
 
-Todo el código Python del proyecto debe seguir las convenciones del estilo PEP 8 para garantizar legibilidad, mantenibilidad y coherencia, además debes tener en cuenta el primer principio de los principios SOLID que es El Principio de responsabilidad única (Single Responsibility Principle).
+# Guía de estilo para Python (PEP 8) + Principios de diseño
 
-El Principio de Responsabilidad Única dice que una clase debe hacer una cosa y, por lo tanto, debe tener una sola razón para cambiar.
+## ✨ PEP 8 - Estándares de estilo Python
 
-Para enunciar este principio más técnicamente: Solo un cambio potencial (lógica de base de datos, lógica de registro, etc.) en la especificación del software debería poder afectar la especificación de la clase.
+Todo el código Python del proyecto debe seguir las convenciones del estilo **PEP 8** para garantizar:
+- ✅ Legibilidad
+- ✅ Mantenibilidad
+- ✅ Coherencia
 
-Esto significa que si una clase es un contenedor de datos, como una clase Libro o una clase Estudiante, y tiene algunos campos relacionados con esa entidad, debería cambiar solo cuando cambiamos el modelo de datos.
-Aplica tambien el principio DRY (Dont Repeat Yourself) al código
+Recomendaciones clave:
+- Usa `snake_case` para nombres de funciones y variables.
+- Usa `CamelCase` para clases.
+- Limita las líneas a 79 caracteres.
+- Usa 4 espacios por nivel de indentación.
+- Comenta con claridad y usa docstrings en funciones y clases.
+
+---
+
+## 🧠 Principio SOLID: Responsabilidad Única (S)
+
+> “Una clase debe tener una única razón para cambiar.”
+
+Esto significa que:
+- Cada clase debe encargarse de **una sola tarea** dentro del sistema.
+- Evita mezclar responsabilidades, por ejemplo, lógica de base de datos con lógica de validación.
+
+**Ejemplo bueno**:
+```python
+# Clase con una única responsabilidad: manejar libros
+class Libro:
+    def __init__(self, titulo, autor):
+        self.titulo = titulo
+        self.autor = autor
