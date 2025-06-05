@@ -57,9 +57,11 @@ class InicioSesionSerializer(serializers.Serializer):
 
 class UsuarioSerializer(serializers.ModelSerializer):
     """Serializador para mostrar información del usuario"""
+    nombre_completo = serializers.CharField(read_only=True)
+
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'telefono', 'cedula']
+        fields = ['id', 'username', 'nombre_completo', 'email', 'cedula', 'telefono', 'ultimo_acceso']
         read_only_fields = ['id']
 
 class EmpleadoSerializer(serializers.ModelSerializer):

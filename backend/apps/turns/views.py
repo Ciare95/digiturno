@@ -4,7 +4,8 @@ from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db import transaction, models
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, F, Value as V
+from django.db.models.functions import Concat
 from rest_framework import serializers
 import random
 import string
@@ -15,7 +16,7 @@ from .serializers import (
     TransferirTurnoSerializer, ColaTurnosSerializer, EstadisticasEmpleadoSerializer
 )
 from apps.users.permisos import EsEmpleado, EsAdministrador
-from apps.users.models import Empleado
+from apps.users.models import Empleado, Usuario
 from apps.core.models import Servicio, Sucursal
 
 
@@ -554,3 +555,30 @@ class EstadisticasEmpleadoView(generics.GenericAPIView):
                 {"detail": "Error interno del servidor"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class ReporteUsuariosView(generics.GenericAPIView):
+    """Vista para generar reportes de usuarios"""
+    permission_classes = [permissions.IsAuthenticated, EsAdministrador]
+    
+    def get_reporte_usuarios(self):
+        try:
+            usuarios = Usuario.objects.annotate(
+                nombre_completo=Concat('first_name', V(' '), 'last_name')
+            ).values(
+                'id',
+                'username',
+                'nombre_completo',
+                'email',
+                'cedula',
+                'telefono',
+                'ultimo_acceso',
+                'date_joined'
+            )
+            
+            return {
+                'usuarios': list(usuarios),
+                'total': usuarios.count()
+            }
+        except Exception as e:
+            raise Exception(f"Error al generar reporte de usuarios: {str(e)}")

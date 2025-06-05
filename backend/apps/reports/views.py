@@ -4,6 +4,8 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from django.db.models import Value as V
+from django.db.models.functions import Concat
 
 from apps.turns.models import Turno
 from apps.core.permissions import EsAdministrador
@@ -83,9 +85,15 @@ class ReporteAvanzadoView(generics.GenericAPIView):
 
     def get_metricas_empleados(self, turnos):
         metricas_empleados = turnos.values(
-            'empleado__usuario__nombre',
+            'empleado__usuario__first_name',
+            'empleado__usuario__last_name',
             'empleado__codigo_empleado'
         ).annotate(
+            nombre_completo=Concat(
+                'empleado__usuario__first_name',
+                V(' '),
+                'empleado__usuario__last_name'
+            ),
             turnos_atendidos=Count('id', filter=Q(estado=Turno.EstadoTurno.FINALIZADO)),
             tiempo_promedio_atencion=Avg(
                 ExpressionWrapper(
@@ -96,29 +104,30 @@ class ReporteAvanzadoView(generics.GenericAPIView):
         ).order_by('-turnos_atendidos')
 
         return [{
-            'empleado': metrica['empleado__usuario__nombre'],
+            'empleado': metrica['nombre_completo'],
             'codigo': metrica['empleado__codigo_empleado'],
             'turnos_atendidos': metrica['turnos_atendidos'],
             'tiempo_promedio_atencion': str(metrica['tiempo_promedio_atencion']) if metrica['tiempo_promedio_atencion'] else "0:00:00"
         } for metrica in metricas_empleados]
 
     def get_metricas_satisfaccion(self, turnos):
+        # Modificamos para usar la relación correcta con CalificacionServicio
         calificaciones = turnos.filter(
-            calificacion__isnull=False
+            calificacionservicio__isnull=False  # Usamos el nombre correcto de la relación
         ).aggregate(
-            promedio=Avg('calificacion__puntuacion'),
-            total_calificaciones=Count('calificacion')
+            promedio=Avg('calificacionservicio__calificacion'),  # Accedemos a través de la relación
+            total_calificaciones=Count('calificacionservicio')
         )
 
+        turnos_finalizados = turnos.filter(estado=Turno.EstadoTurno.FINALIZADO).count()
+        
         return {
             'promedio_satisfaccion': round(calificaciones['promedio'], 2) if calificaciones['promedio'] else 0,
             'total_calificaciones': calificaciones['total_calificaciones'],
             'tasa_respuesta': round(
-                (calificaciones['total_calificaciones'] / turnos.filter(
-                    estado=Turno.EstadoTurno.FINALIZADO
-                ).count() * 100), 
+                (calificaciones['total_calificaciones'] / turnos_finalizados * 100), 
                 2
-            ) if turnos.exists() else 0
+            ) if turnos_finalizados > 0 else 0
         }
 
     def get_tendencias_turnos(self, turnos, fecha_inicio, fecha_fin):
@@ -157,7 +166,7 @@ class ReporteAvanzadoView(generics.GenericAPIView):
                     output_field=fields.DurationField()
                 )
             ),
-            satisfaccion_promedio=Avg('calificacion__puntuacion')
+            satisfaccion_promedio=Avg('calificacionservicio__calificacion')  # Corregimos aquí también
         ).order_by('-total_turnos')
 
     def get(self, request, *args, **kwargs):

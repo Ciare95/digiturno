@@ -1,5 +1,6 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.routers import DefaultRouter
 from .views import (
     RegistroUsuarioView, 
     InicioSesionView, 
@@ -9,6 +10,11 @@ from .views import (
     VerificarRolView,
     RegistroEmpleadoView
 )
+from .admin_views import GestionUsuariosViewSet
+
+# Crear router para vistas basadas en ViewSet
+router = DefaultRouter()
+router.register(r'admin/usuarios', GestionUsuariosViewSet, basename='admin-usuarios')
 
 urlpatterns = [
     # Rutas de autenticación para usuarios normales
@@ -26,4 +32,5 @@ urlpatterns = [
     
     # Ruta para verificar el rol del usuario autenticado
     path('auth/verificar-rol/', VerificarRolView.as_view(), name='verificar_rol'),
+    path('', include(router.urls)),
 ]

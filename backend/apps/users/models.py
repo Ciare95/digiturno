@@ -23,6 +23,13 @@ class Usuario(AbstractUser):
     def __str__(self):
         return self.username
 
+    def get_nombre_completo(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def nombre_completo(self):
+        return self.get_nombre_completo()
+
 class Empleado(models.Model):
     # Usamos OneToOneField para extender el modelo Usuario.
     # 'usuario_id' en tu SQL se convierte en una relación OneToOne.
