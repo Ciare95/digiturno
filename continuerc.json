@@ -1,0 +1,10 @@
+{
+  "contextProviders": [
+    {
+      "name": "file", 
+      "params": {
+        "include": [".continue/rules/new-rule.yaml"]
+      }
+    }
+  ]
+}

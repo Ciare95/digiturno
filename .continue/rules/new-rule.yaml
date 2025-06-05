@@ -1,0 +1,20 @@
+---
+trigger: manual
+---
+name: Digiturno Rules
+version: 0.0.1
+schema: v1
+rules:
+  - Always follow PEP 8 standards: 4 spaces indentation, 79 char lines, snake_case variables
+  - Apply Single Responsibility Principle: each class should have only one reason to change
+  - Separate business logic from presentation and persistence layers
+  - Use Spanish for business logic functions and variables, English for technical code
+  - Follow Django app structure: models.py (data), views.py (controllers), serializers.py (serialization), logic.py (business logic)
+  - Use Class-Based Views appropriately in Django
+  - Create specific serializers for each use case
+  - Write descriptive test names: test_should_create_turn_when_valid_user()
+  - Validate inputs at multiple layers: frontend, serializer, model
+  - Use granular permissions and never expose sensitive data
+  - Optimize queries with select_related/prefetch_related
+  - Implement lazy loading and pagination for large datasets
+

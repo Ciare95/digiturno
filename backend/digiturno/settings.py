@@ -90,13 +90,12 @@ WSGI_APPLICATION = 'digiturno.wsgi.application'
 
 DATABASES = {
     'default': {
-        # Configuración para PostgreSQL
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'sistema_digiturno',
         'USER': 'postgres',
-        'PASSWORD': 'ciarentcity2',
+        'PASSWORD': '',
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '5433',
     }
 }
 

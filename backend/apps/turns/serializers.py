@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Turno, CalificacionServicio, ColaTurnos
 from apps.users.serializers import UsuarioSerializer
 from apps.core.serializers import ServicioSerializer, SucursalSerializer
-from apps.core.models import Servicio # Asegurada una única importación
+from apps.core.models import Servicio 
 
 
 class TurnoSerializer(serializers.ModelSerializer):
