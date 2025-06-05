@@ -10,11 +10,11 @@ from .views import (
     VerificarRolView,
     RegistroEmpleadoView
 )
-from .admin_views import GestionUsuariosViewSet
+from .admin_views import GestionUsuariosAdminViewSet
 
 # Crear router para vistas basadas en ViewSet
 router = DefaultRouter()
-router.register(r'admin/usuarios', GestionUsuariosViewSet, basename='admin-usuarios')
+router.register(r'admin/usuarios', GestionUsuariosAdminViewSet, basename='admin-usuarios')
 
 urlpatterns = [
     # Rutas de autenticación para usuarios normales
