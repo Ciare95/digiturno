@@ -1,11 +1,20 @@
 from django.urls import path
 from .views import (
-    CrearTurnoView, ListarTurnosUsuarioView, DetalleTurnoUsuarioView,
-    CrearCalificacionView, ListarCalificacionesUsuarioView, DetalleCalificacionView,
-    ListarTurnosAgendadosView, HistorialTurnosView,
-    # Vistas de gestión de turnos para empleados
-    SiguienteTurnoEmpleadoView, CompletarTurnoEmpleadoView, TransferirTurnoEmpleadoView,
-    TurnoActualEmpleadoView, ListarColaTurnosEmpleadoView, EstadisticasEmpleadoView
+    CrearTurnoView, 
+    ListarTurnosUsuarioView, 
+    DetalleTurnoUsuarioView,
+    CrearCalificacionView, 
+    ListarCalificacionesUsuarioView, 
+    DetalleCalificacionView,
+    ListarTurnosAgendadosView, 
+    HistorialTurnosView,
+    SiguienteTurnoEmpleadoView, 
+    CompletarTurnoEmpleadoView, 
+    TransferirTurnoEmpleadoView,
+    TurnoActualEmpleadoView, 
+    ListarColaTurnosEmpleadoView, 
+    EstadisticasEmpleadoView,
+    ListarColaTurnosView
 )
 
 urlpatterns = [
@@ -15,6 +24,7 @@ urlpatterns = [
     path('mis-turnos/<int:pk>/', DetalleTurnoUsuarioView.as_view(), name='detalle_turno_usuario'),
     path('turnos/agenda/', ListarTurnosAgendadosView.as_view(), name='listar_turnos_agenda'),
     path('turnos/historial/', HistorialTurnosView.as_view(), name='historial_turnos'),
+    path('turnos/cola/', ListarColaTurnosView.as_view(), name='listar_cola_turnos'),
     
     # Rutas para calificaciones
     path('calificaciones/', ListarCalificacionesUsuarioView.as_view(), name='listar_calificaciones'),

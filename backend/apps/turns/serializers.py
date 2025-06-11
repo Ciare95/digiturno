@@ -3,6 +3,7 @@ from .models import Turno, CalificacionServicio, ColaTurnos
 from apps.users.serializers import UsuarioSerializer
 from apps.core.serializers import ServicioSerializer, SucursalSerializer
 from apps.core.models import Servicio 
+from django.utils import timezone
 
 
 class TurnoSerializer(serializers.ModelSerializer):
@@ -33,30 +34,35 @@ class CrearTurnoSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Turno
-        fields = ['servicio', 'sucursal', 'prioridad', 'es_agendado', 'fecha_agendada', 'observaciones', 'usuario'] # Añadido usuario
-        extra_kwargs = {
-            'usuario': {'required': False, 'allow_null': True} # Usuario es opcional
-        }
-
+        fields = ['servicio', 'sucursal', 'es_agendado', 'fecha_agendada']
+        
     def validate(self, attrs):
         servicio = attrs.get('servicio')
         sucursal = attrs.get('sucursal')
+        es_agendado = attrs.get('es_agendado', False)
+        fecha_agendada = attrs.get('fecha_agendada')
+        usuario = self.context['request'].user if self.context['request'].user.is_authenticated else None
         
         if servicio and sucursal:
-            # Validar que el servicio pertenezca a la sucursal seleccionada
+            # Validar que el servicio pertenezca a la sucursal
             if not sucursal.servicios.filter(id=servicio.id).exists():
-                 raise serializers.ValidationError({
-                    'servicio': 'El servicio seleccionado no pertenece a la sucursal indicada o no está activo en ella.'
+                raise serializers.ValidationError({
+                    'servicio': 'El servicio seleccionado no está disponible en esta sucursal.'
                 })
         
-        es_agendado = attrs.get('es_agendado')
-        fecha_agendada = attrs.get('fecha_agendada')
-        
-        if es_agendado and not fecha_agendada:
-            raise serializers.ValidationError({
-                'fecha_agendada': 'Debe proporcionar una fecha para el turno agendado.'
-            })
-        
+        # Validar turno agendado
+        if es_agendado:
+            if not fecha_agendada:
+                raise serializers.ValidationError({
+                    'fecha_agendada': 'Debe proporcionar una fecha para el turno agendado.'
+                })
+            
+            # Verificar que la fecha no sea pasada
+            if fecha_agendada < timezone.now():
+                raise serializers.ValidationError({
+                    'fecha_agendada': 'No puede agendar turnos para fechas pasadas.'
+                })
+
         return attrs
 
 

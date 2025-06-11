@@ -7,8 +7,8 @@ from .serializers import (
     RegistroUsuarioSerializer, 
     InicioSesionSerializer, 
     UsuarioSerializer,
-    EmpleadoLoginSerializer as EmpleadoSerializer,
-    EmpleadoLoginSerializer as InicioSesionEmpleadoSerializer,
+    EmpleadoSerializer, 
+    EmpleadoLoginSerializer,
     AdministradorSerializer,
     InicioSesionAdminSerializer,
     RegistroEmpleadoSerializer
@@ -73,10 +73,11 @@ class InicioSesionEmpleadoView(APIView):
     permission_classes = [permissions.AllowAny]
     
     def post(self, request):
-        serializer = InicioSesionEmpleadoSerializer(data=request.data, context={'request': request})
+        serializer = EmpleadoLoginSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            usuario = serializer.validated_data['usuario']
-            empleado = serializer.validated_data['empleado']
+            validated_data = serializer.validated_data
+            usuario = validated_data['usuario']
+            empleado = validated_data['empleado']
             
             # Crear tokens para el usuario
             refresh = RefreshToken.for_user(usuario)
@@ -88,7 +89,7 @@ class InicioSesionEmpleadoView(APIView):
             # Devolver datos del empleado y tokens
             return Response({
                 'usuario': UsuarioSerializer(usuario).data,
-                'empleado': EmpleadoSerializer(empleado).data,
+                'empleado': EmpleadoSerializer(empleado).data,  
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             })

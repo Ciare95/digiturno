@@ -82,30 +82,44 @@ class AdministradorSerializer(serializers.ModelSerializer):
 
 class EmpleadoLoginSerializer(serializers.Serializer):
     """Serializador para el inicio de sesión de empleados"""
-    email = serializers.EmailField(required=True)
-    password = serializers.CharField(required=True, write_only=True)
+    username = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
 
     def validate(self, data):
-        email = data.get('email')
+        username = data.get('username')
         password = data.get('password')
 
-        # Buscar el usuario por email
-        try:
-            user = Usuario.objects.get(email=email)
-        except Usuario.DoesNotExist:
-            raise serializers.ValidationError('No se puede iniciar sesión con las credenciales proporcionadas.', code='authorization')
+        # Autenticar usando username directamente
+        user = authenticate(
+            request=self.context.get('request'),
+            username=username,
+            password=password
+        )
 
-        # Autenticar usando username
-        user_auth = authenticate(request=self.context.get('request'), username=user.username, password=password)
-        if not user_auth:
-            raise serializers.ValidationError('No se puede iniciar sesión con las credenciales proporcionadas.', code='authorization')
+        if not user:
+            raise serializers.ValidationError(
+                'No se puede iniciar sesión con las credenciales proporcionadas.',
+                code='authorization'
+            )
 
-        if not hasattr(user_auth, 'perfil_empleado'):
-            raise serializers.ValidationError('Este usuario no tiene perfil de empleado.', code='authorization')
+        if not hasattr(user, 'perfil_empleado'):
+            raise serializers.ValidationError(
+                'Este usuario no tiene perfil de empleado.',
+                code='authorization'
+            )
 
-        data['usuario'] = user_auth
-        data['empleado'] = user_auth.perfil_empleado
+        data['usuario'] = user
+        data['empleado'] = user.perfil_empleado
         return data
+
+    def to_representation(self, instance):
+        """
+        Método para controlar la respuesta serializada
+        """
+        return {
+            'usuario': UsuarioSerializer(instance['usuario']).data,
+            'empleado': EmpleadoSerializer(instance['empleado']).data
+        }
 
 class InicioSesionAdminSerializer(serializers.Serializer):
     """Serializador para el inicio de sesión de administradores"""

@@ -10,7 +10,7 @@ from rest_framework import serializers
 import random
 import string
 
-from .models import Turno, CalificacionServicio, ColaTurnos
+from .models import Turno, CalificacionServicio, ColaTurnos, Notificacion
 from .serializers import (
     TurnoSerializer, CrearTurnoSerializer, CalificacionServicioSerializer,
     TransferirTurnoSerializer, ColaTurnosSerializer, EstadisticasEmpleadoSerializer
@@ -18,81 +18,39 @@ from .serializers import (
 from apps.users.permisos import EsEmpleado, EsAdministrador
 from apps.users.models import Empleado, Usuario
 from apps.core.models import Servicio, Sucursal
+from .logic import GestorTurnos
 
 
 class CrearTurnoView(APIView):
     """Vista para crear un nuevo turno"""
     permission_classes = [permissions.AllowAny]
     
-    def generar_numero_turno(self, servicio):
-        """Genera un número de turno único"""
-        # Prefijo basado en el código del servicio
-        prefijo = servicio.codigo_servicio[:2].upper()
-        
-        # Obtener fecha actual para incluir en el número
-        fecha = timezone.now().strftime('%y%m%d')
-        
-        # Contar cuántos turnos se han generado hoy para este servicio
-        contador = Turno.objects.filter(
-            servicio=servicio,
-            fecha_creacion__date=timezone.now().date()
-        ).count() + 1
-        
-        # Generar número de turno: PREFIJO-FECHA-CONTADOR
-        numero_turno = f"{prefijo}-{fecha}-{contador:03d}"
-        return numero_turno
-    
-    @transaction.atomic
     def post(self, request):
-        """Crea un nuevo turno"""
         serializer = CrearTurnoSerializer(data=request.data)
         
         if serializer.is_valid():
-            # Obtener datos validados
-            servicio = serializer.validated_data['servicio']
-            sucursal = serializer.validated_data['sucursal']
-            
-            # Generar número de turno
-            numero_turno = self.generar_numero_turno(servicio)
-            
-            # Crear el turno
-            turno = serializer.save(
-                numero_turno=numero_turno,
-                estado='en_espera',
-                usuario=request.user if request.user.is_authenticated else None
-            )
-            
-            # Calcular tiempo estimado de espera
-            turnos_en_espera = Turno.objects.filter(
-                servicio=servicio,
-                sucursal=sucursal,
-                estado='en_espera'
-            ).count()
-            
-            tiempo_estimado = turnos_en_espera * servicio.tiempo_estimado_atencion
-            turno.tiempo_espera_estimado = tiempo_estimado
-            turno.save()
-            
-            # Crear entrada en la cola de turnos
-            posicion_cola = ColaTurnos.objects.filter(
-                servicio=servicio,
-                activo=True
-            ).count() + 1
-            
-            ColaTurnos.objects.create(
-                turno=turno,
-                servicio=servicio,
-                posicion_cola=posicion_cola,
-                tiempo_espera_estimado=tiempo_estimado
-            )
-            
-            # Devolver datos del turno creado
-            return Response(
-                TurnoSerializer(turno).data,
-                status=status.HTTP_201_CREATED
-            )
+            try:
+                turno = GestorTurnos.crear_turno(
+                    usuario=request.user if request.user.is_authenticated else None,
+                    servicio=serializer.validated_data['servicio'],
+                    sucursal=serializer.validated_data['sucursal'],
+                    es_agendado=serializer.validated_data.get('es_agendado', False),
+                    fecha_agendada=serializer.validated_data.get('fecha_agendada')
+                )
+                return Response(
+                    TurnoSerializer(turno).data,
+                    status=status.HTTP_201_CREATED
+                )
+            except ValueError as e:
+                return Response(
+                    {'detail': str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class ListarTurnosUsuarioView(generics.ListAPIView):
@@ -280,54 +238,58 @@ class SiguienteTurnoEmpleadoView(generics.GenericAPIView):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        empleado = request.user.perfil_empleado
-        servicios_empleado = empleado.servicios.filter(activo=True)
-
-        if not servicios_empleado.exists():
-            return Response(
-                {"detail": "El empleado no está asignado a ningún servicio activo."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Finalizar turno anterior si existe
-        turno_anterior = Turno.objects.filter(
-            empleado_actual=empleado,
-            estado=Turno.EstadoTurno.EN_ATENCION
-        ).first()
-        if turno_anterior:
-            turno_anterior.estado = Turno.EstadoTurno.FINALIZADO
-            turno_anterior.fecha_finalizacion = timezone.now()
-            turno_anterior.save()
-
-        # Obtener siguiente turno en espera
-        siguiente_turno = Turno.objects.filter(
-            servicio__in=servicios_empleado,
-            estado=Turno.EstadoTurno.EN_ESPERA,
-            sucursal=empleado.sucursal
-        ).order_by('servicio__prioridad', 'fecha_creacion').first()
-
-        if not siguiente_turno:
-            return Response(
-                {"detail": "No hay turnos en espera para los servicios asignados."},
-                status=status.HTTP_204_NO_CONTENT
-            )
-
-        # Asignar y actualizar turno
-        siguiente_turno.estado = Turno.EstadoTurno.EN_ATENCION
-        siguiente_turno.empleado_actual = empleado
-        siguiente_turno.fecha_inicio_atencion = timezone.now()
-        siguiente_turno.save()
-
-        # Actualizar cola de turnos
         try:
-            cola_turno = ColaTurnos.objects.get(turno=siguiente_turno, activo=True)
-            cola_turno.activo = False
-            cola_turno.save()
-        except ColaTurnos.DoesNotExist:
-            pass
+            empleado = request.user.perfil_empleado
 
-        serializer = self.get_serializer(siguiente_turno)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            # Verificar que el empleado esté activo y tenga servicios asignados
+            if not empleado.servicios.filter(activo=True).exists():
+                return Response(
+                    {"detail": "No tiene servicios activos asignados."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Verificar si ya tiene un turno en atención
+            turno_actual = Turno.objects.filter(
+                empleado=empleado,
+                estado=Turno.EstadoTurno.EN_ATENCION
+            ).first()
+
+            if turno_actual:
+                return Response(
+                    {"detail": "Ya tiene un turno en atención. Debe finalizarlo primero."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Obtener siguiente turno
+            siguiente_turno = GestorTurnos.obtener_siguiente_turno(empleado)
+
+            if not siguiente_turno:
+                return Response(
+                    {"detail": "No hay turnos en espera."},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+
+            # Asignar el turno al empleado
+            turno_asignado = GestorTurnos.asignar_turno_empleado(siguiente_turno, empleado)
+            
+            # Enviar notificación al usuario si está registrado
+            if turno_asignado.usuario:
+                Notificacion.objects.create(
+                    usuario=turno_asignado.usuario,
+                    turno=turno_asignado,
+                    tipo='llamado_turno',
+                    titulo=f'Su turno {turno_asignado.numero_turno} ha sido llamado',
+                    mensaje=f'Por favor diríjase a la ventanilla {empleado.ventanilla_asignada}'
+                )
+
+            serializer = self.get_serializer(turno_asignado)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class TurnoActualEmpleadoView(generics.GenericAPIView):
@@ -443,26 +405,41 @@ class TransferirTurnoEmpleadoView(generics.GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ListarColaTurnosView(generics.ListAPIView):
+    """Vista para listar los turnos en cola"""
+    serializer_class = ColaTurnosSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        """Devuelve solo los turnos activos en cola"""
+        return ColaTurnos.objects.filter(
+            activo=True
+        ).select_related(
+            'turno', 'servicio'
+        ).order_by('servicio', 'posicion_cola')
+
+
 class ListarColaTurnosEmpleadoView(generics.ListAPIView):
-    """Vista para listar la cola de turnos para un empleado"""
+    """Vista para listar los turnos en cola para un empleado específico"""
     serializer_class = ColaTurnosSerializer
     permission_classes = [permissions.IsAuthenticated, EsEmpleado]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['servicio', 'activo']
-    ordering_fields = ['posicion_cola', 'tiempo_espera_estimado']
-    ordering = ['posicion_cola']
-
+    
     def get_queryset(self):
-        """Devuelve solo los turnos en cola para los servicios del empleado"""
+        """
+        Devuelve solo los turnos activos en cola para los servicios 
+        asignados al empleado en su sucursal
+        """
         empleado = self.request.user.perfil_empleado
-        servicios_empleado = empleado.servicios.filter(activo=True).values_list('id', flat=True)
+        servicios_empleado = empleado.servicios.all()
         
         return ColaTurnos.objects.filter(
-            servicio_id__in=servicios_empleado,
             activo=True,
-            turno__estado='en_espera',
+            servicio__in=servicios_empleado,
             turno__sucursal=empleado.sucursal
-        ).select_related('turno', 'servicio')
+        ).select_related(
+            'turno', 
+            'servicio'
+        ).order_by('servicio', 'posicion_cola')
 
 
 class EstadisticasEmpleadoView(generics.GenericAPIView):

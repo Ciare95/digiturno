@@ -40,16 +40,21 @@ class Empleado(models.Model):
         related_name='perfil_empleado'
     )
     codigo_empleado = models.CharField(_("código de empleado"), max_length=20, unique=True)
-    # La sucursal_id es una ForeignKey. Usamos la forma de string 'app_label.ModelName'
-    # para evitar importaciones circulares si 'core' también importa 'users'.
     sucursal = models.ForeignKey(
         'core.Sucursal',
-        on_delete=models.SET_NULL, # O models.PROTECT, models.CASCADE según tu lógica de negocio
-        null=True,
-        blank=True,
-        verbose_name=_("sucursal")
+        on_delete=models.PROTECT,
+        verbose_name=_("sucursal"),
+        null=True,  # Permitir null temporalmente
+        blank=True  # Permitir blank temporalmente
     )
-    ventanilla_asignada = models.CharField(_("ventanilla asignada"), max_length=10, blank=True, null=True)
+    # Añadir esta relación
+    servicios = models.ManyToManyField(
+        'core.Servicio',
+        related_name='empleados',
+        verbose_name=_("servicios asignados"),
+        blank=True
+    )
+    ventanilla_asignada = models.CharField(_("ventanilla asignada"), max_length=10)
     estado_conexion = models.CharField(
         _("estado de conexión"),
         max_length=20,

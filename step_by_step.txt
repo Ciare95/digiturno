@@ -110,10 +110,10 @@ Implementación de las reglas clave del sistema, enfocadas en la gestión eficie
 Algoritmos de Turnos y Colas
 •	Asignación automática del turno:
 Basado en disponibilidad del servicio, sucursal y orden de llegada.
-•	Priorización:
-Posible implementación futura de prioridades por tipo de usuario.
 •	Evitar duplicados:
 Reglas para impedir múltiples turnos activos por usuario.
+•	En la llamada de usuarios a la caja, cuando una caja se desocupe, pasara el siguiente turno, los turnos no van a tener una caja asignada, la caja que esté disponible tomará el siguiente turno.
+
 Cálculo de Tiempo de Espera
 •	Basado en:
 o	Cantidad de turnos en cola por servicio.
