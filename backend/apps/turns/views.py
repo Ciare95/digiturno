@@ -9,6 +9,7 @@ from django.db.models.functions import Concat
 from rest_framework import serializers
 import random
 import string
+import logging
 
 from .models import Turno, CalificacionServicio, ColaTurnos, Notificacion
 from .serializers import (
@@ -80,11 +81,17 @@ class DetalleTurnoUsuarioView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         """Cancela un turno en lugar de eliminarlo físicamente"""
         # Verificar si el turno puede ser cancelado
-        estados_no_cancelables = ['atendido', 'cancelado', 'no_asistio']
+        estados_no_cancelables = ['finalizado', 'cancelado', 'ausente']
         
         if instance.estado in estados_no_cancelables:
             raise serializers.ValidationError({
                 'estado': f'No se puede cancelar un turno en estado: {instance.get_estado_display()}'
+            })
+        
+        # Verificar si el turno está en atención
+        if instance.estado == 'en_atencion':
+            raise serializers.ValidationError({
+                'estado': 'No se puede cancelar un turno que está en atención'
             })
         
         # Actualizar el estado a cancelado
@@ -455,7 +462,7 @@ class EstadisticasEmpleadoView(generics.GenericAPIView):
 
         # Base query para turnos finalizados
         turnos_base = Turno.objects.filter(
-            empleado_actual=empleado,
+            empleado=empleado,
             estado=Turno.EstadoTurno.FINALIZADO
         )
 
@@ -479,7 +486,7 @@ class EstadisticasEmpleadoView(generics.GenericAPIView):
             tiempo_promedio = timezone.timedelta()
 
         # Calificaciones
-        calificaciones = CalificacionServicio.objects.filter(empleado_actual=empleado)
+        calificaciones = CalificacionServicio.objects.filter(empleado=empleado)
         cantidad_calificaciones = calificaciones.count()
         
         if cantidad_calificaciones > 0:
@@ -496,12 +503,11 @@ class EstadisticasEmpleadoView(generics.GenericAPIView):
             calificacion_promedio = 0.0
             distribucion = {str(i): 0 for i in range(1, 6)}
 
-        # Turnos transferidos
-        turnos_transferidos = Turno.objects.filter(
-            empleado_actual=empleado,
-            estado=Turno.EstadoTurno.EN_ESPERA,
-            transferencias_count__gt=0
-        ).count()
+        # Turnos transferidos - obtener de las estadísticas del empleado o calcular de otra manera
+        # Como no hay un campo directo para contar transferencias, usaremos las estadísticas guardadas
+        from .models import EstadisticaEmpleado
+        estadisticas_empleado = EstadisticaEmpleado.objects.filter(empleado=empleado)
+        turnos_transferidos = sum(est.turnos_transferidos for est in estadisticas_empleado)
 
         return {
             'turnos_atendidos_hoy': turnos_hoy,
@@ -528,8 +534,9 @@ class EstadisticasEmpleadoView(generics.GenericAPIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
+            logging.exception("Error interno en EstadisticasEmpleadoView:")
             return Response(
-                {"detail": "Error interno del servidor"},
+                {"detail": f"Error interno del servidor: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

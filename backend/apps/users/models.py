@@ -15,7 +15,7 @@ class Usuario(AbstractUser):
     # REQUIRED_FIELDS = ['username'] # O solo ['first_name', 'last_name'] si email es username
 
     class Meta:
-        db_table = 'usuarios' # Para mapear a tu tabla PostgreSQL existente
+        db_table = 'usuarios' 
         verbose_name = _('usuario')
         verbose_name_plural = _('usuarios')
         ordering = ['id']
@@ -31,12 +31,12 @@ class Usuario(AbstractUser):
         return self.get_nombre_completo()
 
 class Empleado(models.Model):
-    # Usamos OneToOneField para extender el modelo Usuario.
-    # 'usuario_id' en tu SQL se convierte en una relación OneToOne.
+    """Modelo que representa a un empleado del sistema, vinculado a un usuario.
+    Este modelo extiende las funcionalidades del usuario para incluir información específica del empleado."""
     usuario = models.OneToOneField(
         Usuario,
-        on_delete=models.CASCADE,
-        primary_key=True, # Esto hace que el ID del empleado sea el mismo que el ID del usuario
+        on_delete=models.CASCADE, 
+        primary_key=True, 
         related_name='perfil_empleado'
     )
     codigo_empleado = models.CharField(_("código de empleado"), max_length=20, unique=True)
@@ -66,7 +66,6 @@ class Empleado(models.Model):
     # o puedes añadir un campo booleano específico aquí si tiene un significado diferente.
     # activo_empleado = models.BooleanField(default=True)
     configuracion_ui = models.JSONField(_("configuración UI"), default=dict, blank=True)
-    # created_at y updated_at pueden ser añadidos con auto_now_add=True y auto_now=True
 
     class Meta:
         db_table = 'empleados'
@@ -84,7 +83,6 @@ class Administrador(models.Model):
         primary_key=True,
         related_name='perfil_administrador'
     )
-    # 'usuario_id' en tu SQL.
     nivel_acceso = models.CharField(_("nivel de acceso"), max_length=20, default='admin')
     permisos = models.JSONField(_("permisos"), default=dict, blank=True)
     sucursal = models.ForeignKey(
@@ -94,8 +92,6 @@ class Administrador(models.Model):
         blank=True,
         verbose_name=_("sucursal")
     )
-    # El campo 'activo' de tu tabla 'administradores'.
-    # activo_admin = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'administradores'

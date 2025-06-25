@@ -59,7 +59,7 @@ class Turno(models.Model):
         verbose_name_plural = _('turnos')
         ordering = ['-fecha_creacion']
     def __str__(self):
-        return f"Turno {self.numero_turno} - {self.servicio}"
+        return f"Turno {self.numero_turno} - {self.servicio.nombre}"
 
 class CalificacionServicio(models.Model):
     turno = models.OneToOneField(
@@ -210,5 +210,3 @@ class EstadisticaEmpleado(models.Model):
 
     def __str__(self):
         return f"Estadísticas {self.empleado} - {self.fecha}"
-
-

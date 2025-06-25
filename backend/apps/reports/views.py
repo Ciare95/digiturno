@@ -111,11 +111,10 @@ class ReporteAvanzadoView(generics.GenericAPIView):
         } for metrica in metricas_empleados]
 
     def get_metricas_satisfaccion(self, turnos):
-        # Modificamos para usar la relación correcta con CalificacionServicio
         calificaciones = turnos.filter(
-            calificacionservicio__isnull=False  # Usamos el nombre correcto de la relación
+            calificacionservicio__isnull=False 
         ).aggregate(
-            promedio=Avg('calificacionservicio__calificacion'),  # Accedemos a través de la relación
+            promedio=Avg('calificacionservicio__calificacion'),  
             total_calificaciones=Count('calificacionservicio')
         )
 
@@ -166,7 +165,7 @@ class ReporteAvanzadoView(generics.GenericAPIView):
                     output_field=fields.DurationField()
                 )
             ),
-            satisfaccion_promedio=Avg('calificacionservicio__calificacion')  # Corregimos aquí también
+            satisfaccion_promedio=Avg('calificacionservicio__calificacion') 
         ).order_by('-total_turnos')
 
     def get(self, request, *args, **kwargs):

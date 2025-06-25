@@ -10,19 +10,19 @@ class TurnoSerializer(serializers.ModelSerializer):
     """Serializador para el modelo Turno"""
     servicio_nombre = serializers.CharField(source='servicio.nombre', read_only=True)
     sucursal_nombre = serializers.CharField(source='sucursal.nombre', read_only=True)
-    empleado_nombre = serializers.CharField(source='empleado_actual.usuario.get_full_name', read_only=True, allow_null=True) # Permitir null si no hay empleado
-    usuario_nombre = serializers.CharField(source='usuario.get_full_name', read_only=True, allow_null=True) # Permitir null si no hay usuario
+    empleado_nombre = serializers.CharField(source='empleado.usuario.get_full_name', read_only=True, allow_null=True)
+    usuario_nombre = serializers.CharField(source='usuario.get_full_name', read_only=True, allow_null=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
     
     class Meta:
         model = Turno
         fields = [
             'id', 'numero_turno', 'usuario', 'usuario_nombre', 'servicio', 
-            'servicio_nombre', 'sucursal', 'sucursal_nombre', 'empleado_actual', # Cambiado de 'empleado' a 'empleado_actual'
-            'empleado_nombre', 'estado', 'estado_display', 'prioridad',
-            'fecha_creacion', 'fecha_atencion', 'fecha_finalizacion', # Cambiados nombres de fechas
+            'servicio_nombre', 'sucursal', 'sucursal_nombre', 'empleado',
+            'empleado_nombre', 'estado', 'estado_display',
+            'fecha_creacion', 'fecha_llamado', 'fecha_inicio_atencion', 'fecha_finalizacion',
             'tiempo_espera_estimado', 'es_agendado',
-            'fecha_agendada', 'observaciones', 'ventanilla_atencion' # Añadido ventanilla_atencion
+            'fecha_agendada', 'observaciones'
         ]
         read_only_fields = ['numero_turno', 'fecha_creacion', 'fecha_atencion', 
                           'fecha_finalizacion', 'empleado_nombre', 'usuario_nombre', 
@@ -41,11 +41,12 @@ class CrearTurnoSerializer(serializers.ModelSerializer):
         sucursal = attrs.get('sucursal')
         es_agendado = attrs.get('es_agendado', False)
         fecha_agendada = attrs.get('fecha_agendada')
-        usuario = self.context['request'].user if self.context['request'].user.is_authenticated else None
+        request = self.context.get('request')
+        usuario = request.user if request and hasattr(request, 'user') and request.user.is_authenticated else None
         
         if servicio and sucursal:
             # Validar que el servicio pertenezca a la sucursal
-            if not sucursal.servicios.filter(id=servicio.id).exists():
+            if not sucursal.servicio_set.filter(id=servicio.id).exists():
                 raise serializers.ValidationError({
                     'servicio': 'El servicio seleccionado no está disponible en esta sucursal.'
                 })
@@ -70,14 +71,14 @@ class CalificacionServicioSerializer(serializers.ModelSerializer):
     """Serializador para el modelo CalificacionServicio"""
     turno_numero = serializers.CharField(source='turno.numero_turno', read_only=True)
     servicio_nombre = serializers.CharField(source='servicio.nombre', read_only=True)
-    empleado_nombre = serializers.CharField(source='empleado_actual.usuario.get_full_name', read_only=True, allow_null=True) # Usar empleado_actual
+    empleado_nombre = serializers.CharField(source='empleado.usuario.get_full_name', read_only=True, allow_null=True)
     usuario_nombre = serializers.CharField(source='usuario.get_full_name', read_only=True, allow_null=True)
     fecha_calificacion_formateada = serializers.DateTimeField(source='fecha_calificacion', format='%d/%m/%Y %H:%M', read_only=True)
     
     class Meta:
         model = CalificacionServicio
         fields = [
-            'id', 'turno', 'turno_numero', 'usuario', 'usuario_nombre', 'empleado_actual', 'empleado_nombre', # Usar empleado_actual
+            'id', 'turno', 'turno_numero', 'usuario', 'usuario_nombre', 'empleado', 'empleado_nombre',
             'servicio', 'servicio_nombre', 'calificacion', 'comentario',
             'aspectos_evaluados', 'fecha_calificacion', 'fecha_calificacion_formateada'
         ]
@@ -99,22 +100,22 @@ class CalificacionServicioSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         turno = attrs.get('turno')
         servicio = attrs.get('servicio')
-        empleado_actual = attrs.get('empleado_actual') # Usar empleado_actual
+        empleado = attrs.get('empleado')
 
         # Validar que el usuario que califica sea el mismo del turno (si el turno tiene usuario)
-        if turno.usuario and self.context['request'].user != turno.usuario:
+        if turno.usuario and self.context.get('request', {}).user and self.context['request'].user != turno.usuario:
             raise serializers.ValidationError('No puede calificar un turno que no le pertenece.')
 
         if turno and servicio and turno.servicio.id != servicio.id:
             raise serializers.ValidationError({'servicio': 'El servicio no corresponde al turno indicado.'})
         
-        # El empleado_actual en la calificación debe ser el mismo que atendió el turno.
-        if turno and empleado_actual and turno.empleado_actual and turno.empleado_actual.id != empleado_actual.id:
-            raise serializers.ValidationError({'empleado_actual': 'El empleado no corresponde al que atendió el turno.'})
-        elif turno and not empleado_actual and turno.empleado_actual:
-             # Si el turno tiene un empleado_actual pero no se provee en la calificación
-             attrs['empleado_actual'] = turno.empleado_actual
-        elif turno and empleado_actual and not turno.empleado_actual:
+        # El empleado en la calificación debe ser el mismo que atendió el turno.
+        if turno and empleado and turno.empleado and turno.empleado.usuario.id != empleado.usuario.id:
+            raise serializers.ValidationError({'empleado': 'El empleado no corresponde al que atendió el turno.'})
+        elif turno and not empleado and turno.empleado:
+             # Si el turno tiene un empleado pero no se provee en la calificación
+             attrs['empleado'] = turno.empleado
+        elif turno and empleado and not turno.empleado:
             # Esto no debería pasar si el turno está finalizado y fue atendido por alguien
             pass
 

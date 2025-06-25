@@ -1,6 +1,7 @@
 import random
 from django.utils import timezone
 from django.db import transaction
+from django.db import models
 from django.db.models import Count, Min, F
 from .models import Turno, ColaTurnos
 from apps.core.models import Servicio, Sucursal
@@ -39,19 +40,63 @@ class GestorTurnos:
     @staticmethod
     def calcular_tiempo_espera(servicio, sucursal):
         """
-        Calcula el tiempo estimado de espera para un nuevo turno
+        Calcula el tiempo estimado de espera para un nuevo turno basado en:
+        - Cantidad de turnos en espera para el servicio
+        - Tiempo promedio real de atención del servicio
+        - Cantidad de empleados activos atendiendo ese servicio
         """
-        # Obtener cantidad de turnos en espera para este servicio
-        turnos_en_espera = Turno.objects.filter(
+        from django.db.models import Avg, Count, Q
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # 1. Obtener turnos en espera para este servicio en esta sucursal
+        turnos_en_espera = ColaTurnos.objects.filter(
+            servicio=servicio,
+            turno__sucursal=sucursal,
+            activo=True
+        ).count()
+
+        # 2. Calcular tiempo promedio real de atención (últimas 24 horas)
+        ayer = timezone.now() - timedelta(days=1)
+        tiempo_promedio_atencion = Turno.objects.filter(
             servicio=servicio,
             sucursal=sucursal,
-            estado=Turno.EstadoTurno.EN_ESPERA
+            estado=Turno.EstadoTurno.FINALIZADO,
+            fecha_finalizacion__gte=ayer,
+            fecha_inicio_atencion__isnull=False,
+            fecha_finalizacion__isnull=False
+        ).aggregate(
+            promedio=Avg(
+                models.F('fecha_finalizacion') - models.F('fecha_inicio_atencion')
+            )
+        )['promedio']
+
+        # Si no hay datos históricos, usar el tiempo estimado configurado
+        if not tiempo_promedio_atencion:
+            tiempo_promedio_atencion = timedelta(minutes=servicio.tiempo_estimado_atencion)
+
+        # 3. Contar empleados activos atendiendo este servicio
+        empleados_activos = servicio.empleados.filter(
+            estado_conexion='ACTIVO',
+            sucursal=sucursal
+        ).exclude(
+            turnos_atendidos__estado=Turno.EstadoTurno.EN_ATENCION
         ).count()
-        
-        # Tiempo estimado = turnos en espera * tiempo promedio de atención del servicio
-        tiempo_espera = turnos_en_espera * servicio.tiempo_estimado_atencion
-        
-        return tiempo_espera
+
+        # Si no hay empleados activos, asumir al menos 1 para evitar división por cero
+        empleados_activos = max(empleados_activos, 1)
+
+        # 4. Calcular tiempo estimado total
+        tiempo_espera = (
+            (turnos_en_espera * tiempo_promedio_atencion.total_seconds()) / 
+            (empleados_activos * 60)  # Convertir a minutos
+        )
+
+        # 5. Aplicar factor de seguridad (10% adicional)
+        tiempo_espera *= 1.1
+
+        # Redondear al minuto más cercano
+        return round(tiempo_espera)
 
     @staticmethod
     def verificar_disponibilidad(servicio, sucursal):
@@ -61,7 +106,7 @@ class GestorTurnos:
         return (
             servicio.activo and 
             sucursal.activa and 
-            servicio.sucursales.filter(id=sucursal.id).exists()
+            servicio.sucursal == sucursal
         )
 
     @staticmethod
@@ -70,7 +115,7 @@ class GestorTurnos:
         Verifica si el usuario ya tiene turnos activos en el servicio y sucursal
         """
         if not usuario:
-            return True  # Usuarios anónimos pueden crear turnos
+            return True  
             
         estados_activos = [
             Turno.EstadoTurno.EN_ESPERA,
@@ -145,7 +190,7 @@ class GestorTurnos:
         # Crear entrada en la cola
         posicion = ColaTurnos.objects.filter(
             servicio=servicio,
-            sucursal=sucursal,
+            turno__sucursal=sucursal,
             activo=True
         ).count() + 1
         
@@ -153,9 +198,10 @@ class GestorTurnos:
             turno=turno,
             servicio=servicio,
             posicion_cola=posicion,
-            tiempo_espera_estimado=tiempo_espera
+            tiempo_espera_estimado=tiempo_espera,
+            activo=True
         )
-        
+
         return turno
 
     @staticmethod
@@ -173,8 +219,7 @@ class GestorTurnos:
         ).select_related(
             'servicio', 'sucursal'
         ).order_by(
-            'servicio__prioridad',  # Primero por prioridad del servicio
-            'fecha_creacion'        # Luego por orden de llegada
+            'fecha_creacion'        # Ordenar por orden de llegada
         ).first()
         
         return siguiente_turno
@@ -201,12 +246,49 @@ class GestorTurnos:
             # Reordenar la cola
             ColaTurnos.objects.filter(
                 servicio=turno.servicio,
-                sucursal=turno.sucursal,
+                turno__sucursal=turno.sucursal,
                 activo=True,
                 posicion_cola__gt=cola_turno.posicion_cola
             ).update(posicion_cola=F('posicion_cola') - 1)
 
         except ColaTurnos.DoesNotExist:
             pass
+
+        return turno
+
+    @staticmethod
+    @transaction.atomic
+    def transferir_turno(turno, nuevo_servicio, empleado):
+        """
+        Transfiere un turno a otro servicio y lo coloca en la cola correspondiente
+        """
+        # Verificar que el turno esté en atención por el empleado
+        if turno.estado != Turno.EstadoTurno.EN_ATENCION or turno.empleado != empleado:
+            raise ValueError("El turno debe estar en atención por el empleado actual")
+
+        # Actualizar el turno
+        turno.servicio = nuevo_servicio
+        turno.estado = Turno.EstadoTurno.EN_ESPERA
+        turno.empleado = None
+        turno.fecha_inicio_atencion = None
+        turno.save()
+
+        # Actualizar cola
+        ColaTurnos.objects.filter(turno=turno, activo=True).update(activo=False)
+
+        # Calcular nueva posición en cola
+        nueva_posicion = ColaTurnos.objects.filter(
+            servicio=nuevo_servicio,
+            activo=True
+        ).count() + 1
+
+        # Crear nueva entrada en la cola
+        ColaTurnos.objects.create(
+            turno=turno,
+            servicio=nuevo_servicio,
+            posicion_cola=nueva_posicion,
+            tiempo_espera_estimado=nuevo_servicio.tiempo_estimado_atencion * nueva_posicion,
+            activo=True
+        )
 
         return turno

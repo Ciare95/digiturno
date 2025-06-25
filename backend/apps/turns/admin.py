@@ -1,13 +1,17 @@
 from django.contrib import admin
+from django.db.models import Count
+from django.utils.html import format_html
 from .models import Turno, CalificacionServicio, ColaTurnos, Notificacion, EstadisticaEmpleado
 
 
 @admin.register(Turno)
 class TurnoAdmin(admin.ModelAdmin):
     """Configuración del administrador para el modelo Turno"""
-    list_display = ('numero_turno', 'servicio', 'sucursal', 'estado', 'fecha_creacion', 'empleado')
-    list_filter = ('estado', 'servicio', 'sucursal', 'es_agendado')
-    search_fields = ('numero_turno', 'observaciones')
+    list_display = ('numero_turno', 'servicio', 'sucursal', 'estado', 
+                   'tiempo_espera', 'usuario', 'fecha_creacion')
+    list_filter = ('estado', 'servicio', 'sucursal', 'es_agendado', 
+                  'fecha_creacion', 'fecha_finalizacion')
+    search_fields = ('numero_turno', 'usuario__username', 'usuario__email')
     date_hierarchy = 'fecha_creacion'
     ordering = ('-fecha_creacion',)
     fieldsets = (
@@ -28,6 +32,15 @@ class TurnoAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('fecha_creacion',)
+
+    def tiempo_espera(self, obj):
+        if obj.tiempo_espera_estimado:
+            return f"{obj.tiempo_espera_estimado.total_seconds() / 60:.0f} min"
+        return "-"
+    tiempo_espera.short_description = "Tiempo de espera"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('usuario', 'servicio', 'sucursal')
 
 
 @admin.register(CalificacionServicio)

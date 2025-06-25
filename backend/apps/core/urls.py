@@ -20,7 +20,7 @@ urlpatterns = [
     
     # Rutas para sucursales
     path('sucursales/', ListarSucursalesView.as_view(), name='listar_sucursales'),
-
-    # Incluir rutas del router
+    
+    # Rutas de administración
     path('', include(router.urls)),
 ]
