@@ -23,3 +23,12 @@ urlpatterns = [    path('admin/', admin.site.urls),
     path('api/', include('apps.turns.urls')),  # Incluir URLs de la aplicación turns
     path('api/', include('apps.reports.urls')),  # Incluir URLs de la aplicación reports
 ]
+
+# Agregar URLs de debug_toolbar solo en modo DEBUG
+from django.conf import settings
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ]
