@@ -1,24 +1,31 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Empleado, Administrador
+from .models import Usuario, Empleado, Administrador, UsuarioSinStaff
+
+
+@admin.register(UsuarioSinStaff)
+class UsuarioSinStaffAdmin(admin.ModelAdmin):
+    """Configuración simplificada para usuarios sin autenticación"""
+    list_display = ('cedula', 'telefono', 'email')
+    search_fields = ('cedula', 'telefono', 'email')
+    fields = ('cedula', 'telefono', 'email')
 
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
     """Configuración del administrador para el modelo Usuario personalizado"""
-    list_display = ('username', 'email', 'first_name', 'last_name', 'telefono', 'cedula', 'is_staff')
+    list_display = ('username', 'email', 'is_staff')
     list_filter = ('is_staff', 'is_active', 'is_superuser')
-    search_fields = ('username', 'email', 'first_name', 'last_name', 'cedula')
+    search_fields = ('username', 'email')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Información personal', {'fields': ('first_name', 'last_name', 'email', 'telefono', 'cedula')}),
-        ('Permisos', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Fechas importantes', {'fields': ('last_login', 'date_joined', 'ultimo_acceso')}),
+        ('Información básica', {'fields': ('email',)}),
+        ('Permisos', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'first_name', 'last_name', 'telefono', 'cedula'),
+            'fields': ('username', 'email', 'password1', 'password2'),
         }),
     )
 
