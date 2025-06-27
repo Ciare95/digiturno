@@ -2,17 +2,26 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+class UsuarioSinStaff(models.Model):
+    """Modelo simplificado para usuarios que no necesitan autenticación"""
+    cedula = models.CharField(_("cédula"), max_length=20, unique=True)
+    telefono = models.CharField(_("teléfono"), max_length=15)
+    email = models.EmailField(_("correo electrónico"), blank=True, null=True)
+
+    class Meta:
+        db_table = 'usuarios_sin_staff'
+        verbose_name = _('usuario sin staff')
+        verbose_name_plural = _('usuarios sin staff')
+        ordering = ['id']
+
+    def __str__(self):
+        return self.cedula
+
+
 class Usuario(AbstractUser):
-    # AbstractUser ya incluye: username, first_name, last_name, email, password,
-    # is_staff, is_active, date_joined.
-    # Campos de tu tabla 'usuarios' que no están directamente en AbstractUser o que queremos añadir:
     telefono = models.CharField(_("teléfono"), max_length=15, blank=True, null=True)
     cedula = models.CharField(_("cédula"), max_length=20, unique=True, blank=True, null=True)
     ultimo_acceso = models.DateTimeField(_("último acceso"), blank=True, null=True)
-
-    # Si deseas usar el email como campo de login principal:
-    # USERNAME_FIELD = 'email'
-    # REQUIRED_FIELDS = ['username'] # O solo ['first_name', 'last_name'] si email es username
 
     class Meta:
         db_table = 'usuarios' 
@@ -30,6 +39,7 @@ class Usuario(AbstractUser):
     def nombre_completo(self):
         return self.get_nombre_completo()
 
+
 class Empleado(models.Model):
     """Modelo que representa a un empleado del sistema, vinculado a un usuario.
     Este modelo extiende las funcionalidades del usuario para incluir información específica del empleado."""
@@ -40,20 +50,24 @@ class Empleado(models.Model):
         related_name='perfil_empleado'
     )
     codigo_empleado = models.CharField(_("código de empleado"), max_length=20, unique=True)
+    
     sucursal = models.ForeignKey(
         'core.Sucursal',
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,  
         verbose_name=_("sucursal"),
-        null=True,  # Permitir null temporalmente
-        blank=True  # Permitir blank temporalmente
+        null=True,
+        blank=True
     )
-    # Añadir esta relación
+    
+    
     servicios = models.ManyToManyField(
         'core.Servicio',
+        through='EmpleadoServicio',  
         related_name='empleados',
         verbose_name=_("servicios asignados"),
         blank=True
     )
+    
     ventanilla_asignada = models.CharField(_("ventanilla asignada"), max_length=10)
     estado_conexion = models.CharField(
         _("estado de conexión"),
@@ -62,9 +76,6 @@ class Empleado(models.Model):
         default='desconectado'
     )
     fecha_ingreso = models.DateField(_("fecha de ingreso"), blank=True, null=True)
-    # El campo 'activo' de tu tabla 'empleados' puede ser manejado por el 'is_active' del Usuario,
-    # o puedes añadir un campo booleano específico aquí si tiene un significado diferente.
-    # activo_empleado = models.BooleanField(default=True)
     configuracion_ui = models.JSONField(_("configuración UI"), default=dict, blank=True)
 
     class Meta:
@@ -101,3 +112,28 @@ class Administrador(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} (Admin)"
+    
+    
+class EmpleadoServicio(models.Model):
+    """Tabla intermedia para la relación empleado-servicio"""
+    empleado = models.ForeignKey(
+        Empleado,
+        on_delete=models.CASCADE,
+        related_name='asignaciones_servicio'
+    )
+    servicio = models.ForeignKey(
+        'core.Servicio',
+        on_delete=models.CASCADE,
+        related_name='asignaciones_empleado'
+    )
+    fecha_asignacion = models.DateTimeField(auto_now_add=True)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'empleados_servicios'
+        verbose_name = _('empleado servicio')
+        verbose_name_plural = _('empleados servicios')
+        unique_together = ('empleado', 'servicio')
+
+    def __str__(self):
+        return f"{self.empleado.codigo_empleado} - {self.servicio.nombre}"
