@@ -13,8 +13,9 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator
 
-# Configurar el entorno de Django antes de importar módulos que dependan de la configuración
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'digiturno.settings')
+# Obtener el entorno desde variable de entorno o usar 'prod' por defecto para ASGI
+environment = os.getenv('DJANGO_ENV', 'prod')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'config.settings.{environment}')
 
 # Importamos las rutas de WebSocket después de configurar el entorno
 import digiturno.routing

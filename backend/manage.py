@@ -7,7 +7,9 @@ sys.path.append('c:\\laragon\\www\\digiturno\\backend')
 
 def ejecutar_tareas_administrativas():
     """Ejecutar tareas administrativas principales."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'digiturno.settings')
+    # Obtener el entorno desde variable de entorno o usar 'dev' por defecto
+    environment = os.getenv('DJANGO_ENV', 'dev')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'config.settings.{environment}')
     
     try:
         from django.core.management import execute_from_command_line

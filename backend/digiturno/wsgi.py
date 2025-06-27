@@ -11,6 +11,8 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'digiturno.settings')
+# Obtener el entorno desde variable de entorno o usar 'prod' por defecto para WSGI
+environment = os.getenv('DJANGO_ENV', 'prod')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'config.settings.{environment}')
 
 application = get_wsgi_application()
