@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
 // Importamos las rutas y la app
-import router from './router/index' 
+import Router from './router/index' 
 import App from './App.vue'
 
 //Importamos los estilos con tailwind
@@ -12,6 +12,4 @@ import './styles/style.css'
 const Pinia = createPinia()
 const app = createApp(App)
 
-app.use(router)
-app.use(Pinia)
-app.mount('#app')
+app.use(Router).use(Pinia).mount('#app')
