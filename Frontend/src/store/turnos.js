@@ -16,6 +16,13 @@ export const useTurnosStore = defineStore('turnos', {
     },
     turnosAtendidos: (state) => {
       return [...state.turnos].filter(turno => turno.atendido);
+    },
+    // Obtener el número de turnos por servicio
+    conteoPorServicio: (state) => {
+      return state.turnos.reduce((acc, turno) => {
+        acc[turno.servicio] = (acc[turno.servicio] || 0) + 1;
+        return acc;
+      }, {});
     }
   },
 
