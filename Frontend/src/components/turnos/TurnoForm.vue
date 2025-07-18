@@ -95,7 +95,6 @@
             required
             class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Ingrese su nombre completo"
-            :disabled="!turnoData.servicio"
           >
         </div>
         
@@ -107,7 +106,6 @@
             required
             class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Ingrese su número de documento"
-            :disabled="!turnoData.servicio"
           >
         </div>
       </div>
@@ -141,7 +139,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['update:sucursal', 'update:servicio']);
+const emit = defineEmits(['update:sucursal', 'update:servicio', 'turno-solicitado']);
 
 const turnosStore = useTurnosStore();
 
@@ -201,18 +199,15 @@ const solicitarTurno = async () => {
     };
 
     // Enviar al store
-    await turnosStore.solicitarTurno(nuevoTurno);
+    await turnosStore.agregarTurno(nuevoTurno);
     
-    // Resetear el formulario
-    turnoData.value = {
-      sucursalId: turnoData.value.sucursalId, // Mantener la sucursal seleccionada
-      servicio: '',
-      nombre: '',
-      documento: ''
-    };
+    // Emitir evento con los datos del turno generado
+    emit('turno-solicitado', nuevoTurno);
     
-    // Mostrar notificación de éxito
-    alert(`¡Turno solicitado con éxito!\nTu código es: ${nuevoTurno.codigo}`);
+    // Limpiar el formulario
+    turnoData.value.servicio = '';
+    turnoData.value.nombre = '';
+    turnoData.value.documento = '';
   } catch (error) {
     console.error('Error al solicitar turno:', error);
     alert(error.message || 'Ocurrió un error al solicitar el turno. Por favor, intente nuevamente.');

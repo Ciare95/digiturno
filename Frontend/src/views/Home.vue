@@ -4,103 +4,207 @@
     <AppHeader />
 
     <!-- Contenido Principal -->
-    <main class="flex-grow flex items-center justify-center py-12 px-4">
-      <div class="w-full max-w-4xl">
-        <!-- Tarjeta Principal -->
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <!-- Encabezado -->
-          <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 text-center">
-            <h1 class="text-3xl font-bold text-white">Solicita tu Turno</h1>
-            <p class="text-blue-100 mt-2">Selecciona tu sucursal y servicio</p>
-          </div>
-          
-          <!-- Contenido -->
-          <div class="p-8">
-            <!-- Selector de Sucursal y Servicio -->
-            <TurnoForm 
-              :sucursales="sucursales" 
-              :servicios="servicios" 
-              class="max-w-2xl mx-auto"
-              @update:sucursal="seleccionarSucursal"
-              @update:servicio="seleccionarServicio"
-            />
-            
-            <!-- Información de la Sucursal -->
-            <div v-if="sucursalSeleccionada" class="mt-8 bg-blue-50 rounded-xl p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-3">Información de la Sucursal</h3>
-              <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 class="font-medium text-gray-700">Dirección</h4>
-                  <p class="text-gray-600 mt-1">{{ sucursalSeleccionada.direccion }}</p>
-                  <div class="mt-3 flex items-start">
-                    <svg class="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <div>
-                      <p class="text-sm text-gray-500">{{ sucursalSeleccionada.ubicacion }}</p>
-                      <a :href="'https://maps.google.com/?q=' + encodeURIComponent(sucursalSeleccionada.direccion)" 
-                         target="_blank" 
-                         class="text-blue-600 hover:text-blue-800 text-sm font-medium mt-1 inline-flex items-center">
-                        Ver en mapa
-                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                        </svg>
-                      </a>
+    <main class="flex-grow py-12 px-4">
+      <div class="max-w-7xl mx-auto">
+        <!-- Encabezado -->
+        <div class="text-center mb-12">
+          <h1 class="text-4xl font-bold text-gray-900 mb-2">Sistema de Turnos</h1>
+          <p class="text-xl text-gray-600">Solicita tu turno de forma rápida y sencilla</p>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+          <!-- Columna del formulario -->
+          <div class="lg:col-span-2">
+            <div class="flex flex-col lg:flex-row gap-6">
+              <!-- Formulario de turno -->  
+              <div class="flex-1 bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6">
+                  <h2 class="text-2xl font-bold text-white">Solicita tu Turno</h2>
+                  <p class="text-blue-100 mt-1">Completa el formulario para reservar tu turno</p>
+                </div>
+                
+                <div class="p-6">
+                  <TurnoForm 
+                    :sucursales="sucursales" 
+                    :servicios="servicios" 
+                    @update:sucursal="seleccionarSucursal"
+                    @update:servicio="seleccionarServicio"
+                    @turno-solicitado="mostrarAlertaTurno"
+                  />
+                </div>
+              </div>
+
+              <!-- Tarjeta de turno generado -->
+              <div v-if="ultimoTurno" class="lg:w-80 flex-shrink-0">
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden h-full">
+                  <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
+                    <h2 class="text-xl font-bold text-white">Tu Turno</h2>
+                  </div>
+                  
+                  <div class="p-6 text-center">
+                    <div class="mb-6">
+                      <p class="text-sm font-medium text-gray-500">Número de turno</p>
+                      <div class="mt-2 bg-green-50 rounded-lg p-4">
+                        <span class="text-4xl font-bold text-green-600">{{ ultimoTurno.codigo }}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-4 text-left">
+                      <div>
+                        <p class="text-sm font-medium text-gray-500">Servicio</p>
+                        <p class="font-medium">
+                          {{ servicios.find(s => s.id === ultimoTurno.servicio)?.nombre || ultimoTurno.servicio }}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <p class="text-sm font-medium text-gray-500">Sucursal</p>
+                        <p class="font-medium">{{ ultimoTurno.sucursal }}</p>
+                      </div>
+                      
+                      <div>
+                        <p class="text-sm font-medium text-gray-500">Tiempo de espera</p>
+                        <p class="font-medium">
+                          <span class="text-blue-600">{{ calcularTiempoEspera(ultimoTurno) }} minutos</span>
+                        </p>
+                      </div>
+                      
+                      <div class="pt-4 mt-4 border-t border-gray-100">
+                        <p class="text-sm text-gray-500">
+                          <svg class="h-5 w-5 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                          </svg>
+                          Hora de solicitud: {{ new Date(ultimoTurno.horaSolicitud).toLocaleTimeString() }}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- Sección de turnos en espera -->
+            <div v-if="sucursalSeleccionada" class="mt-8 bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Turnos en Espera</h3>
+              </div>
+              <div class="p-6">
+                <TurnosList :servicios="servicios" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna de información -->
+          <div class="space-y-6">
+            <!-- Mensaje de confirmación -->
+            <div v-if="ultimoTurno" class="mt-4">
+              <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium text-blue-800">¡Turno generado con éxito!</p>
+                    <p class="text-sm text-blue-700 mt-1">Tu turno ha sido registrado correctamente.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de la Sucursal -->
+            <div v-if="sucursalSeleccionada" class="bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Información de la Sucursal</h3>
+              </div>
+              <div class="p-6 space-y-4">
                 <div>
-                  <h4 class="font-medium text-gray-700">Horario de Atención</h4>
+                  <h4 class="text-sm font-medium text-gray-500">Sucursal</h4>
+                  <p class="mt-1 text-gray-900 font-medium">{{ sucursalSeleccionada.nombre }}</p>
+                </div>
+                
+                <div>
+                  <h4 class="text-sm font-medium text-gray-500">Dirección</h4>
+                  <p class="mt-1 text-gray-900">{{ sucursalSeleccionada.direccion }}</p>
+                  <p class="text-sm text-gray-500">{{ sucursalSeleccionada.ubicacion }}</p>
+                  <a :href="'https://maps.google.com/?q=' + encodeURIComponent(sucursalSeleccionada.direccion)" 
+                     target="_blank" 
+                     class="mt-2 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800">
+                    Ver en mapa
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                  </a>
+                </div>
+                
+                <div>
+                  <h4 class="text-sm font-medium text-gray-500">Horario de Atención</h4>
                   <ul class="mt-1 space-y-1">
                     <li v-for="(horario, dia) in sucursalSeleccionada.horario" :key="dia" class="flex justify-between">
                       <span class="text-gray-600">{{ dia }}:</span>
-                      <span class="font-medium">{{ horario }}</span>
+                      <span class="font-medium text-gray-900">{{ horario }}</span>
                     </li>
                   </ul>
-                  <div class="mt-3 flex items-start">
-                    <svg class="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <div>
-                      <p class="text-sm text-gray-500">Tiempo de espera estimado: {{ tiempoEsperaEstimado }} min</p>
-                      <p class="text-sm text-gray-500">Personas en espera: {{ personasEnEspera }}</p>
+                </div>
+                
+                <div class="pt-4 border-t border-gray-200">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-100 p-2 rounded-lg">
+                      <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm font-medium text-gray-900">Tiempo de espera estimado</p>
+                      <p class="text-2xl font-bold text-blue-600">{{ tiempoEsperaEstimado }} min</p>
+                      <p class="text-sm text-gray-500">{{ personasEnEspera }} personas en espera</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <!-- Información del Servicio -->
-            <div v-if="servicioSeleccionado" class="mt-6 bg-blue-50 rounded-xl p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-3">Detalles del Servicio</h3>
-              <div class="flex items-start">
-                <div class="p-3 rounded-lg mr-4" :class="servicioSeleccionado.color + ' bg-opacity-10'">
-                  <component :is="servicioSeleccionado.icono" class="h-6 w-6" :class="servicioSeleccionado.color" />
-                </div>
-                <div>
-                  <h4 class="text-lg font-medium text-gray-900">{{ servicioSeleccionado.nombre }}</h4>
-                  <p class="text-gray-600 mt-1">{{ servicioSeleccionado.descripcion }}</p>
-                  <div class="mt-3 grid grid-cols-2 gap-4">
-                    <div>
-                      <p class="text-sm text-gray-500">Tiempo estimado</p>
-                      <p class="font-medium">{{ servicioSeleccionado.tiempo }}</p>
-                    </div>
-                    <div>
-                      <p class="text-sm text-gray-500">Documentos requeridos</p>
-                      <p class="font-medium">{{ servicioSeleccionado.documentos }}</p>
+            <div v-if="servicioSeleccionado" class="bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Detalles del Servicio</h3>
+              </div>
+              <div class="p-6">
+                <div class="flex items-start">
+                  <div class="p-3 rounded-lg mr-4" :class="servicioSeleccionado.color + ' bg-opacity-10'">
+                    <component :is="servicioSeleccionado.icono" class="h-6 w-6" :class="servicioSeleccionado.color" />
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="text-lg font-semibold text-gray-900">{{ servicioSeleccionado.nombre }}</h4>
+                    <p class="mt-1 text-gray-600">{{ servicioSeleccionado.descripcion }}</p>
+                    
+                    <div class="mt-4 space-y-3">
+                      <div class="flex items-start">
+                        <svg class="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                          <p class="text-sm font-medium text-gray-500">Tiempo estimado</p>
+                          <p class="text-gray-900">{{ servicioSeleccionado.tiempo }}</p>
+                        </div>
+                      </div>
+                      
+                      <div class="flex items-start">
+                        <svg class="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <div>
+                          <p class="text-sm font-medium text-gray-500">Documentos requeridos</p>
+                          <p class="text-gray-900">{{ servicioSeleccionado.documentos }}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Turnos en Espera -->
-        <div v-if="sucursalSeleccionada" class="mt-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4">Turnos en Espera</h2>
-          <TurnosList :servicios="servicios" class="max-w-2xl mx-auto" />
         </div>
       </div>
     </main>
@@ -165,6 +269,7 @@ const turnosStore = useTurnosStore();
 // Estado reactivo
 const sucursalSeleccionada = ref(null);
 const servicioSeleccionado = ref(null);
+const ultimoTurno = ref(null);
 
 // Datos de los servicios
 const servicios = [
@@ -271,6 +376,34 @@ const personasEnEspera = computed(() => {
   if (!sucursalSeleccionada.value) return 0;
   return turnosStore.turnosEnEspera.filter(t => t.sucursalId === sucursalSeleccionada.value.id).length;
 });
+
+// Mostrar alerta cuando se genera un nuevo turno
+const mostrarAlertaTurno = (nuevoTurno) => {
+  ultimoTurno.value = nuevoTurno;
+  
+  // Ocultar la alerta después de 10 segundos
+  setTimeout(() => {
+    ultimoTurno.value = null;
+  }, 10000);
+};
+
+// Calcular tiempo de espera estimado para el turno
+const calcularTiempoEspera = (turno) => {
+  if (!turno || !sucursalSeleccionada.value) return 0;
+  
+  const turnosEnEspera = turnosStore.turnosEnEspera.filter(t => 
+    t.sucursalId === sucursalSeleccionada.value.id && 
+    t.servicio === turno.servicio
+  );
+  
+  // Encontrar la posición del turno actual
+  const posicion = turnosEnEspera.findIndex(t => t.id === turno.id);
+  
+  if (posicion === -1) return 0;
+  
+  // Calcular tiempo estimado (5 minutos por turno por delante)
+  return (posicion + 1) * 5;
+};
 
 // Íconos para las estadísticas
 const ClockIcon = {
