@@ -1,4 +1,5 @@
 import random
+import string
 from django.utils import timezone
 from django.db import transaction
 from django.db import models
@@ -14,27 +15,37 @@ class GestorTurnos:
     @staticmethod
     def generar_numero_turno(servicio, sucursal):
         """
-        Genera un número de turno único con el formato: LETRA-NÚMERO
-        donde LETRA corresponde al servicio y NÚMERO es aleatorio de 3 dígitos
+        Genera un número de turno único con el formato: LETRA-CÓDIGO
+        donde LETRA corresponde al servicio y CÓDIGO es una combinación
+        aleatoria de 3 números y 1 letra.
         """
         # Obtener la letra del servicio
-        letra = servicio.codigo_servicio[0].upper()
-        
-        # Generar número aleatorio de 3 dígitos
+        letra_servicio = servicio.codigo_servicio[0].upper()
+
+        # Generar código aleatorio de 3 números y 1 letra
         while True:
-            numero = str(random.randint(1, 999)).zfill(3)
-            numero_turno = f"{letra}{numero}"
-            
+            # 3 números aleatorios
+            numeros = [str(random.randint(0, 9)) for _ in range(3)]
+            # 1 letra aleatoria
+            letra_aleatoria = random.choice(string.ascii_uppercase)
+
+            # Combinar y barajar
+            componentes = numeros + [letra_aleatoria]
+            random.shuffle(componentes)
+            sufijo_turno = "".join(componentes)
+
+            numero_turno = f"{letra_servicio}{sufijo_turno}"
+
             # Verificar que no exista este número de turno hoy
             existe = Turno.objects.filter(
                 numero_turno=numero_turno,
                 sucursal=sucursal,
                 fecha_creacion__date=timezone.now().date()
             ).exists()
-            
+
             if not existe:
                 break
-        
+
         return numero_turno
 
     @staticmethod

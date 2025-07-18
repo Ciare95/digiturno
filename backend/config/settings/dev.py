@@ -23,8 +23,16 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Configuración de logging para desarrollo
-LOGGING['loggers']['django']['level'] = 'DEBUG'
-LOGGING['loggers']['apps']['level'] = 'DEBUG'
+LOGGING['loggers']['django'] = {
+    'level': 'WARNING',
+    'handlers': ['console'],
+    'propagate': False
+}
+LOGGING['loggers']['django.db.backends'] = {'level': 'WARNING'}
+LOGGING['loggers']['django.template'] = {'level': 'WARNING'}
+LOGGING['loggers']['django.utils.autoreload'] = {'level': 'WARNING'}
+LOGGING['loggers']['apps'] = {'level': 'WARNING'}
+LOGGING['loggers']['debug_toolbar'] = {'level': 'WARNING'}
 
 # Configuración de caché para desarrollo (más rápido)
 CACHES = {
@@ -70,4 +78,4 @@ SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'] = timedelta(days=30)
 REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
     'rest_framework.renderers.JSONRenderer',
     'rest_framework.renderers.BrowsableAPIRenderer',  # Para desarrollo
-] 
+]
