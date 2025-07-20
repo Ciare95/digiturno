@@ -6,7 +6,8 @@ export const useTurnosStore = defineStore('turnos', {
     contadorTurnos: {
       caja: 0,
       asesoria: 0,
-      pagos: 0
+      pagos: 0,
+      informacion: 0
     }
   }),
 
@@ -31,10 +32,11 @@ export const useTurnosStore = defineStore('turnos', {
       const prefijos = {
         caja: 'C',
         asesoria: 'A',
-        pagos: 'P'
+        pagos: 'P',
+        informacion: 'I'
       };
       
-      this.contadorTurnos[servicio] += 1;
+      this.contadorTurnos[servicio] = (this.contadorTurnos[servicio] || 0) + 1;
       return `${prefijos[servicio]}${this.contadorTurnos[servicio].toString().padStart(3, '0')}`;
     },
 
@@ -45,12 +47,19 @@ export const useTurnosStore = defineStore('turnos', {
         servicio: datosTurno.servicio,
         nombre: datosTurno.nombre,
         documento: datosTurno.documento,
+        sucursalId: datosTurno.sucursalId,
+        sucursal: datosTurno.sucursal,
         horaSolicitud: new Date().toISOString(),
         atendido: false
       };
 
       this.turnos.unshift(nuevoTurno);
       return nuevoTurno;
+    },
+
+    async agregarTurno(datosTurno) {
+      // Método alias para mantener compatibilidad con el componente
+      return await this.solicitarTurno(datosTurno);
     },
 
     marcarAtendido(id) {
@@ -60,6 +69,5 @@ export const useTurnosStore = defineStore('turnos', {
         turno.horaAtencion = new Date().toISOString();
       }
     }
-  },
-  persist: true
+  }
 });

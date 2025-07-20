@@ -189,20 +189,17 @@ const solicitarTurno = async () => {
     // Obtener la sucursal seleccionada
     const sucursal = props.sucursales.find(s => s.id === turnoData.value.sucursalId);
     
-    // Crear el objeto de turno
-    const nuevoTurno = {
-      ...turnoData.value,
-      sucursal: sucursal.nombre,
-      horaSolicitud: new Date().toISOString(),
-      estado: 'pendiente',
-      codigo: generarCodigoTurno()
-    };
-
     // Enviar al store
-    await turnosStore.agregarTurno(nuevoTurno);
+    const turnoGenerado = await turnosStore.agregarTurno({
+      servicio: turnoData.value.servicio,
+      nombre: turnoData.value.nombre,
+      documento: turnoData.value.documento,
+      sucursalId: turnoData.value.sucursalId,
+      sucursal: sucursal.nombre
+    });
     
     // Emitir evento con los datos del turno generado
-    emit('turno-solicitado', nuevoTurno);
+    emit('turno-solicitado', turnoGenerado);
     
     // Limpiar el formulario
     turnoData.value.servicio = '';
@@ -214,10 +211,5 @@ const solicitarTurno = async () => {
   }
 };
 
-// Generar un código de turno único (ej: C-001)
-const generarCodigoTurno = () => {
-  const letraServicio = turnoData.value.sucursalId.charAt(0).toUpperCase();
-  const numero = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `${letraServicio}-${numero}`;
-};
+
 </script>
