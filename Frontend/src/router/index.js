@@ -5,6 +5,7 @@ import Home from '../views/Home.vue';
 import SolicitarTurno from "../views/SolicitarTurno.vue";
 import Login from "../views/Login.vue";
 import AdminDashboard from "../views/AdminDashboard.vue";
+import EmpleadoDashboard from "../views/EmpleadoDashboard.vue";
 
 //Creamos las rutas
 const routes = [
@@ -27,6 +28,11 @@ const routes = [
         path: '/admin',
         component: AdminDashboard,
         meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/empleado',
+        component: EmpleadoDashboard,
+        meta: { requiresAuth: true, requiresEmpleado: true }
     }
 ]
 
@@ -48,6 +54,9 @@ Router.beforeEach((to, from, next) => {
             next('/login');
         } else if (to.matched.some(record => record.meta.requiresAdmin) && userRole !== 'admin') {
             // Si la ruta requiere ser admin y el usuario no lo es, redirigir al home
+            next('/');
+        } else if (to.matched.some(record => record.meta.requiresEmpleado) && userRole !== 'empleado' && userRole !== 'admin') {
+            // Si la ruta es para empleados y el usuario no tiene permiso
             next('/');
         } else {
             next();

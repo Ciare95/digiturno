@@ -17,7 +17,7 @@
               </div>
             </div>
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <router-link to="/" class="border-b-2 border-b border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">
+              <router-link to="/" class="border-b-2 border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium">
                 Panel Principal
               </router-link>
             </div>
