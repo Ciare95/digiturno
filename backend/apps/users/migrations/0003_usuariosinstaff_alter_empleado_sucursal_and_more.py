@@ -31,26 +31,5 @@ class Migration(migrations.Migration):
             model_name='empleado',
             name='sucursal',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.sucursal', verbose_name='sucursal'),
-        ),
-        migrations.CreateModel(
-            name='EmpleadoServicio',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('fecha_asignacion', models.DateTimeField(auto_now_add=True)),
-                ('activo', models.BooleanField(default=True)),
-                ('empleado', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='asignaciones_servicio', to='users.empleado')),
-                ('servicio', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='asignaciones_empleado', to='core.servicio')),
-            ],
-            options={
-                'verbose_name': 'empleado servicio',
-                'verbose_name_plural': 'empleados servicios',
-                'db_table': 'empleados_servicios',
-                'unique_together': {('empleado', 'servicio')},
-            },
-        ),
-        migrations.AlterField(
-            model_name='empleado',
-            name='servicios',
-            field=models.ManyToManyField(blank=True, related_name='empleados', through='users.EmpleadoServicio', to='core.servicio', verbose_name='servicios asignados'),
-        ),
+        )
     ]
