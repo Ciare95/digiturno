@@ -1,6 +1,4 @@
 from rest_framework import generics, permissions, status, filters, viewsets
-from rest_framework.authentication import SessionAuthentication
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import ValidationError
@@ -15,7 +13,6 @@ class SucursalAdminViewSet(viewsets.ModelViewSet):
     """ViewSet para la gestión completa de sucursales por el administrador"""
     queryset = Sucursal.objects.all()
     serializer_class = SucursalSerializer
-    authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated, EsAdministrador]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['activa', 'ciudad', 'departamento']

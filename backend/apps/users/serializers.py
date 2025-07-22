@@ -137,13 +137,22 @@ class InicioSesionAdminSerializer(serializers.Serializer):
             if not usuario:
                 msg = _('No se pudo iniciar sesión con las credenciales proporcionadas.')
                 raise serializers.ValidationError(msg, code='authorization')
-            
-            # Verificar que el usuario es un administrador
-            try:
-                admin = Administrador.objects.get(usuario=usuario)
-            except Administrador.DoesNotExist:
-                msg = _('Este usuario no tiene permisos de administrador.')
-                raise serializers.ValidationError(msg, code='authorization')
+
+            # Si el usuario es superusuario, se le permite el acceso sin perfil de Administrador
+            if usuario.is_superuser:
+                # Crear un perfil de administrador temporal para la respuesta, si no existe
+                admin, _ = Administrador.objects.get_or_create(
+                    usuario=usuario,
+                    defaults={'nivel_acceso': 'super_admin'}
+                )
+            else:
+                # Verificar que el usuario tiene un perfil de administrador
+                try:
+                    admin = Administrador.objects.get(usuario=usuario)
+                except Administrador.DoesNotExist:
+                    msg = _('Este usuario no tiene permisos de administrador.')
+                    raise serializers.ValidationError(msg, code='authorization')
+        
         else:
             msg = _('Debe incluir "username" y "password".')
             raise serializers.ValidationError(msg, code='authorization')

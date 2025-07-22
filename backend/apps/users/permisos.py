@@ -19,9 +19,9 @@ class EsAdministrador(permissions.BasePermission):
     mensaje = 'El usuario debe ser un administrador para acceder a este recurso.'
     
     def has_permission(self, request, view):
-        # Verificar si el usuario está autenticado y es un administrador
+        # Verificar si el usuario está autenticado y es un administrador o un superusuario
         if request.user.is_authenticated:
-            return hasattr(request.user, 'perfil_administrador')
+            return hasattr(request.user, 'perfil_administrador') or request.user.is_superuser
         return False
 
 class EsUsuarioNormal(permissions.BasePermission):
