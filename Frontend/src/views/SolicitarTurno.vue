@@ -14,7 +14,7 @@
   
           <div class="grid lg:grid-cols-3 gap-8">
             <!-- Columna del formulario -->
-            <div class="lg:col-span-2">
+            <div class="lg:col-span-3">
               <div class="flex flex-col lg:flex-row gap-6">
                 <!-- Formulario de turno -->  
                 <div class="flex-1 bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -102,98 +102,6 @@
                   </div>
                 </div>
               </div>
-  
-              <!-- Información de la Sucursal -->
-              <div v-if="sucursalSeleccionada" class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                  <h3 class="text-lg font-semibold text-gray-800">Información de la Sucursal</h3>
-                </div>
-                <div class="p-6 space-y-4">
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-500">Sucursal</h4>
-                    <p class="mt-1 text-gray-900 font-medium">{{ sucursalSeleccionada.nombre }}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-500">Dirección</h4>
-                    <p class="mt-1 text-gray-900">{{ sucursalSeleccionada.direccion }}</p>
-                    <p class="text-sm text-gray-500">{{ sucursalSeleccionada.ubicacion }}</p>
-                    <a :href="'https://maps.google.com/?q=' + encodeURIComponent(sucursalSeleccionada.direccion)" 
-                       target="_blank" 
-                       class="mt-2 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800">
-                      Ver en mapa
-                      <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                      </svg>
-                    </a>
-                  </div>
-                  
-                  <div>
-                    <h4 class="text-sm font-medium text-gray-500">Horario de Atención</h4>
-                    <ul class="mt-1 space-y-1">
-                      <li v-for="(horario, dia) in sucursalSeleccionada.horario" :key="dia" class="flex justify-between">
-                        <span class="text-gray-600">{{ dia }}:</span>
-                        <span class="font-medium text-gray-900">{{ horario }}</span>
-                      </li>
-                    </ul>
-                  </div>
-                  
-                  <div class="pt-4 border-t border-gray-200">
-                    <div class="flex items-center">
-                      <div class="flex-shrink-0 bg-blue-100 p-2 rounded-lg">
-                        <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                      </div>
-                      <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">Tiempo de espera estimado</p>
-                        <p class="text-2xl font-bold text-blue-600">{{ tiempoEsperaEstimado }} min</p>
-                        <p class="text-sm text-gray-500">{{ personasEnEspera }} personas en espera</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-  
-              <!-- Información del Servicio -->
-              <div v-if="servicioSeleccionado" class="bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                  <h3 class="text-lg font-semibold text-gray-800">Detalles del Servicio</h3>
-                </div>
-                <div class="p-6">
-                  <div class="flex items-start">
-                    <div class="p-3 rounded-lg mr-4" :class="servicioSeleccionado.color + ' bg-opacity-10'">
-                      <component :is="servicioSeleccionado.icono" class="h-6 w-6" :class="servicioSeleccionado.color" />
-                    </div>
-                    <div class="flex-1">
-                      <h4 class="text-lg font-semibold text-gray-900">{{ servicioSeleccionado.nombre }}</h4>
-                      <p class="mt-1 text-gray-600">{{ servicioSeleccionado.descripcion }}</p>
-                      
-                      <div class="mt-4 space-y-3">
-                        <div class="flex items-start">
-                          <svg class="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                          </svg>
-                          <div>
-                            <p class="text-sm font-medium text-gray-500">Tiempo estimado</p>
-                            <p class="text-gray-900">{{ servicioSeleccionado.tiempo }}</p>
-                          </div>
-                        </div>
-                        
-                        <div class="flex items-start">
-                          <svg class="h-5 w-5 text-gray-400 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                          </svg>
-                          <div>
-                            <p class="text-sm font-medium text-gray-500">Documentos requeridos</p>
-                            <p class="text-gray-900">{{ servicioSeleccionado.documentos }}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -210,7 +118,6 @@
   import AppHeader from '@/components/layout/AppHeader.vue';
   import AppFooter from '@/components/layout/AppFooter.vue';
   import TurnoForm from '@/components/turnos/TurnoForm.vue';
-  import TurnosList from '@/components/turnos/TurnosList.vue';
   
   // Datos de las sucursales
   const sucursales = [
