@@ -4,10 +4,13 @@ from django.utils import timezone
 from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
-from apps.users.models.usuario import Usuario, Empleado
-from apps.turns.models.turno import Turno, ColaTurnos
+from apps.users.models.usuario import Usuario
+from apps.users.models.empleado import Empleado
+from apps.turns.models.turno import Turno
+from apps.turns.models.cola_turnos import ColaTurnos
 from apps.turns.services.logic import GestorTurnos
-from apps.core.models.core_model import Servicio, Sucursal
+from apps.core.models.servicio import Servicio
+from apps.core.models.sucursal import Sucursal
 
 
 class GestorTurnosTest(TestCase):

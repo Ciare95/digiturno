@@ -7,9 +7,13 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from unittest.mock import patch, MagicMock
 
-from apps.users.models.usuario import Usuario, Empleado
-from apps.turns.models.turno import Turno, CalificacionServicio, ColaTurnos
-from apps.core.models.core_model import Servicio, Sucursal
+from apps.users.models.usuario import Usuario
+from apps.users.models.empleado import Empleado
+from apps.turns.models.turno import Turno
+from apps.turns.models.calificacion_servicio import CalificacionServicio
+from apps.turns.models.cola_turnos import ColaTurnos
+from apps.core.models.servicio import Servicio
+from apps.core.models.sucursal import Sucursal
 from apps.turns.services.logic import GestorTurnos
 
 

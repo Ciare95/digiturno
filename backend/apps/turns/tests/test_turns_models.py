@@ -4,9 +4,15 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
 
-from apps.users.models.usuario import Usuario, Empleado
-from apps.turns.models.turno import Turno, CalificacionServicio, ColaTurnos, Notificacion, EstadisticaEmpleado
-from apps.core.models.core_model import Servicio, Sucursal
+from apps.users.models.usuario import Usuario
+from apps.users.models.empleado import Empleado
+from apps.turns.models.turno import Turno
+from apps.turns.models.calificacion_servicio import CalificacionServicio
+from apps.turns.models.cola_turnos import ColaTurnos
+from apps.turns.models.notificacion import Notificacion
+from apps.turns.models.estadistica_empleado import EstadisticaEmpleado
+from apps.core.models.servicio import Servicio
+from apps.core.models.sucursal import Sucursal
 
 
 class TurnoModelTest(TestCase):
