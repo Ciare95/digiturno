@@ -16,9 +16,9 @@ from .serializers import (
     TurnoSerializer, CrearTurnoSerializer, CalificacionServicioSerializer,
     TransferirTurnoSerializer, ColaTurnosSerializer, EstadisticasEmpleadoSerializer
 )
-from apps.users.permisos import EsEmpleado, EsAdministrador
-from apps.users.models import Empleado, Usuario
-from apps.core.models import Servicio, Sucursal
+from apps.users.permissions.es_admin import EsEmpleado, EsAdministrador
+from apps.users.models.usuario import Empleado, Usuario
+from apps.core.models.core_model import Servicio, Sucursal
 from .logic import GestorTurnos
 
 

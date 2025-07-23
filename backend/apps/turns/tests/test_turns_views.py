@@ -7,10 +7,10 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from unittest.mock import patch, MagicMock
 
-from apps.users.models import Usuario, Empleado
-from apps.turns.models import Turno, CalificacionServicio, ColaTurnos
-from apps.core.models import Servicio, Sucursal
-from apps.turns.logic import GestorTurnos
+from apps.users.models.usuario import Usuario, Empleado
+from apps.turns.models.turno import Turno, CalificacionServicio, ColaTurnos
+from apps.core.models.core_model import Servicio, Sucursal
+from apps.turns.services.logic import GestorTurnos
 
 
 class CrearTurnoViewTest(TransactionTestCase):

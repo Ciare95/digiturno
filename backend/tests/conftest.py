@@ -6,6 +6,10 @@ import os
 import django
 from django.conf import settings
 from django.test.utils import get_runner
+from apps.users.models.usuario import Usuario
+from apps.users.models.usuario import Usuario, Empleado
+from apps.users.models.usuario import Usuario, Administrador
+from apps.turns.models.turno import Turno
 
 
 def pytest_configure():
@@ -37,7 +41,6 @@ def api_client():
 @pytest.fixture
 def authenticated_user():
     """Usuario autenticado para tests"""
-    from apps.users.models import Usuario
     return Usuario.objects.create_user(
         username='testuser',
         email='test@example.com',
@@ -50,7 +53,6 @@ def authenticated_user():
 @pytest.fixture
 def empleado_user():
     """Usuario empleado para tests"""
-    from apps.users.models import Usuario, Empleado
     from apps.core.models import Sucursal
     
     user = Usuario.objects.create_user(
@@ -80,7 +82,6 @@ def empleado_user():
 @pytest.fixture
 def admin_user():
     """Usuario administrador para tests"""
-    from apps.users.models import Usuario, Administrador
     
     user = Usuario.objects.create_user(
         username='admin',
@@ -126,7 +127,6 @@ def servicio_test(sucursal_test):
 @pytest.fixture
 def turno_test(authenticated_user, servicio_test, sucursal_test):
     """Turno de prueba"""
-    from apps.turns.models import Turno
     return Turno.objects.create(
         numero_turno='T001',
         servicio=servicio_test,

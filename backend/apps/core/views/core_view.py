@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db.models import Q
 from .models import Sucursal, Servicio, Configuracion
 from .serializers import SucursalSerializer, ServicioSerializer, ConfiguracionSerializer
-from apps.users.permisos import EsAdministrador
+from apps.users.permissions.es_admin import EsAdministrador
 
 
 class SucursalAdminViewSet(viewsets.ModelViewSet):

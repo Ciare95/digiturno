@@ -7,10 +7,11 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from django.contrib.auth import get_user_model
 
-from apps.users.models import Usuario, Empleado, Administrador
-from apps.turns.models import Turno, CalificacionServicio
-from apps.core.models import Servicio, Sucursal
-from apps.reports.views import ReporteAvanzadoView
+from apps.users.models.usuario import Usuario, Empleado, Administrador
+from apps.turns.models.turno import Turno, CalificacionServicio
+from apps.core.models.core_model import Servicio, Sucursal
+from apps.reports.views.report_view import ReporteAvanzadoView
+from apps.reports.serializers.report_serializer import ReporteAvanzadoSerializer, DashboardAdminSerializer
 
 User = get_user_model()
 

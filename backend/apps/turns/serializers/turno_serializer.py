@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from .models import Turno, CalificacionServicio, ColaTurnos
-from apps.users.serializers import UsuarioSerializer
-from apps.core.serializers import ServicioSerializer, SucursalSerializer
-from apps.core.models import Servicio 
+from apps.users.serializers.usuario_serializer import UsuarioSerializer
+from apps.core.serializers.core_serializer import ServicioSerializer, SucursalSerializer
+from apps.core.models.core_model import Servicio
 from django.utils import timezone
 
 

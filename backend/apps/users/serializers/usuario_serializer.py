@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 from .models import Usuario, Empleado, Administrador
-from apps.core.models import Sucursal, Servicio
+from apps.core.models.core_model import Sucursal, Servicio
 
 class RegistroUsuarioSerializer(serializers.ModelSerializer):
     """Serializador para el registro de nuevos usuarios"""

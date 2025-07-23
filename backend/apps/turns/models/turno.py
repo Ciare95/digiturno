@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from apps.users.models import Usuario, Empleado  # Importar Empleado desde users
-from apps.core.models import Servicio, Sucursal
+from apps.users.models.usuario import Usuario, Empleado  # Importar Empleado desde users
+from apps.core.models.core_model import Servicio, Sucursal
 
 class Turno(models.Model):
     class EstadoTurno(models.TextChoices):

@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from django.db.models import Value as V
 from django.db.models.functions import Concat
 
-from apps.turns.models import Turno
-from apps.core.permissions import EsAdministrador
+from apps.turns.models.turno import Turno
+from apps.core.permissions.core_permission import EsAdministrador
 from .serializers import ReporteAvanzadoSerializer
 
 class ReporteAvanzadoView(generics.GenericAPIView):

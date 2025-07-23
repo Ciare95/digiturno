@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db import models
 from django.db.models import Count, Min, F
 from .models import Turno, ColaTurnos
-from apps.core.models import Servicio, Sucursal
+from apps.core.models.core_model import Servicio, Sucursal
 
 class GestorTurnos:
     """

@@ -4,9 +4,9 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework.test import APIRequestFactory
 
-from apps.users.models import Usuario, Empleado
-from apps.turns.models import Turno, CalificacionServicio
-from apps.core.models import Servicio, Sucursal
+from apps.users.models.usuario import Usuario, Empleado
+from apps.turns.models.turno import Turno, CalificacionServicio
+from apps.core.models.core_model import Servicio, Sucursal
 from apps.turns.serializers import (
     TurnoSerializer, CrearTurnoSerializer, CalificacionServicioSerializer,
     TransferirTurnoSerializer, ColaTurnosSerializer, EstadisticasEmpleadoSerializer
