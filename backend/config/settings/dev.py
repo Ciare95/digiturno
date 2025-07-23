@@ -4,6 +4,20 @@ Configuración de Django para el entorno de desarrollo.
 
 from .base import *
 
+# Se redefine el MIDDLEWARE para excluir explícitamente la protección CSRF.
+# Esta es la solución definitiva para el error 403 en el entorno de desarrollo,
+# permitiendo el uso de herramientas de API como Postman sin conflictos.
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware', # Excluido intencionalmente
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
 # Configuración específica para desarrollo
 DEBUG = True
 
@@ -57,11 +71,11 @@ CHANNEL_LAYERS = {
 # Configuración de email para desarrollo (consola)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Configuración de debug toolbar (opcional)
-if DEBUG:
-    INSTALLED_APPS += ['debug_toolbar']
-    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
-    INTERNAL_IPS = ['127.0.0.1', 'localhost']
+# Configuración de debug toolbar (deshabilitada para evitar conflictos con CSRF)
+# if DEBUG:
+#     INSTALLED_APPS += ['debug_toolbar']
+#     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
+#     INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 # Configuración de archivos estáticos para desarrollo
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
@@ -77,5 +91,4 @@ SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'] = timedelta(days=30)
 # Configuración de REST Framework para desarrollo
 REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
     'rest_framework.renderers.JSONRenderer',
-    'rest_framework.renderers.BrowsableAPIRenderer',  # Para desarrollo
 ]
