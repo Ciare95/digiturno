@@ -119,15 +119,19 @@
   import AppFooter from '@/components/layout/AppFooter.vue';
   import TurnoForm from '@/components/turnos/TurnoForm.vue';
   import { obtenerSucursales } from '@/services/Sucursales';
+  import { obtenerServicios } from '@/services/Servicios';
 
 
   const sucursales = ref([]);
+  const servicios = ref([]);
   
   async function obtenerData() {
     try {
         sucursales.value = await obtenerSucursales();
+        servicios.value = await obtenerServicios();
     } catch (error) {
         sucursales.value = [];
+        servicios.value = [];
         console.error('Error al obtener sucursales:', error);
     }
   }
@@ -141,74 +145,10 @@
   const servicioSeleccionado = ref(null);
   const ultimoTurno = ref(null);
   
-  // Datos de los servicios
-  const servicios = [
-    {
-      id: 'caja',
-      nombre: 'Atención en Caja',
-      descripcion: 'Realiza pagos, depósitos y consulta de saldos',
-      tiempo: '5-10 min',
-      documentos: 'INE y comprobante de pago',
-      color: 'bg-green-500',
-      icono: {
-        template: `
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-          </svg>
-        `
-      }
-    },
-    {
-      id: 'asesoria',
-      nombre: 'Asesoría Personalizada',
-      descripcion: 'Atención personalizada para resolver dudas sobre nuestros servicios',
-      tiempo: '15-20 min',
-      documentos: 'INE y documentación relacionada',
-      color: 'bg-purple-500',
-      icono: {
-        template: `
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        `
-      }
-    },
-    {
-      id: 'pagos',
-      nombre: 'Pagos de Servicios',
-      descripcion: 'Realiza el pago de servicios como luz, agua, teléfono, etc.',
-      tiempo: '5-8 min',
-      documentos: 'Recibo del servicio a pagar',
-      color: 'bg-amber-500',
-      icono: {
-        template: `
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-          </svg>
-        `
-      }
-    },
-    {
-      id: 'informacion',
-      nombre: 'Información General',
-      descripcion: 'Solicita información sobre trámites y requisitos',
-      tiempo: '3-5 min',
-      documentos: 'Ninguno',
-      color: 'bg-blue-500',
-      icono: {
-        template: `
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        `
-      }
-    }
-  ];
-  
   // Filtra los servicios disponibles según la sucursal seleccionada
   const serviciosDisponibles = computed(() => {
     if (!sucursalSeleccionada.value) return [];
-    return servicios.filter(servicio => 
+    return servicios.value.filter(servicio => 
       sucursalSeleccionada.value.servicios.includes(servicio.id)
     );
   });
@@ -227,11 +167,11 @@
   
   // Métodos para manejar la selección
   const seleccionarSucursal = (sucursalId) => {
-    sucursalSeleccionada.value = sucursales.find(s => s.id === sucursalId) || null;
+    sucursalSeleccionada.value = sucursales.value.find(s => s.id === sucursalId) || null;
   };
   
   const seleccionarServicio = (servicioId) => {
-    servicioSeleccionado.value = servicios.find(s => s.id === servicioId) || null;
+    servicioSeleccionado.value = servicios.value.find(s => s.id === servicioId) || null;
   };
   
   // Datos simulados para el tiempo de espera

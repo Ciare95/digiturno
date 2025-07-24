@@ -29,6 +29,7 @@
                         <div>
                             <h4 class="text-sm font-medium text-gray-500">Dirección</h4>
                             <p class="mt-1 text-gray-900">{{ sucursalSeleccionada . direccion }}</p>
+                            <p class="mt-1 text-gray-900">{{ sucursalSeleccionada . descripcion }}</p>
                             <p class="text-sm text-gray-500">{{ sucursalSeleccionada . ubicacion }}</p>
                             <a :href="'https://maps.google.com/?q=' + encodeURIComponent(sucursalSeleccionada.direccion)"
                                 target="_blank"
@@ -108,9 +109,9 @@
                         class="block w-full pl-4 pr-10 py-3 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg appearance-none bg-white"
                         :class="{ 'text-gray-500': !turnoData.servicio }">
                         <option value="" disabled selected>Selecciona un servicio</option>
-                        <option v-for="servicio in serviciosDisponibles" :key="servicio.id" :value="servicio.id"
+                        <option v-for="servicio in serviciosDeSucursal" :key="servicio.id" :value="servicio.id"
                             class="text-gray-900">
-                            {{ servicio . nombre }}
+                            {{ servicio.nombre }}
                         </option>
                     </select>
                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -223,7 +224,6 @@
 </template>
 
 <script setup>
-    import { obtenerSucursales } from '@/services/Sucursales';
     import {
         ref,
         computed,
@@ -324,4 +324,8 @@
             alert(error.message || 'Ocurrió un error al solicitar el turno. Por favor, intente nuevamente.');
         }
     };
+
+    const serviciosDeSucursal = computed(() => {
+      return sucursalSeleccionada.value?.servicios || [];
+    });
 </script>
