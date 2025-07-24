@@ -223,6 +223,7 @@
 </template>
 
 <script setup>
+    import { obtenerSucursales } from '@/services/Sucursales';
     import {
         ref,
         computed,
@@ -276,7 +277,6 @@
     const sucursalSeleccionada = computed(() => {
         return props.sucursales.find(s => s.id === turnoData.value.sucursalId) || null;
     });
-
 
     // Manejar selección de sucursal
     const seleccionarSucursal = () => {

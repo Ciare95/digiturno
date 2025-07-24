@@ -118,48 +118,21 @@
   import AppHeader from '@/components/layout/AppHeader.vue';
   import AppFooter from '@/components/layout/AppFooter.vue';
   import TurnoForm from '@/components/turnos/TurnoForm.vue';
+  import { obtenerSucursales } from '@/services/Sucursales';
+
+
+  const sucursales = ref([]);
   
-  // Datos de las sucursales
-  const sucursales = [
-    {
-      id: 'centro',
-      nombre: 'Sucursal Centro',
-      direccion: 'Av. Principal #123, Colonia Centro',
-      ubicacion: 'Entre Calle Juárez y Calle Hidalgo',
-      horario: {
-        'Lunes a Viernes': '9:00 AM - 6:00 PM',
-        'Sábado': '9:00 AM - 2:00 PM',
-        'Domingo': 'Cerrado'
-      },
-      telefono: '555-123-4567',
-      servicios: ['caja', 'asesoria', 'pagos', 'informacion']
-    },
-    {
-      id: 'norte',
-      nombre: 'Sucursal Norte',
-      direccion: 'Blvd. Las Américas #456, Col. Del Valle',
-      ubicacion: 'Cerca del Parque Central',
-      horario: {
-        'Lunes a Viernes': '8:30 AM - 5:30 PM',
-        'Sábado': '9:00 AM - 1:00 PM',
-        'Domingo': 'Cerrado'
-      },
-      telefono: '555-987-6543',
-      servicios: ['caja', 'pagos', 'informacion']
-    },
-    {
-      id: 'sur',
-      nombre: 'Sucursal Sur',
-      direccion: 'Calle Revolución #789, Col. Moderna',
-      ubicacion: 'Frente a Plaza Galerías',
-      horario: {
-        'Lunes a Sábado': '10:00 AM - 7:00 PM',
-        'Domingo': '10:00 AM - 2:00 PM'
-      },
-      telefono: '555-456-7890',
-      servicios: ['caja', 'asesoria', 'pagos', 'informacion']
+  async function obtenerData() {
+    try {
+        sucursales.value = await obtenerSucursales();
+    } catch (error) {
+        sucursales.value = [];
+        console.error('Error al obtener sucursales:', error);
     }
-  ];
+  }
+
+  obtenerData();
   
   const turnosStore = useTurnosStore();
   

@@ -17,7 +17,7 @@ const routes = [
     {
         path: '/solicitar-turno',
         component: SolicitarTurno,
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true },
     },
     {
         path: '/login',
