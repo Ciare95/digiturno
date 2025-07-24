@@ -1,7 +1,5 @@
 from django.contrib import admin
-
-from apps.core.models import DiasSemana
-from .models import Sucursal, Servicio, Configuracion
+from .models import Sucursal, Servicio, Configuracion, DiaSucursal
 from django.db.models import Count
 
 
@@ -60,3 +58,10 @@ class ConfiguracionAdmin(admin.ModelAdmin):
             'fields': ('categoria', 'sucursal', 'es_global')
         }),
     )
+
+@admin.register(DiaSucursal)
+class DiaSucursalAdmin(admin.ModelAdmin):
+    list_display = ('sucursal', 'dia_semana', 'hora_apertura', 'hora_cierre', 'activo')
+    list_filter = ('sucursal', 'dia_semana')
+    search_fields = ('sucursal__nombre', 'dia_semana__nombre')
+    ordering = ('sucursal', 'dia_semana')
