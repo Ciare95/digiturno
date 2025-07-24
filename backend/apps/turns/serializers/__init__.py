@@ -1,0 +1,6 @@
+from .crear_turno_serializer import CrearTurnoSerializer
+from .turno_serializer import TurnoSerializer
+from .cola_turnos_serializer import ColaTurnosSerializer
+from .calificar_servicio_serializer import CalificacionServicioSerializer
+from .transferir_turno_serializer import TransferirTurnoSerializer
+from .estadisticas_empleado_serializer import EstadisticasEmpleadoSerializer
