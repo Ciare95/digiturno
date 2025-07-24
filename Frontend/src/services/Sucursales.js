@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const URL = "http://127.0.0.1:8000/api/";
+const url = "http://127.0.0.1:8000/api/";
 
 /**
  * Obtiene la lista de sucursales desde la API.
@@ -8,17 +8,15 @@ const URL = "http://127.0.0.1:8000/api/";
  * @throws {Error} Lanza un error si no se puede obtener la lista de sucursales.
  */
 export async function obtenerSucursales() {
-  const response = await fetch('/api/sucursales/');
-  const text = await response.text();
-  console.log('Respuesta cruda:', text);
+  const response = await axios.get(url + 'sucursales/');
   try {
-    const data = JSON.parse(text);
+    const data = response.data;
     if (!data || !Array.isArray(data.results)) {
       throw new Error('La respuesta de la API no contiene un array de sucursales');
     }
     return data.results;
   } catch (e) {
-    console.error('No se pudo parsear la respuesta como JSON:', text);
+    console.error('No se pudo parsear la respuesta como JSON:', response.data);
     throw e;
   }
 }
