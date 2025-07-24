@@ -7,8 +7,6 @@ class Servicio(models.Model):
     codigo_servicio = models.CharField(max_length=20, verbose_name='Código Servicio')
     sucursal = models.ForeignKey(Sucursal, on_delete=models.CASCADE, verbose_name='Sucursal')
     tiempo_estimado_atencion = models.PositiveIntegerField(default=15, verbose_name='Tiempo Estimado (min)')
-    color_identificacion = models.CharField(max_length=7, blank=True, null=True, verbose_name='Color')
-    icono = models.CharField(max_length=50, blank=True, null=True, verbose_name='Ícono')
     activo = models.BooleanField(default=True, verbose_name='Activo')
 
     class Meta:

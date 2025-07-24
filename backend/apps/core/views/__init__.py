@@ -3,3 +3,4 @@ from .servicio_admin_view_set import ServicioAdminViewSet
 from .sucursal_admin_view_set import SucursalAdminViewSet
 from .listar_sucursales_view import ListarSucursalesView
 from .listar_servicios_view import ListarServiciosView
+from .dias_semana_view import ListarDiasSemanaView

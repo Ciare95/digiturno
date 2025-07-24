@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from apps.core.models import DiasSemana
 from .models import Sucursal, Servicio, Configuracion
 from django.db.models import Count
 
@@ -37,7 +39,7 @@ class ServicioAdmin(admin.ModelAdmin):
             'fields': ('nombre', 'codigo_servicio', 'sucursal')
         }),
         ('Configuración', {
-            'fields': ('tiempo_estimado_atencion', 'color_identificacion', 'icono')
+            'fields': ('tiempo_estimado_atencion', )
         }),
     )
 
