@@ -11,7 +11,7 @@ from .serializers import (
     AdministradorSerializer,
     RegistroUsuarioSerializer
 )
-from .permisos import EsAdministrador
+from .permissions import EsAdministrador
 
 class GestionUsuariosAdminViewSet(viewsets.ModelViewSet):
     """
