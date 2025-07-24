@@ -8,8 +8,8 @@ from django.db.models import Value as V
 from django.db.models.functions import Concat
 
 from apps.turns.models.turno import Turno
-from apps.core.permissions.core_permission import EsAdministrador
-from .serializers import ReporteAvanzadoSerializer
+from apps.core.permissions import EsAdministrador
+from ..serializers import ReporteAvanzadoSerializer
 
 class ReporteAvanzadoView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated, EsAdministrador]
