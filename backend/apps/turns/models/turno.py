@@ -20,40 +20,25 @@ class Turno(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_('servicio')
     )
+
     sucursal = models.ForeignKey(
         'core.Sucursal',
         on_delete=models.CASCADE,
         verbose_name=_('sucursal')
     )
-    usuario = models.ForeignKey(
-        'users.Usuario',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        verbose_name=_('usuario')
-    )
-    empleado = models.ForeignKey(
-        'users.Empleado',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='turnos_atendidos',
-        verbose_name=_('empleado')
-    )
+
+    nombre_cliente = models.CharField('nombre del cliente', max_length=100, default="", blank=True)
+
+    numero_cedula = models.CharField('número de cédula', max_length=20, default="", blank=True)
+
     estado = models.CharField(
         max_length=20,
         choices=EstadoTurno.choices,
         default=EstadoTurno.EN_ESPERA,
         verbose_name=_('estado')
     )
+    
     fecha_creacion = models.DateTimeField(_('fecha de creación'), auto_now_add=True)
-    fecha_llamado = models.DateTimeField(_('fecha de llamado'), null=True, blank=True)
-    fecha_inicio_atencion = models.DateTimeField(_('fecha de inicio de atención'), null=True, blank=True)
-    fecha_finalizacion = models.DateTimeField(_('fecha de finalización'), null=True, blank=True)
-    es_agendado = models.BooleanField(_('es agendado'), default=False)
-    fecha_agendada = models.DateTimeField(_('fecha agendada'), null=True, blank=True)
-    tiempo_espera_estimado = models.DurationField(_('tiempo de espera estimado'), null=True, blank=True)
-    observaciones = models.TextField(_('observaciones'), blank=True)
 
     class Meta:
         db_table = 'turnos'

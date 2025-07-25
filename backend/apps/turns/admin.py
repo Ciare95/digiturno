@@ -7,29 +7,19 @@ from .models import Turno, CalificacionServicio, ColaTurnos, Notificacion, Estad
 @admin.register(Turno)
 class TurnoAdmin(admin.ModelAdmin):
     """Configuración del administrador para el modelo Turno"""
-    list_display = ('numero_turno', 'servicio', 'sucursal', 'estado', 
-                   'tiempo_espera', 'usuario', 'fecha_creacion')
-    list_filter = ('estado', 'servicio', 'sucursal', 'es_agendado', 
-                  'fecha_creacion', 'fecha_finalizacion')
-    search_fields = ('numero_turno', 'usuario__username', 'usuario__email')
+    list_display = ('numero_turno', 'servicio', 'sucursal', 'nombre_cliente', 
+                    'numero_cedula', 'estado')
+    list_filter = ('estado', 'servicio', 'sucursal', 'fecha_creacion')
+    search_fields = ('numero_turno', 'usuario__username', 'usuario__email',)
     date_hierarchy = 'fecha_creacion'
     ordering = ('-fecha_creacion',)
     fieldsets = (
         ('Información básica', {
-            'fields': ('numero_turno', 'servicio', 'sucursal', 'usuario')
+            'fields': ('numero_turno', 'servicio', 'sucursal', 'nombre_cliente', 'numero_cedula',)
         }),
         ('Estado', {
-            'fields': ('estado', 'prioridad', 'empleado')
-        }),
-        ('Fechas', {
-            'fields': ('fecha_creacion', 'fecha_llamado', 'fecha_inicio_atencion', 'fecha_finalizacion')
-        }),
-        ('Agendamiento', {
-            'fields': ('es_agendado', 'fecha_agendada', 'tiempo_espera_estimado')
-        }),
-        ('Notas', {
-            'fields': ('observaciones',)
-        }),
+            'fields': ('estado',)
+        })
     )
     readonly_fields = ('fecha_creacion',)
 
@@ -40,7 +30,7 @@ class TurnoAdmin(admin.ModelAdmin):
     tiempo_espera.short_description = "Tiempo de espera"
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('usuario', 'servicio', 'sucursal')
+        return super().get_queryset(request).select_related('servicio', 'sucursal')
 
 
 @admin.register(CalificacionServicio)
