@@ -7,10 +7,15 @@ from .models import Turno, CalificacionServicio, ColaTurnos, Notificacion, Estad
 @admin.register(Turno)
 class TurnoAdmin(admin.ModelAdmin):
     """Configuración del administrador para el modelo Turno"""
-    list_display = ('numero_turno', 'servicio', 'sucursal', 'nombre_cliente', 
-                    'numero_cedula', 'estado')
-    list_filter = ('estado', 'servicio', 'sucursal', 'fecha_creacion')
-    search_fields = ('numero_turno', 'usuario__username', 'usuario__email',)
+    list_display = (
+        'numero_turno', 'servicio', 'sucursal', 'nombre_cliente', 'numero_cedula', 'estado', 'fecha_creacion'
+    )
+    list_filter = (
+        'estado', 'servicio', 'sucursal', 'fecha_creacion',
+    )
+    search_fields = (
+        'numero_turno', 'nombre_cliente', 'numero_cedula'
+    )
     date_hierarchy = 'fecha_creacion'
     ordering = ('-fecha_creacion',)
     fieldsets = (
@@ -21,13 +26,32 @@ class TurnoAdmin(admin.ModelAdmin):
             'fields': ('estado',)
         })
     )
-    readonly_fields = ('fecha_creacion',)
+    readonly_fields = ('fecha_creacion', 'numero_turno')
 
-    def tiempo_espera(self, obj):
-        if obj.tiempo_espera_estimado:
-            return f"{obj.tiempo_espera_estimado.total_seconds() / 60:.0f} min"
-        return "-"
-    tiempo_espera.short_description = "Tiempo de espera"
+    actions = ['exportar_turnos_csv']
+
+    def exportar_turnos_csv(self, request, queryset):
+        import csv
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="turnos.csv"'
+        writer = csv.writer(response)
+        writer.writerow([
+            'Número de turno', 'Servicio', 'Sucursal',
+            'Nombre cliente', 'Cédula', 'Estado', 'Fecha creación'
+        ])
+        for turno in queryset:
+            writer.writerow([
+                turno.numero_turno,
+                str(turno.servicio),
+                str(turno.sucursal),
+                turno.nombre_cliente,
+                turno.numero_cedula,
+                turno.estado,
+                turno.fecha_creacion,
+            ])
+        return response
+    exportar_turnos_csv.short_description = "Exportar turnos seleccionados a CSV"
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('servicio', 'sucursal')

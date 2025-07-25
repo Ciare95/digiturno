@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from apps.turns.models.turno import Turno
+from .turno import Turno
 from apps.core.models.servicio import Servicio
 
 class ColaTurnos(models.Model):
