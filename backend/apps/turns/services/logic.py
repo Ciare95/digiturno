@@ -4,7 +4,6 @@ from django.utils import timezone
 from django.db import transaction   
 from django.db import models
 from django.db.models import Count, Min, F
-from ..models import Turno, ColaTurnos
 from apps.core.models.servicio import Servicio
 from apps.core.models.sucursal import Sucursal
 
@@ -15,6 +14,7 @@ class GestorTurnos:
     
     @staticmethod
     def generar_numero_turno(servicio, sucursal):
+        from ..models import Turno
         """
         Genera un número de turno único con el formato: LETRA-CÓDIGO
         donde LETRA corresponde al servicio y CÓDIGO es una combinación
@@ -51,6 +51,7 @@ class GestorTurnos:
 
     @staticmethod
     def calcular_tiempo_espera(servicio, sucursal):
+        from ..models import Turno, ColaTurnos
         """
         Calcula el tiempo estimado de espera para un nuevo turno basado en:
         - Cantidad de turnos en espera para el servicio
@@ -123,6 +124,7 @@ class GestorTurnos:
 
     @staticmethod
     def verificar_turnos_activos(usuario, servicio, sucursal):
+        from ..models import Turno, ColaTurnos
         """
         Verifica si el usuario ya tiene turnos activos en el servicio y sucursal
         """
@@ -152,72 +154,41 @@ class GestorTurnos:
 
     @classmethod
     @transaction.atomic
-    def crear_turno(cls, usuario, servicio, sucursal, es_agendado=False, fecha_agendada=None):
+    def crear_turno(cls, servicio, sucursal, nombre_cliente, numero_cedula):
+        from ..models import Turno, ColaTurnos
         """
         Crea un nuevo turno y lo asigna a la cola correspondiente
         """
-        # Verificar disponibilidad
-        if not cls.verificar_disponibilidad(servicio, sucursal):
-            raise ValueError("El servicio no está disponible en esta sucursal")
-            
-        # Verificar turnos activos del usuario
-        cls.verificar_turnos_activos(usuario, servicio, sucursal)
-        
-        # Si es agendado, verificar que no tenga otros turnos agendados para la misma fecha
-        if es_agendado and fecha_agendada and usuario:
-            turnos_agendados = Turno.objects.filter(
-                usuario=usuario,
-                es_agendado=True,
-                fecha_agendada__date=fecha_agendada.date(),
-                estado__in=[
-                    Turno.EstadoTurno.EN_ESPERA,
-                    Turno.EstadoTurno.LLAMADO
-                ]
-            ).exists()
-            
-            if turnos_agendados:
-                raise ValueError(
-                    "Ya tiene un turno agendado para esta fecha. "
-                    "Por favor seleccione otra fecha o cancele el turno existente."
-                )
-
         # Generar número de turno
         numero_turno = cls.generar_numero_turno(servicio, sucursal)
         
-        # Calcular tiempo de espera estimado
-        tiempo_espera = cls.calcular_tiempo_espera(servicio, sucursal)
+        # Calcular tiempo de espera estimado (puedes dejarlo fijo o simplificar la lógica)
+        tiempo_espera = 5  # minutos, por ejemplo
         
         # Crear el turno
         turno = Turno.objects.create(
             numero_turno=numero_turno,
             servicio=servicio,
             sucursal=sucursal,
-            usuario=usuario,
-            estado=Turno.EstadoTurno.EN_ESPERA,
-            es_agendado=es_agendado,
-            fecha_agendada=fecha_agendada,
-            tiempo_espera_estimado=timezone.timedelta(minutes=tiempo_espera)
+            nombre_cliente=nombre_cliente,
+            numero_cedula=numero_cedula,
+            estado=Turno.EstadoTurno.EN_ESPERA
         )
         
-        # Crear entrada en la cola
-        posicion = ColaTurnos.objects.filter(
-            servicio=servicio,
-            turno__sucursal=sucursal,
-            activo=True
-        ).count() + 1
-        
-        ColaTurnos.objects.create(
-            turno=turno,
-            servicio=servicio,
-            posicion_cola=posicion,
-            tiempo_espera_estimado=tiempo_espera,
-            activo=True
-        )
+        # Crear entrada en la cola (opcional, si usas ColaTurnos)
+        # ColaTurnos.objects.create(
+        #     turno=turno,
+        #     servicio=servicio,
+        #     posicion_cola=1,  # o el cálculo que uses
+        #     tiempo_espera_estimado=tiempo_espera,
+        #     activo=True
+        # )
 
         return turno
 
     @staticmethod
     def obtener_siguiente_turno(empleado):
+        from ..models import Turno, ColaTurnos
         """
         Obtiene el siguiente turno en espera para los servicios del empleado
         """
@@ -239,6 +210,7 @@ class GestorTurnos:
     @staticmethod
     @transaction.atomic
     def asignar_turno_empleado(turno, empleado):
+        from ..models import Turno, ColaTurnos
         """
         Asigna un turno a un empleado y actualiza su estado
         """
@@ -271,6 +243,7 @@ class GestorTurnos:
     @staticmethod
     @transaction.atomic
     def transferir_turno(turno, nuevo_servicio, empleado):
+        from ..models import Turno, ColaTurnos
         """
         Transfiere un turno a otro servicio y lo coloca en la cola correspondiente
         """

@@ -14,11 +14,10 @@ class CrearTurnoView(APIView):
         if serializer.is_valid():
             try:
                 turno = GestorTurnos.crear_turno(
-                    usuario=request.user if request.user.is_authenticated else None,
                     servicio=serializer.validated_data['servicio'],
                     sucursal=serializer.validated_data['sucursal'],
-                    es_agendado=serializer.validated_data.get('es_agendado', False),
-                    fecha_agendada=serializer.validated_data.get('fecha_agendada')
+                    nombre_cliente=serializer.validated_data['nombre_cliente'],
+                    numero_cedula=serializer.validated_data['numero_cedula']
                 )
                 return Response(
                     TurnoSerializer(turno).data,

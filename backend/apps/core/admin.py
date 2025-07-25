@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Sucursal, Servicio, Configuracion
+from .models import Sucursal, Servicio, Configuracion, DiaSucursal
 from django.db.models import Count
 
 
@@ -37,7 +37,7 @@ class ServicioAdmin(admin.ModelAdmin):
             'fields': ('nombre', 'codigo_servicio', 'sucursal')
         }),
         ('Configuración', {
-            'fields': ('tiempo_estimado_atencion', 'color_identificacion', 'icono')
+            'fields': ('tiempo_estimado_atencion', )
         }),
     )
 
@@ -58,3 +58,10 @@ class ConfiguracionAdmin(admin.ModelAdmin):
             'fields': ('categoria', 'sucursal', 'es_global')
         }),
     )
+
+@admin.register(DiaSucursal)
+class DiaSucursalAdmin(admin.ModelAdmin):
+    list_display = ('sucursal', 'dia_semana', 'hora_apertura', 'hora_cierre', 'activo')
+    list_filter = ('sucursal', 'dia_semana')
+    search_fields = ('sucursal__nombre', 'dia_semana__nombre')
+    ordering = ('sucursal', 'dia_semana')

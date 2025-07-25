@@ -3,12 +3,13 @@ from ..models import Turno
 from django.utils import timezone
 
 class CrearTurnoSerializer(serializers.ModelSerializer):
-    """Serializador para crear un nuevo turno"""
-    
+    numero_cedula = serializers.CharField(required=True)
+    nombre_cliente = serializers.CharField(required=True)
+
     class Meta:
         model = Turno
-        fields = ['servicio', 'sucursal', 'es_agendado', 'fecha_agendada']
-        
+        fields = ['servicio', 'sucursal', 'nombre_cliente', 'numero_cedula']
+
     def validate(self, attrs):
         servicio = attrs.get('servicio')
         sucursal = attrs.get('sucursal')

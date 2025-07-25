@@ -1,3 +1,5 @@
 from .sucursal_serializer import SucursalSerializer
 from .servicio_serializer import ServicioSerializer
 from .configuracion_serializer import ConfiguracionSerializer
+from .dias_semana_serializer import DiasSemanaSerializer
+from .dias_sucursales_serializer import DiaSucursalSerializer
