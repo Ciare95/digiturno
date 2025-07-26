@@ -13,10 +13,27 @@ class CrearTurnoSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         servicio = attrs.get('servicio')
         sucursal = attrs.get('sucursal')
+        numero_cedula = attrs.get('numero_cedula')
         es_agendado = attrs.get('es_agendado', False)
         fecha_agendada = attrs.get('fecha_agendada')
         request = self.context.get('request')
         usuario = request.user if request and hasattr(request, 'user') and request.user.is_authenticated else None
+        
+        # Validar que no exista un turno activo con el mismo número de cédula
+        if numero_cedula:
+            turnos_activos = Turno.objects.filter(
+                numero_cedula=numero_cedula,
+                estado__in=[
+                    Turno.EstadoTurno.EN_ESPERA,
+                    Turno.EstadoTurno.LLAMADO,
+                    Turno.EstadoTurno.EN_ATENCION
+                ]
+            )
+            
+            if turnos_activos.exists():
+                raise serializers.ValidationError({
+                    'numero_cedula': f'Ya existe un turno activo con el número de cédula {numero_cedula}. Debe esperar a que finalice o sea cancelado.'
+                })
         
         if servicio and sucursal:
             # Validar que el servicio pertenezca a la sucursal

@@ -8,6 +8,9 @@ export const solicitarTurno = async (turno) => {
         return response.data;
     } catch (error) {
         console.error("Error al solicitar turno:", error);
+        if (error.response) {
+            console.error("Respuesta de error del backend:", error.response.data);
+        }
         throw error;
     }
 }

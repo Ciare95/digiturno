@@ -16,19 +16,19 @@
       <div class="bg-white py-8 px-6 shadow-xl rounded-2xl sm:px-10 border border-gray-100">
         <form class="space-y-6" @submit.prevent="handleLogin">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
-              Correo electrónico
+            <label for="username" class="block text-sm font-medium text-gray-700">
+              Nombre de usuario
             </label>
             <div class="mt-1">
               <input
-                id="email"
-                v-model="email"
-                name="email"
-                type="email"
-                autocomplete="email"
+                id="username"
+                v-model="username"
+                name="username"
+                type="text"
+                autocomplete="username"
                 required
                 class="appearance-none block w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 sm:text-sm"
-                placeholder="tu@ejemplo.com"
+                placeholder="tu_usuario"
               >
             </div>
           </div>
@@ -77,12 +77,26 @@
           <div>
             <button
               type="submit"
-              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-0.5"
-            >
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-0.5">
               Iniciar Sesión
             </button>
           </div>
         </form>
+
+        <div v-if="inicioexitoso" class="mt-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-green-700">
+                {{ inicioexitoso }}
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div v-if="error" class="mt-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
           <div class="flex">
@@ -104,26 +118,40 @@
 </template>
 
 <script>
+import axios from 'axios'
+import AuthService from '@/services/AuthService';
+
 export default {
   name: 'LoginView',
   data() {
     return {
-      email: '',
+      username: '',
       password: '',
       rememberMe: false,
-      error: ''
+      error: '',
+      inicioexitoso: ''
     }
   },
   methods: {
     async handleLogin() {
       try {
-        // Aquí iría la lógica de autenticación
-        console.log('Iniciando sesión con:', this.email);
-        // Redirigir al home después del login exitoso
-        this.$router.push('/');
+        const response = await AuthService.login(this.username, this.password)
+        console.log('Login response:', response)
+        const token = response['access']
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+        // Guardar token
+        if (this.rememberMe) {
+          localStorage.setItem('access', token)
+        } else {
+          sessionStorage.setItem('access', token)
+        }
+
+        this.inicioexitoso = 'Inicio de sesión exitoso.'
+        //this.$router.push('/')
       } catch (error) {
-        this.error = 'Credenciales inválidas. Por favor, inténtalo de nuevo.';
-        console.error('Error al iniciar sesión:', error);
+        console.error('Error al iniciar sesión:', error)
+        this.error = 'Credenciales incorrectas o error de servidor.'
       }
     }
   }

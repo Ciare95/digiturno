@@ -234,6 +234,7 @@
     import {
         useTurnosStore
     } from '@/store/turnos';
+    import { useNotifications } from '@/composables/useNotifications';
 
     const props = defineProps({
         sucursales: {
@@ -249,6 +250,7 @@
     const emit = defineEmits(['update:sucursal', 'update:servicio', 'turno-solicitado']);
 
     const turnosStore = useTurnosStore();
+    const { showError, showSuccess } = useNotifications();
 
     const turnoData = ref({
         sucursalId: '',
@@ -312,6 +314,9 @@
                 sucursal: sucursal.nombre
             });
 
+            // Mostrar mensaje de éxito
+            showSuccess('Turno creado exitosamente', 'Tu turno ha sido registrado correctamente');
+
             // Emitir evento con los datos del turno generado
             emit('turno-solicitado', turnoGenerado);
 
@@ -321,7 +326,33 @@
             turnoData.value.documento = '';
         } catch (error) {
             console.error('Error al solicitar turno:', error);
-            alert(error.message || 'Ocurrió un error al solicitar el turno. Por favor, intente nuevamente.');
+            
+            // Manejar errores específicos del backend
+            if (error.response && error.response.data) {
+                const errorData = error.response.data;
+                
+                // Error de documento duplicado
+                if (errorData.numero_cedula) {
+                    showError('Documento duplicado', errorData.numero_cedula[0]);
+                    return;
+                }
+                
+                // Error de servicio no disponible
+                if (errorData.servicio) {
+                    showError('Servicio no disponible', errorData.servicio[0]);
+                    return;
+                }
+                
+                // Otros errores de validación
+                const errorMessages = Object.values(errorData).flat();
+                if (errorMessages.length > 0) {
+                    showError('Error de validación', errorMessages.join(', '));
+                    return;
+                }
+            }
+            
+            // Error genérico
+            showError('Error del sistema', error.message || 'Ocurrió un error al solicitar el turno. Por favor, intente nuevamente.');
         }
     };
 
