@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { solicitarTurno as solicitarTurnoAPI } from '@/services/SolicitarTurno';
 
 export const useTurnosStore = defineStore('turnos', {
   state: () => ({
@@ -58,8 +59,24 @@ export const useTurnosStore = defineStore('turnos', {
     },
 
     async agregarTurno(datosTurno) {
-      // Método alias para mantener compatibilidad con el componente
-      return await this.solicitarTurno(datosTurno);
+      try {
+        // Prepara el payload para el backend
+        const payload = {
+          servicio: datosTurno.servicio,
+          sucursal: datosTurno.sucursalId,
+          numero_cedula: datosTurno.documento,
+          nombre_cliente: datosTurno.nombre
+        };
+        
+        // Llama al backend
+        const turnoGenerado = await solicitarTurnoAPI(payload);
+        // Puedes guardar el turno en el estado si lo deseas
+        this.turnos.unshift(turnoGenerado);
+        return turnoGenerado;
+      } catch (error) {
+        // Propagar el error para que el componente pueda manejarlo
+        throw error;
+      }
     },
 
     marcarAtendido(id) {

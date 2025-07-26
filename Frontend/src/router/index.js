@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from "vue-router";
 //Importamos las vistas
 import Home from '../views/Home.vue';
 import SolicitarTurno from "../views/SolicitarTurno.vue";
+import TurnoGenerado from "../views/TurnoGenerado.vue";
 import Login from "../views/Login.vue";
 import AdminDashboard from "../views/AdminDashboard.vue";
 import EmpleadoDashboard from "../views/EmpleadoDashboard.vue";
@@ -17,7 +18,13 @@ const routes = [
     {
         path: '/solicitar-turno',
         component: SolicitarTurno,
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/turno-generado',
+        name: 'turno-generado',
+        component: TurnoGenerado,
+        meta: { requiresAuth: true },
     },
     {
         path: '/login',

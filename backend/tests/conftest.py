@@ -6,6 +6,12 @@ import os
 import django
 from django.conf import settings
 from django.test.utils import get_runner
+from apps.users.models.usuario import Usuario
+from apps.users.models.empleado import Empleado
+from apps.users.models.administrador import Administrador
+from apps.turns.models.turno import Turno
+from apps.core.models.sucursal import Sucursal
+from apps.core.models.servicio import Servicio
 
 
 def pytest_configure():
@@ -37,7 +43,6 @@ def api_client():
 @pytest.fixture
 def authenticated_user():
     """Usuario autenticado para tests"""
-    from apps.users.models import Usuario
     return Usuario.objects.create_user(
         username='testuser',
         email='test@example.com',
@@ -50,8 +55,6 @@ def authenticated_user():
 @pytest.fixture
 def empleado_user():
     """Usuario empleado para tests"""
-    from apps.users.models import Usuario, Empleado
-    from apps.core.models import Sucursal
     
     user = Usuario.objects.create_user(
         username='empleado',
@@ -80,7 +83,6 @@ def empleado_user():
 @pytest.fixture
 def admin_user():
     """Usuario administrador para tests"""
-    from apps.users.models import Usuario, Administrador
     
     user = Usuario.objects.create_user(
         username='admin',
@@ -102,7 +104,6 @@ def admin_user():
 @pytest.fixture
 def sucursal_test():
     """Sucursal de prueba"""
-    from apps.core.models import Sucursal
     return Sucursal.objects.create(
         nombre='Sucursal Test',
         direccion='Calle Test 123',
@@ -113,7 +114,6 @@ def sucursal_test():
 @pytest.fixture
 def servicio_test(sucursal_test):
     """Servicio de prueba"""
-    from apps.core.models import Servicio
     return Servicio.objects.create(
         nombre='Servicio Test',
         codigo_servicio='ST',
@@ -126,7 +126,6 @@ def servicio_test(sucursal_test):
 @pytest.fixture
 def turno_test(authenticated_user, servicio_test, sucursal_test):
     """Turno de prueba"""
-    from apps.turns.models import Turno
     return Turno.objects.create(
         numero_turno='T001',
         servicio=servicio_test,

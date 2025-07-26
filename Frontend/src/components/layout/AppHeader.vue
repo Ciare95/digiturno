@@ -63,6 +63,8 @@
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+const isMobileMenuOpen = ref(false);
+
 const itemsNavegacion = ref([
     { name: 'Inicio', path: '#', active: true },
     { name: 'Servicios', path: '#', active: false },
