@@ -41,7 +41,7 @@ class InicioSesionSerializer(serializers.Serializer):
         username = attrs.get('username')
         password = attrs.get('password')
         
-        if username and password:
+        if username and password:   
             # Autenticar al usuario
             usuario = authenticate(request=self.context.get('request'), username=username, password=password)
             
