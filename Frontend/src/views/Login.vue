@@ -136,18 +136,19 @@ export default {
     async handleLogin() {
       try {
         const response = await AuthService.login(this.username, this.password)
-
-        const token = response.data.token
+        console.log('Login response:', response)
+        const token = response['access']
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
         // Guardar token
         if (this.rememberMe) {
-          localStorage.setItem('token', token)
+          localStorage.setItem('access', token)
         } else {
-          sessionStorage.setItem('token', token)
+          sessionStorage.setItem('access', token)
         }
 
         this.inicioexitoso = 'Inicio de sesión exitoso.'
-        this.$router.push('/')
+        //this.$router.push('/')
       } catch (error) {
         console.error('Error al iniciar sesión:', error)
         this.error = 'Credenciales incorrectas o error de servidor.'
