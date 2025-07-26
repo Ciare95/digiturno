@@ -67,6 +67,7 @@ export const useTurnosStore = defineStore('turnos', {
           numero_cedula: datosTurno.documento,
           nombre_cliente: datosTurno.nombre
         };
+        
         // Llama al backend
         const turnoGenerado = await solicitarTurnoAPI(payload);
         // Puedes guardar el turno en el estado si lo deseas
