@@ -11,10 +11,12 @@ from .views import (
     RegistroEmpleadoView
 )
 from .admin_views import GestionUsuariosAdminViewSet
+from .views.empleado_admin_view_set import EmpleadoAdminViewSet
 
 # Crear router para vistas basadas en ViewSet
 router = DefaultRouter()
 router.register(r'admin/usuarios', GestionUsuariosAdminViewSet, basename='admin-usuarios')
+router.register(r'admin/empleados', EmpleadoAdminViewSet, basename='admin-empleados')
 
 urlpatterns = [
     # Rutas de autenticación para usuarios normales
@@ -26,7 +28,7 @@ urlpatterns = [
     path('auth/empleado/registro/', RegistroEmpleadoView.as_view(), name='registro_empleado'),
     path('auth/empleado/iniciar-sesion/', InicioSesionEmpleadoView.as_view(), name='inicio_sesion_empleado'),
     path('auth/admin/iniciar-sesion/', InicioSesionAdminView.as_view(), name='inicio_sesion_admin'),
-    
+
     # Ruta de perfil de usuario
     path('perfil/', PerfilUsuarioView.as_view(), name='perfil_usuario'),
     
