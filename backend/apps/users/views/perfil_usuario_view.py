@@ -1,6 +1,7 @@
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from apps.users.serializers import UsuarioSerializer
 
 class PerfilUsuarioView(APIView):
     """Vista para obtener y actualizar el perfil del usuario autenticado"""

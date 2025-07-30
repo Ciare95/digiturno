@@ -8,7 +8,11 @@ class AuthService {
       username,
       password,
     })
-    return response.data
+    return {
+      ...response.data,
+      es_empleado: response.data.es_empleado,
+      es_admin: response.data.es_admin
+    }
   }
 
   async logout() {

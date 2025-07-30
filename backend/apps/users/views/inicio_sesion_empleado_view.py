@@ -2,6 +2,7 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from apps.users.serializers import EmpleadoLoginSerializer, UsuarioSerializer, EmpleadoSerializer
 
 class InicioSesionEmpleadoView(APIView):
     """Vista para el inicio de sesión de empleados"""

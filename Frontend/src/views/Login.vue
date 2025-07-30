@@ -148,7 +148,15 @@ export default {
         }
 
         this.inicioexitoso = 'Inicio de sesión exitoso.'
-        //this.$router.push('/')
+        
+        // Redirigir según tipo de usuario
+        if (response.es_admin) {
+          this.$router.push('/admin')
+        } else if (response.es_empleado) {
+          this.$router.push('/empleado')
+        } else {
+          this.$router.push('/')
+        }
       } catch (error) {
         console.error('Error al iniciar sesión:', error)
         this.error = 'Credenciales incorrectas o error de servidor.'

@@ -7,7 +7,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'nombre_completo', 'email', 'cedula', 'telefono', 'ultimo_acceso']
+        fields = ['id', 'username', 'nombre_completo', 'email', 'cedula', 'telefono', 'ultimo_acceso', 'is_staff', 'is_superuser']
         read_only_fields = ['id']
 
 class EmpleadoSerializer(serializers.ModelSerializer):
