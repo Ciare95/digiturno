@@ -295,6 +295,7 @@ import {
   UserCircleIcon,
   CalendarIcon
 } from '@heroicons/vue/24/outline';
+import EmpleadoService from '@/Services/EmpleadoService';
 
 export default {
   name: 'EmpleadoDashboard',
@@ -312,26 +313,33 @@ export default {
     const tiempoTranscurrido = ref('00:00');
     let intervalo = null;
 
-    // Datos de ejemplo
-    const sucursalActual = ref({
-      id: 1,
-      nombre: 'Sucursal Centro',
-      direccion: 'Av. Principal #123'
+    // Datos reales
+    const sucursalActual = ref({});
+    const turnos = ref([]);
+    const historial = ref([]);
+    const isLoading = ref(true);
+
+    // Cargar datos iniciales
+    onMounted(async () => {
+      try {
+        const [estadisticas, pendientes, actual] = await Promise.all([
+          EmpleadoService.obtenerEstadisticas(),
+          EmpleadoService.obtenerTurnosPendientes(),
+          EmpleadoService.obtenerTurnoActual()
+        ]);
+        
+        sucursalActual.value = estadisticas.sucursal;
+        turnos.value = pendientes;
+        if (actual) {
+          turnoActual.value = actual;
+          iniciarTemporizador();
+        }
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+      } finally {
+        isLoading.value = false;
+      }
     });
-
-    const turnos = ref([
-      { id: 1, numero: 'A12', servicio: 'Atención al Cliente', cliente: 'Juan Pérez', estado: 'Pendiente', hora: '09:15' },
-      { id: 2, numero: 'B05', servicio: 'Pagos', cliente: 'María González', estado: 'Pendiente', hora: '09:30' },
-      { id: 3, numero: 'C08', servicio: 'Asesoría Legal', cliente: 'Carlos López', estado: 'Pendiente', hora: '09:45' },
-      { id: 4, numero: 'A15', servicio: 'Atención al Cliente', cliente: 'Ana Martínez', estado: 'Pendiente', hora: '10:00' },
-      { id: 5, numero: 'B10', servicio: 'Pagos', cliente: 'Roberto Sánchez', estado: 'Pendiente', hora: '10:15' }
-    ]);
-
-    const historial = ref([
-      { id: 6, numero: 'A10', servicio: 'Atención al Cliente', cliente: 'Laura Ramírez', estado: 'Atendido', hora: '08:30', duracion: '15 min' },
-      { id: 7, numero: 'B03', servicio: 'Pagos', cliente: 'Pedro Gómez', estado: 'Atendido', hora: '08:45', duracion: '8 min' },
-      { id: 8, numero: 'A09', servicio: 'Atención al Cliente', cliente: 'Sofía Torres', estado: 'Ausente', hora: '09:00', duracion: '-' }
-    ]);
 
     // Turno actual en atención
     const turnoActual = ref(null);
@@ -377,17 +385,21 @@ export default {
     };
 
     // Atender siguiente turno
-    const atenderSiguiente = (turno) => {
-      if (turnoActual.value) {
-        finalizarTurno();
-      }
-      
-      // Actualizar estado del turno
-      const index = turnos.value.findIndex(t => t.id === turno.id);
-      if (index !== -1) {
-        turnos.value[index].estado = 'En Atención';
-        turnoActual.value = { ...turnos.value[index] };
+    const atenderSiguiente = async (turno) => {
+      try {
+        if (turnoActual.value) {
+          await finalizarTurno();
+        }
+        
+        const response = await EmpleadoService.iniciarAtencion(turno.id);
+        turnoActual.value = response;
         iniciarTemporizador();
+        
+        // Actualizar lista de turnos
+        const updatedTurnos = await EmpleadoService.obtenerTurnosPendientes();
+        turnos.value = updatedTurnos;
+      } catch (error) {
+        console.error('Error al atender turno:', error);
       }
     };
 
@@ -399,25 +411,27 @@ export default {
     };
 
     // Finalizar turno actual
-    const finalizarTurno = () => {
+    const finalizarTurno = async () => {
       if (turnoActual.value) {
-        // Mover a historial
-        const turnoFinalizado = {
-          ...turnoActual.value,
-          estado: 'Atendido',
-          hora: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-          duracion: tiempoTranscurrido.value
-        };
-        
-        historial.value.unshift(turnoFinalizado);
-        
-        // Eliminar de la lista de turnos
-        turnos.value = turnos.value.filter(t => t.id !== turnoActual.value.id);
-        
-        // Limpiar turno actual
-        turnoActual.value = null;
-        clearInterval(intervalo);
-        tiempoTranscurrido.value = '00:00';
+        try {
+          await EmpleadoService.finalizarAtencion(turnoActual.value.id);
+          
+          // Actualizar historial y turnos
+          const [updatedHistorial, updatedTurnos] = await Promise.all([
+            EmpleadoService.obtenerHistorial(),
+            EmpleadoService.obtenerTurnosPendientes()
+          ]);
+          
+          historial.value = updatedHistorial;
+          turnos.value = updatedTurnos;
+          
+          // Limpiar turno actual
+          turnoActual.value = null;
+          clearInterval(intervalo);
+          tiempoTranscurrido.value = '00:00';
+        } catch (error) {
+          console.error('Error al finalizar turno:', error);
+        }
       }
     };
 
