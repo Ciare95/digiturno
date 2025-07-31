@@ -36,14 +36,26 @@ class SiguienteTurnoEmpleadoView(generics.GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Obtener siguiente turno
-            siguiente_turno = GestorTurnos.obtener_siguiente_turno(empleado)
-
-            if not siguiente_turno:
-                return Response(
-                    {"detail": "No hay turnos en espera."},
-                    status=status.HTTP_204_NO_CONTENT
-                )
+            # Obtener turno específico si se proporciona ID, sino obtener siguiente
+            turno_id = request.data.get('turno_id')
+            if turno_id:
+                siguiente_turno = Turno.objects.filter(
+                    id=turno_id,
+                    estado=Turno.EstadoTurno.EN_ESPERA
+                ).first()
+                
+                if not siguiente_turno:
+                    return Response(
+                        {"detail": "El turno especificado no está disponible."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                siguiente_turno = GestorTurnos.obtener_siguiente_turno(empleado)
+                if not siguiente_turno:
+                    return Response(
+                        {"detail": "No hay turnos en espera."},
+                        status=status.HTTP_204_NO_CONTENT
+                    )
 
             # Asignar el turno al empleado
             turno_asignado = GestorTurnos.asignar_turno_empleado(siguiente_turno, empleado)

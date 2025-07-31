@@ -1,16 +1,16 @@
 import axios from "axios"
 
-const API_URL = "http://127.0.0.1:8000/api"
+const API_URL = "http://127.0.0.1:8000/api/turns"
 
 class EmpleadoService {
   async obtenerEstadisticas() {
-    const response = await axios.get(`${API_URL}/turns/estadisticas-empleado/`)
+    const response = await axios.get(`${API_URL}/estadisticas-empleado/`)
     return response.data
   }
 
   async obtenerTurnosPendientes() {
     try {
-      const response = await axios.get(`${API_URL}/turns/cola-turnos-empleado/`)
+      const response = await axios.get(`${API_URL}/cola-turnos-empleado/`)
       console.log('Turnos pendientes response:', response.data) // Debugging
       
       if (!response.data) return []
@@ -33,7 +33,7 @@ class EmpleadoService {
   }
 
   async obtenerTurnoActual() {
-    const response = await axios.get(`${API_URL}/turns/turno-actual-empleado/`)
+    const response = await axios.get(`${API_URL}/turno-actual-empleado/`)
     if (response.data) {
       return {
         id: response.data.id,
@@ -48,7 +48,11 @@ class EmpleadoService {
   }
 
   async iniciarAtencion(turnoId) {
-    const response = await axios.post(`${API_URL}/turns/iniciar-atencion/`, { turno_id: turnoId })
+    // First call the turn (set to LLAMADO state)
+    await axios.post(`${API_URL}/empleado/turnos/siguiente/`, { turno_id: turnoId })
+    
+    // Then start attention (set to EN_ATENCION state)
+    const response = await axios.post(`${API_URL}/iniciar-atencion/`, { turno_id: turnoId })
     return {
       id: response.data.id,
       numero: response.data.numero_turno,
@@ -60,7 +64,7 @@ class EmpleadoService {
   }
 
   async finalizarAtencion(turnoId) {
-    const response = await axios.post(`${API_URL}/turns/finalizar-atencion/`, { turno_id: turnoId })
+    const response = await axios.post(`${API_URL}/finalizar-atencion/`, { turno_id: turnoId })
     return {
       id: response.data.id,
       numero: response.data.numero_turno,
