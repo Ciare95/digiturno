@@ -20,7 +20,7 @@ class SiguienteTurnoEmpleadoView(generics.GenericAPIView):
         try:
             logger.info(f"SiguienteTurnoEmpleadoView request data: {request.data}")
             empleado = request.user.perfil_empleado
-            logger.info(f"Empleado: {empleado.id} - Ventanilla: {getattr(empleado, 'ventanilla_asignada', 'No asignada')}")
+            logger.info(f"Empleado: {empleado.usuario.id} ({empleado.codigo_empleado}) - Ventanilla: {getattr(empleado, 'ventanilla_asignada', 'No asignada')}")
 
             # Verificar que el empleado esté activo y tenga servicios asignados
             if not empleado.servicios.filter(activo=True).exists():
@@ -78,15 +78,14 @@ class SiguienteTurnoEmpleadoView(generics.GenericAPIView):
                 logger.error(f"Error asignando turno: {str(e)}")
                 raise
             
-            # Enviar notificación al usuario si está registrado
-            if turno_asignado.usuario:
-                logger.info(f"Creando notificación para usuario {turno_asignado.usuario.id}")
+            # Enviar notificación solo si hay datos de cliente
+            if turno_asignado.nombre_cliente:
+                logger.info(f"Creando notificación para turno {turno_asignado.id}")
                 Notificacion.objects.create(
-                    usuario=turno_asignado.usuario,
                     turno=turno_asignado,
                     tipo='llamado_turno',
-                    titulo=f'Su turno {turno_asignado.numero_turno} ha sido llamado',
-                    mensaje=f'Por favor diríjase a la ventanilla {empleado.ventanilla_asignada}'
+                    titulo=f'Turno {turno_asignado.numero_turno} llamado',
+                    mensaje=f'Cliente {turno_asignado.nombre_cliente}, diríjase a ventanilla {empleado.ventanilla_asignada}'
                 )
 
             serializer = self.get_serializer(turno_asignado)
