@@ -212,12 +212,14 @@ class GestorTurnos:
     def asignar_turno_empleado(turno, empleado):
         from ..models import Turno, ColaTurnos
         """
-        Asigna un turno a un empleado y actualiza su estado
+        Asigna un turno a un empleado y actualiza su estado a 'Llamado'
         """
         # Actualizar el turno
-        turno.estado = Turno.EstadoTurno.EN_ATENCION
+        turno.estado = Turno.EstadoTurno.LLAMADO
         turno.empleado = empleado
-        turno.fecha_inicio_atencion = timezone.now()
+        # La fecha de inicio de atención se establece cuando el empleado confirma
+        # que ha comenzado a atender, no al llamar.
+        # turno.fecha_inicio_atencion = timezone.now() 
         turno.ventanilla = empleado.ventanilla_asignada
         turno.save()
 

@@ -404,16 +404,28 @@ export default {
         if (turnoActual.value) {
           await finalizarTurno();
         }
-        
-        const response = await EmpleadoService.iniciarAtencion(turno.id);
-        turnoActual.value = response;
-        iniciarTemporizador();
-        
-        // Actualizar lista de turnos
+
+        // Refetch turns before attempting to start attention
         const updatedTurnos = await EmpleadoService.obtenerTurnosPendientes();
         turnos.value = updatedTurnos;
+
+        // Find the turn in the updated list
+        const turnoToAttend = turnos.value.find(t => t.id === turno.id);
+        if (!turnoToAttend) {
+          throw new Error('El turno especificado no está disponible.');
+        }
+
+        const response = await EmpleadoService.iniciarAtencion(turnoToAttend.id);
+        turnoActual.value = response;
+        iniciarTemporizador();
+
+        // Refresh turn list again after successful attention start
+        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
       } catch (error) {
         console.error('Error al atender turno:', error);
+        alert(error.message || 'Error al atender el turno');
+        // Refresh turn list in case the error was due to stale data
+        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
       }
     };
 

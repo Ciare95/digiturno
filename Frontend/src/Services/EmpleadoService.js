@@ -48,18 +48,30 @@ class EmpleadoService {
   }
 
   async iniciarAtencion(turnoId) {
-    // First call the turn (set to LLAMADO state)
-    await axios.post(`${API_URL}/empleado/turnos/siguiente/`, { turno_id: turnoId })
-    
-    // Then start attention (set to EN_ATENCION state)
-    const response = await axios.post(`${API_URL}/iniciar-atencion/`, { turno_id: turnoId })
-    return {
-      id: response.data.id,
-      numero: response.data.numero_turno,
-      servicio: response.data.servicio_nombre,
-      cliente: response.data.nombre_cliente || 'Cliente no disponible',
-      estado: response.data.estado_display,
-      fecha_creacion: response.data.fecha_creacion
+    try {
+      // First call the turn (set to LLAMADO state)
+      const llamadoResponse = await axios.post(`${API_URL}/empleado/turnos/siguiente/`, { turno_id: turnoId })
+      
+      // Then start attention (set to EN_ATENCION state)
+      const response = await axios.post(`${API_URL}/empleado/iniciar-atencion/`, { turno_id: llamadoResponse.data.id })
+      return {
+        id: response.data.id,
+        numero: response.data.numero_turno,
+        servicio: response.data.servicio_nombre,
+        cliente: response.data.nombre_cliente || 'Cliente no disponible',
+        estado: response.data.estado_display,
+        fecha_creacion: response.data.fecha_creacion
+      }
+    } catch (error) {
+      if (error.response) {
+        if (error.response.status === 400 && error.response.data.detail) {
+          throw new Error(error.response.data.detail)
+        }
+        if (error.response.status === 404) {
+          throw new Error('El turno ya no está disponible. Por favor actualice la lista de turnos.')
+        }
+      }
+      throw new Error('Error al procesar el turno. Intente nuevamente.')
     }
   }
 
