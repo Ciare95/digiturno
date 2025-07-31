@@ -175,14 +175,20 @@ class GestorTurnos:
             estado=Turno.EstadoTurno.EN_ESPERA
         )
         
-        # Crear entrada en la cola (opcional, si usas ColaTurnos)
-        # ColaTurnos.objects.create(
-        #     turno=turno,
-        #     servicio=servicio,
-        #     posicion_cola=1,  # o el cálculo que uses
-        #     tiempo_espera_estimado=tiempo_espera,
-        #     activo=True
-        # )
+        # Crear entrada en la cola
+        posicion = ColaTurnos.objects.filter(
+            servicio=servicio,
+            turno__sucursal=sucursal,
+            activo=True
+        ).count() + 1
+        
+        ColaTurnos.objects.create(
+            turno=turno,
+            servicio=servicio,
+            posicion_cola=posicion,
+            tiempo_espera_estimado=tiempo_espera,
+            activo=True
+        )
 
         return turno
 

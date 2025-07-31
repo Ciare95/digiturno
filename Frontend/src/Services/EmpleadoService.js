@@ -20,7 +20,7 @@ class EmpleadoService {
           id: item.turno?.id || item.id,
           numero: item.turno_numero || item.numero_turno,
           servicio: item.servicio_nombre || item.servicio?.nombre || 'Servicio no disponible',
-          cliente: item.turno?.cliente_nombre || item.nombre_cliente || 'Cliente no disponible',
+          cliente: item.cliente_nombre || item.turno?.cliente_nombre || item.nombre_cliente || 'Cliente no disponible',
           estado: item.estado_turno || item.estado_display || 'Pendiente',
           fecha_creacion: item.turno?.fecha_creacion || item.fecha_creacion
         }))
