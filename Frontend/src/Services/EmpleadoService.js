@@ -94,8 +94,15 @@ class EmpleadoService {
   }
 
   async obtenerHistorial() {
-    const response = await axios.get(`${API_URL}/turnos/historial/`);
-    return response.data;
+    try {
+      const response = await axios.get(`${API_URL}/turnos/historial/`);
+      // Asegurar que siempre devolvemos un array
+      if (!response.data) return [];
+      return Array.isArray(response.data) ? response.data : [response.data];
+    } catch (error) {
+      console.error('Error obteniendo historial:', error);
+      return [];
+    }
   }
 }
 

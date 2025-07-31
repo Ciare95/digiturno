@@ -406,21 +406,32 @@ export default {
           return;
         }
 
+        // Actualizar lista de turnos primero
+        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
+        
         const turnoId = turno?.id;
         if (!turnoId) {
           alert('No se ha seleccionado un turno válido.');
           return;
         }
 
+        // Verificar que el turno sigue disponible
+        const turnoActualizado = turnos.value.find(t => t.id === turnoId);
+        if (!turnoActualizado) {
+          throw new Error('El turno seleccionado ya no está disponible. Actualizando lista...');
+        }
+
         const response = await EmpleadoService.iniciarAtencion(turnoId);
         turnoActual.value = response;
         iniciarTemporizador();
 
+        // Actualizar lista nuevamente después de atender
         turnos.value = await EmpleadoService.obtenerTurnosPendientes();
 
       } catch (error) {
         console.error('Error al atender turno:', error);
         alert(error.message || 'Error al atender el turno');
+        // Forzar actualización de lista
         turnos.value = await EmpleadoService.obtenerTurnosPendientes();
       }
     };
@@ -433,13 +444,24 @@ export default {
       }
       
       try {
+        // Actualizar lista de turnos primero
+        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
+        
+        if (turnos.value.length === 0) {
+          throw new Error('No hay turnos disponibles en la cola');
+        }
+
         const response = await EmpleadoService.iniciarAtencion(null);
         turnoActual.value = response;
         iniciarTemporizador();
+        
+        // Actualizar lista nuevamente después de atender
         turnos.value = await EmpleadoService.obtenerTurnosPendientes();
       } catch (error) {
         console.error('Error al llamar al siguiente turno:', error);
         alert(error.message || 'No se pudo llamar al siguiente turno.');
+        // Forzar actualización de lista
+        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
       }
     };
 
@@ -452,8 +474,8 @@ export default {
           const updatedTurnos = await EmpleadoService.obtenerTurnosPendientes();
           const updatedHistorial = await EmpleadoService.obtenerHistorial();
           
-          turnos.value = updatedTurnos;
-          historial.value = updatedHistorial;
+          turnos.value = Array.isArray(updatedTurnos) ? updatedTurnos : [];
+          historial.value = Array.isArray(updatedHistorial) ? updatedHistorial : [];
           
           turnoActual.value = null;
           clearInterval(intervalo);
