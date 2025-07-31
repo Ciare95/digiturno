@@ -19,8 +19,11 @@
             </div>
           </div>
           <div class="hidden sm:ml-6 sm:flex sm:items-center">
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-4">
+            <span v-if="sucursalActual?.nombre" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-4">
               {{ sucursalActual.nombre }}
+            </span>
+            <span v-else class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 mr-4">
+              Sucursal no disponible
             </span>
             <button @click="cerrarSesion" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               Cerrar Sesión
@@ -328,8 +331,9 @@ export default {
           EmpleadoService.obtenerTurnoActual()
         ]);
         
-        sucursalActual.value = estadisticas.sucursal;
-        turnos.value = pendientes;
+        console.log('Datos cargados:', { estadisticas, pendientes, actual }); // Debugging
+        sucursalActual.value = estadisticas.sucursal || {};
+        turnos.value = Array.isArray(pendientes) ? pendientes : [];
         if (actual) {
           turnoActual.value = actual;
           iniciarTemporizador();
@@ -347,7 +351,14 @@ export default {
 
     // Filtrar turnos pendientes
     const turnosPendientes = computed(() => {
-      return turnos.value.filter(t => t.estado === 'Pendiente');
+      console.log('All turnos:', turnos.value); // Debugging
+      const pendientes = turnos.value.filter(t => 
+        t.estado === 'Pendiente' || 
+        t.estado === 'En Espera' ||
+        t.estado === 'EN_ESPERA'
+      );
+      console.log('Turnos pendientes filtrados:', pendientes); // Debugging
+      return pendientes;
     });
 
     // Historial reciente (últimos 5 turnos)
@@ -361,8 +372,11 @@ export default {
     const estadisticas = computed(() => {
       const hoy = new Date().toISOString().split('T')[0];
       return {
-        turnosHoy: turnos.value.length + historial.value.length,
-        atendidosHoy: historial.value.filter(t => t.estado === 'Atendido').length,
+        turnosHoy: turnos.value.length,
+        atendidosHoy: historial.value.filter(t => 
+          t.estado === 'Atendido' || 
+          t.estado === 'ATENDIDO'
+        ).length,
         enEspera: turnosPendientes.value.length,
         enAtencion: turnoActual.value ? 1 : 0
       };
