@@ -402,37 +402,44 @@ export default {
     const atenderSiguiente = async (turno) => {
       try {
         if (turnoActual.value) {
-          await finalizarTurno();
+          alert('Ya hay un turno en atención. Finalícelo antes de atender otro.');
+          return;
         }
 
-        // Refetch turns before attempting to start attention
-        const updatedTurnos = await EmpleadoService.obtenerTurnosPendientes();
-        turnos.value = updatedTurnos;
-
-        // Find the turn in the updated list
-        const turnoToAttend = turnos.value.find(t => t.id === turno.id);
-        if (!turnoToAttend) {
-          throw new Error('El turno especificado no está disponible.');
+        const turnoId = turno?.id;
+        if (!turnoId) {
+          alert('No se ha seleccionado un turno válido.');
+          return;
         }
 
-        const response = await EmpleadoService.iniciarAtencion(turnoToAttend.id);
+        const response = await EmpleadoService.iniciarAtencion(turnoId);
         turnoActual.value = response;
         iniciarTemporizador();
 
-        // Refresh turn list again after successful attention start
         turnos.value = await EmpleadoService.obtenerTurnosPendientes();
+
       } catch (error) {
         console.error('Error al atender turno:', error);
         alert(error.message || 'Error al atender el turno');
-        // Refresh turn list in case the error was due to stale data
-        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
+        turnos.value = await Empleado.obtenerTurnosPendientes();
       }
     };
 
     // Llamar siguiente turno
-    const llamarSiguiente = () => {
-      if (turnosPendientes.value.length > 0) {
-        atenderSiguiente(turnosPendientes.value[0]);
+    const llamarSiguiente = async () => {
+      if (turnoActual.value) {
+        alert('Ya hay un turno en atención. Finalícelo antes de llamar a otro.');
+        return;
+      }
+      
+      try {
+        const response = await EmpleadoService.iniciarAtencion(null);
+        turnoActual.value = response;
+        iniciarTemporizador();
+        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
+      } catch (error) {
+        console.error('Error al llamar al siguiente turno:', error);
+        alert(error.message || 'No se pudo llamar al siguiente turno.');
       }
     };
 
@@ -442,21 +449,18 @@ export default {
         try {
           await EmpleadoService.finalizarAtencion(turnoActual.value.id);
           
-          // Actualizar historial y turnos
-          const [updatedHistorial, updatedTurnos] = await Promise.all([
-            EmpleadoService.obtenerHistorial(),
-            EmpleadoService.obtenerTurnosPendientes()
-          ]);
+          const updatedTurnos = await EmpleadoService.obtenerTurnosPendientes();
+          const updatedHistorial = await EmpleadoService.obtenerHistorial();
           
-          historial.value = updatedHistorial;
           turnos.value = updatedTurnos;
+          historial.value = updatedHistorial;
           
-          // Limpiar turno actual
           turnoActual.value = null;
           clearInterval(intervalo);
           tiempoTranscurrido.value = '00:00';
         } catch (error) {
           console.error('Error al finalizar turno:', error);
+          alert('Error al finalizar el turno.');
         }
       }
     };

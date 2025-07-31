@@ -49,11 +49,13 @@ class EmpleadoService {
 
   async iniciarAtencion(turnoId) {
     try {
-      // First call the turn (set to LLAMADO state)
-      const llamadoResponse = await axios.post(`${API_URL}/empleado/turnos/siguiente/`, { turno_id: turnoId })
+      const requestData = turnoId ? { turno_id: turnoId } : {};
+      const response = await axios.post(`${API_URL}/empleado/turnos/siguiente/`, requestData);
       
-      // Then start attention (set to EN_ATENCION state)
-      const response = await axios.post(`${API_URL}/empleado/iniciar-atencion/`, { turno_id: llamadoResponse.data.id })
+      if (response.status === 204) {
+        throw new Error("No hay turnos disponibles en la cola.");
+      }
+
       return {
         id: response.data.id,
         numero: response.data.numero_turno,
@@ -61,17 +63,21 @@ class EmpleadoService {
         cliente: response.data.nombre_cliente || 'Cliente no disponible',
         estado: response.data.estado_display,
         fecha_creacion: response.data.fecha_creacion
-      }
+      };
     } catch (error) {
       if (error.response) {
         if (error.response.status === 400 && error.response.data.detail) {
-          throw new Error(error.response.data.detail)
+          throw new Error(error.response.data.detail);
         }
         if (error.response.status === 404) {
-          throw new Error('El turno ya no está disponible. Por favor actualice la lista de turnos.')
+          throw new Error('El turno ya no está disponible. Por favor actualice la lista de turnos.');
         }
       }
-      throw new Error('Error al procesar el turno. Intente nuevamente.')
+      // Si el error ya tiene un mensaje personalizado, usarlo.
+      if (error.message) {
+        throw error;
+      }
+      throw new Error('Error al procesar el turno. Intente nuevamente.');
     }
   }
 
@@ -85,6 +91,11 @@ class EmpleadoService {
       estado: response.data.estado_display,
       fecha_creacion: response.data.fecha_creacion
     }
+  }
+
+  async obtenerHistorial() {
+    const response = await axios.get(`${API_URL}/historial-turnos/`);
+    return response.data;
   }
 }
 
