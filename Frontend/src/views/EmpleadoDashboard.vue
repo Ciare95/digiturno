@@ -421,7 +421,7 @@ export default {
       } catch (error) {
         console.error('Error al atender turno:', error);
         alert(error.message || 'Error al atender el turno');
-        turnos.value = await Empleado.obtenerTurnosPendientes();
+        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
       }
     };
 

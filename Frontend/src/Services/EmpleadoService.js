@@ -94,7 +94,7 @@ class EmpleadoService {
   }
 
   async obtenerHistorial() {
-    const response = await axios.get(`${API_URL}/historial-turnos/`);
+    const response = await axios.get(`${API_URL}/turnos/historial/`);
     return response.data;
   }
 }
