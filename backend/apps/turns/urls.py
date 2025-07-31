@@ -14,7 +14,9 @@ from .views import (
     TurnoActualEmpleadoView, 
     ListarColaTurnosEmpleadoView, 
     EstadisticasEmpleadoView,
-    ListarColaTurnosView
+    ListarColaTurnosView,
+    IniciarAtencionView,
+    FinalizarAtencionView
 )
 
 urlpatterns = [
@@ -35,7 +37,9 @@ urlpatterns = [
     path('empleado/turnos/siguiente/', SiguienteTurnoEmpleadoView.as_view(), name='siguiente_turno_empleado'),
     path('empleado/turnos/<int:turno_id>/completar/', CompletarTurnoEmpleadoView.as_view(), name='completar_turno_empleado'),
     path('empleado/turnos/<int:turno_id>/transferir/', TransferirTurnoEmpleadoView.as_view(), name='transferir_turno_empleado'),
-    path('empleado/turnos/actual/', TurnoActualEmpleadoView.as_view(), name='turno_actual_empleado'),
-    path('empleado/colas/', ListarColaTurnosEmpleadoView.as_view(), name='listar_cola_turnos_empleado'),
-    path('empleado/estadisticas/', EstadisticasEmpleadoView.as_view(), name='estadisticas_empleado'),
+    path('turno-actual-empleado/', TurnoActualEmpleadoView.as_view(), name='turno_actual_empleado'),
+    path('cola-turnos-empleado/', ListarColaTurnosEmpleadoView.as_view(), name='listar_cola_turnos_empleado'),
+    path('estadisticas-empleado/', EstadisticasEmpleadoView.as_view(), name='estadisticas_empleado'),
+    path('iniciar-atencion/', IniciarAtencionView.as_view(), name='iniciar_atencion'),
+    path('finalizar-atencion/', FinalizarAtencionView.as_view(), name='finalizar_atencion'),
 ]

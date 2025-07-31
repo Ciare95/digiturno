@@ -68,7 +68,7 @@ class EstadisticasEmpleadoView(generics.GenericAPIView):
 
         # Turnos transferidos - obtener de las estadísticas del empleado o calcular de otra manera
         # Como no hay un campo directo para contar transferencias, usaremos las estadísticas guardadas
-        from .models import EstadisticaEmpleado
+        from apps.turns.models import EstadisticaEmpleado
         estadisticas_empleado = EstadisticaEmpleado.objects.filter(empleado=empleado)
         turnos_transferidos = sum(est.turnos_transferidos for est in estadisticas_empleado)
 

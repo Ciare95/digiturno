@@ -277,3 +277,35 @@ class GestorTurnos:
         )
 
         return turno
+
+    @staticmethod
+    @transaction.atomic
+    def iniciar_atencion_turno(turno_id):
+        from ..models import Turno
+        """
+        Marca un turno como "En Atención"
+        """
+        turno = Turno.objects.get(id=turno_id)
+        if turno.estado != Turno.EstadoTurno.LLAMADO:
+            raise ValueError("El turno debe ser llamado primero.")
+        
+        turno.estado = Turno.EstadoTurno.EN_ATENCION
+        turno.fecha_inicio_atencion = timezone.now()
+        turno.save()
+        return turno
+
+    @staticmethod
+    @transaction.atomic
+    def finalizar_atencion_turno(turno_id):
+        from ..models import Turno
+        """
+        Marca un turno como "Finalizado"
+        """
+        turno = Turno.objects.get(id=turno_id)
+        if turno.estado != Turno.EstadoTurno.EN_ATENCION:
+            raise ValueError("El turno debe estar en atención.")
+            
+        turno.estado = Turno.EstadoTurno.FINALIZADO
+        turno.fecha_finalizacion = timezone.now()
+        turno.save()
+        return turno
