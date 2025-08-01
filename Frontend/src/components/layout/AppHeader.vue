@@ -66,7 +66,7 @@ import { RouterLink } from 'vue-router'
 const isMobileMenuOpen = ref(false);
 
 const itemsNavegacion = ref([
-    { name: 'Inicio', path: '#', active: true },
+    { name: 'Inicio', path: '/', active: true },
     { name: 'Servicios', path: '#', active: false },
     { name: 'Sucursales', path: '#', active: false },
     { name: 'Contacto', path: '#', active: false }

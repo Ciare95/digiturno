@@ -13,9 +13,9 @@
           <router-link to="/login" class="btn btn-primary">
             Iniciar Ahora
           </router-link>
-          <a href="#solucion" class="btn btn-outline">
-            Ver Demo
-          </a>
+          <router-link to="/solicitar-turno" class="btn btn-outline">
+            Solicitar turno
+          </router-link>
         </div>
       </div>
       <div class="scroll-indicator">
