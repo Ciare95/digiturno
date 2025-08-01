@@ -47,15 +47,28 @@ class SiguienteTurnoEmpleadoView(generics.GenericAPIView):
             turno_id = request.data.get('turno_id')
             if turno_id:
                 logger.info(f"Buscando turno específico: {turno_id}")
-                siguiente_turno = Turno.objects.filter(
-                    id=turno_id,
-                    estado=Turno.EstadoTurno.EN_ESPERA
-                ).first()
+                # Debug: Log all turns in system
+                all_turns = list(Turno.objects.all().values('id', 'numero_turno', 'estado'))
+                logger.debug(f"All turns in system: {all_turns}")
+                
+                siguiente_turno = Turno.objects.filter(id=turno_id).first()
+                logger.debug(f"Found turn: {siguiente_turno}")
                 
                 if not siguiente_turno:
-                    logger.error(f"Turno {turno_id} no disponible o no en espera")
+                    logger.error(f"Turno {turno_id} no encontrado. Available turns: {all_turns}")
                     return Response(
-                        {"detail": "El turno especificado no está disponible."},
+                        {
+                            "detail": "El turno especificado no existe.",
+                            "available_turns": all_turns
+                        },
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                
+                # Verificar estado después de encontrar el turno
+                if siguiente_turno.estado != Turno.EstadoTurno.EN_ESPERA:
+                    logger.error(f"Turno {turno_id} no está en espera (estado: {siguiente_turno.estado})")
+                    return Response(
+                        {"detail": f"El turno {siguiente_turno.numero_turno} no está disponible para atención (estado: {siguiente_turno.get_estado_display()})."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
             else:
