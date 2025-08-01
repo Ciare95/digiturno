@@ -41,9 +41,36 @@
           <div>
             <h1 class="text-2xl font-bold text-gray-900">Panel de Turnos</h1>
             <p class="mt-1 text-sm text-gray-600">Gestiona los turnos de la sucursal</p>
+            
+            <!-- Información del empleado -->
+            <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Información del Empleado</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <p class="text-sm text-gray-500">Nombre:</p>
+                  <p class="font-medium">{{ empleadoInfo.nombre || 'No disponible' }}</p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Código:</p>
+                  <p class="font-medium">{{ empleadoInfo.codigo || 'No disponible' }}</p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Ventanilla:</p>
+                  <p class="font-medium">{{ empleadoInfo.ventanilla || 'No asignada' }}</p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">Estado:</p>
+                  <p class="font-medium" :class="{
+                    'text-green-600': empleadoInfo.estado === 'Conectado',
+                    'text-gray-600': empleadoInfo.estado !== 'Conectado'
+                  }">
+                    {{ empleadoInfo.estado || 'Desconectado' }}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="mt-4 flex md:mt-0 md:ml-4
-          ">
+          <div class="mt-4 flex md:mt-0 md:ml-4">
             <div class="relative rounded-md shadow-sm">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <CalendarIcon class="h-5 w-5 text-gray-400" />
@@ -321,22 +348,37 @@ export default {
     const turnos = ref([]);
     const historial = ref([]);
     const isLoading = ref(true);
+    const empleadoInfo = ref({
+      nombre: '',
+      codigo: '',
+      ventanilla: '',
+      estado: 'Desconectado'
+    });
 
     // Cargar datos iniciales
     onMounted(async () => {
       try {
-        const [estadisticas, pendientes, actual] = await Promise.all([
+        const [estadisticas, pendientes, actual, infoEmpleado] = await Promise.all([
           EmpleadoService.obtenerEstadisticas(),
           EmpleadoService.obtenerTurnosPendientes(),
-          EmpleadoService.obtenerTurnoActual()
+          EmpleadoService.obtenerTurnoActual(),
+          EmpleadoService.obtenerInfoEmpleado()
         ]);
         
-        console.log('Datos cargados:', { estadisticas, pendientes, actual }); // Debugging
+        console.log('Datos cargados:', { estadisticas, pendientes, actual, infoEmpleado }); // Debugging
         sucursalActual.value = estadisticas.sucursal || {};
         turnos.value = Array.isArray(pendientes) ? pendientes : [];
         if (actual) {
           turnoActual.value = actual;
           iniciarTemporizador();
+        }
+        if (infoEmpleado) {
+          empleadoInfo.value = {
+            nombre: infoEmpleado.nombre || '',
+            codigo: infoEmpleado.codigo_empleado || '',
+            ventanilla: infoEmpleado.ventanilla_asignada || '',
+            estado: infoEmpleado.estado_conexion ? 'Conectado' : 'Desconectado'
+          };
         }
       } catch (error) {
         console.error('Error cargando datos:', error);
@@ -550,6 +592,9 @@ export default {
       estadisticas,
       fechaSeleccionada,
       tiempoTranscurrido,
+      
+      // Datos
+      empleadoInfo,
       
       // Métodos
       atenderSiguiente,

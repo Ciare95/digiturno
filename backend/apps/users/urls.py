@@ -8,7 +8,8 @@ from .views import (
     InicioSesionEmpleadoView,
     InicioSesionAdminView,
     VerificarRolView,
-    RegistroEmpleadoView
+    RegistroEmpleadoView,
+    InfoEmpleadoView
 )
 from .admin_views import GestionUsuariosAdminViewSet
 
@@ -26,6 +27,7 @@ urlpatterns = [
     path('auth/empleado/registro/', RegistroEmpleadoView.as_view(), name='registro_empleado'),
     path('auth/empleado/iniciar-sesion/', InicioSesionEmpleadoView.as_view(), name='inicio_sesion_empleado'),
     path('auth/admin/iniciar-sesion/', InicioSesionAdminView.as_view(), name='inicio_sesion_admin'),
+    path('empleado/info/', InfoEmpleadoView.as_view(), name='info_empleado'),
     
     # Ruta de perfil de usuario
     path('perfil/', PerfilUsuarioView.as_view(), name='perfil_usuario'),

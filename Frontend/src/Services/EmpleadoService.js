@@ -124,6 +124,26 @@ class EmpleadoService {
       return []
     }
   }
+
+  async obtenerInfoEmpleado() {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/empleado/info/")
+      return response.data || {
+        nombre: '',
+        codigo_empleado: '',
+        ventanilla_asignada: '',
+        estado_conexion: false
+      }
+    } catch (error) {
+      console.error('Error getting employee info:', error)
+      return {
+        nombre: '',
+        codigo_empleado: '',
+        ventanilla_asignada: '',
+        estado_conexion: false
+      }
+    }
+  }
 }
 
 export default new EmpleadoService()

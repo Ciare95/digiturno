@@ -56,8 +56,8 @@ class RegistroEmpleadoSerializer(serializers.ModelSerializer):
         user = Usuario(
             username=validated_data['username'],
             email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
+            first_name=validated_data.get('first_name', validated_data['username']),
+            last_name=validated_data.get('last_name', ''),
             telefono=validated_data.get('telefono', ''),
             cedula=validated_data.get('cedula', '')
         )
