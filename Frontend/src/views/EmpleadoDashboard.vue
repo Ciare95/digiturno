@@ -415,10 +415,16 @@ export default {
           return;
         }
 
+        console.log('Attempting to attend turn ID:', turnoId, 'Number:', turno.numero);
+        console.log('Current turn list:', turnos.value.map(t => ({id: t.id, numero: t.numero})));
+
         // Verificar que el turno sigue disponible
         const turnoActualizado = turnos.value.find(t => t.id === turnoId);
         if (!turnoActualizado) {
           throw new Error('El turno seleccionado ya no está disponible. Actualizando lista...');
+        }
+        if (turnoActualizado.estado !== 'Pendiente' && turnoActualizado.estado !== 'En Espera' && turnoActualizado.estado !== 'EN_ESPERA') {
+          throw new Error('El turno seleccionado no está disponible para atención.');
         }
 
         const response = await EmpleadoService.iniciarAtencion(turnoId);
@@ -432,7 +438,11 @@ export default {
         console.error('Error al atender turno:', error);
         alert(error.message || 'Error al atender el turno');
         // Forzar actualización de lista
-        turnos.value = await EmpleadoService.obtenerTurnosPendientes();
+        try {
+          turnos.value = await EmpleadoService.obtenerTurnosPendientes();
+        } catch (refreshError) {
+          console.error('Error actualizando lista de turnos:', refreshError);
+        }
       }
     };
 
