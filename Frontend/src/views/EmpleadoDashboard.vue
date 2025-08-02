@@ -45,20 +45,20 @@
             <!-- Información del empleado -->
             <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <h3 class="text-lg font-medium text-gray-900 mb-2">Información del Empleado</h3>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
+              <div class="flex flex-wrap gap-6">
+                <div class="flex items-center gap-2">
                   <p class="text-sm text-gray-500">Nombre:</p>
                   <p class="font-medium">{{ empleadoInfo.nombre || 'No disponible' }}</p>
                 </div>
-                <div>
+                <div class="flex items-center gap-2">
                   <p class="text-sm text-gray-500">Código:</p>
                   <p class="font-medium">{{ empleadoInfo.codigo || 'No disponible' }}</p>
                 </div>
-                <div>
+                <div class="flex items-center gap-2">
                   <p class="text-sm text-gray-500">Ventanilla:</p>
                   <p class="font-medium">{{ empleadoInfo.ventanilla || 'No asignada' }}</p>
                 </div>
-                <div>
+                <div class="flex items-center gap-2">
                   <p class="text-sm text-gray-500">Estado:</p>
                   <p class="font-medium" :class="{
                     'text-green-600': empleadoInfo.estado === 'Conectado',
