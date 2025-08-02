@@ -339,6 +339,7 @@ export default {
   setup() {
     const router = useRouter();
     const fechaSeleccionada = ref(new Date().toISOString().split('T')[0]);
+    const estadisticasServidor = ref({ turnos_atendidos_hoy: 0 });
     const tiempoInicio = ref(null);
     const tiempoTranscurrido = ref('00:00');
     let intervalo = null;
@@ -358,15 +359,16 @@ export default {
     // Cargar datos iniciales
     onMounted(async () => {
       try {
-        const [estadisticas, pendientes, actual, infoEmpleado] = await Promise.all([
+        const [stats, pendientes, actual, infoEmpleado] = await Promise.all([
           EmpleadoService.obtenerEstadisticas(),
           EmpleadoService.obtenerTurnosPendientes(),
           EmpleadoService.obtenerTurnoActual(),
           EmpleadoService.obtenerInfoEmpleado()
         ]);
         
-        console.log('Datos cargados:', { estadisticas, pendientes, actual, infoEmpleado }); // Debugging
-        sucursalActual.value = estadisticas.sucursal || {};
+        console.log('Datos cargados:', { stats, pendientes, actual, infoEmpleado }); // Debugging
+        estadisticasServidor.value = stats;
+        sucursalActual.value = stats.sucursal || {};
         turnos.value = Array.isArray(pendientes) ? pendientes : [];
         if (actual) {
           turnoActual.value = actual;
@@ -412,14 +414,12 @@ export default {
 
     // Estadísticas
     const estadisticas = computed(() => {
-      const hoy = new Date().toISOString().split('T')[0];
+      const atendidos = estadisticasServidor.value?.turnos_atendidos_hoy || 0;
+      const enEspera = turnosPendientes.value.length;
       return {
-        turnosHoy: turnos.value.length,
-        atendidosHoy: historial.value.filter(t => 
-          t.estado === 'Atendido' || 
-          t.estado === 'ATENDIDO'
-        ).length,
-        enEspera: turnosPendientes.value.length,
+        turnosHoy: atendidos + enEspera,
+        atendidosHoy: atendidos,
+        enEspera: enEspera,
         enAtencion: turnoActual.value ? 1 : 0
       };
     });
@@ -523,9 +523,14 @@ export default {
         try {
           await EmpleadoService.finalizarAtencion(turnoActual.value.id);
           
-          const updatedTurnos = await EmpleadoService.obtenerTurnosPendientes();
-          const updatedHistorial = await EmpleadoService.obtenerHistorial();
-          
+          // Recargar datos para reflejar el cambio
+          const [stats, updatedTurnos, updatedHistorial] = await Promise.all([
+            EmpleadoService.obtenerEstadisticas(),
+            EmpleadoService.obtenerTurnosPendientes(),
+            EmpleadoService.obtenerHistorial()
+          ]);
+
+          estadisticasServidor.value = stats;
           turnos.value = Array.isArray(updatedTurnos) ? updatedTurnos : [];
           historial.value = Array.isArray(updatedHistorial) ? updatedHistorial : [];
           
