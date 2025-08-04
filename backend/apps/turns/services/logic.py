@@ -175,14 +175,20 @@ class GestorTurnos:
             estado=Turno.EstadoTurno.EN_ESPERA
         )
         
-        # Crear entrada en la cola (opcional, si usas ColaTurnos)
-        # ColaTurnos.objects.create(
-        #     turno=turno,
-        #     servicio=servicio,
-        #     posicion_cola=1,  # o el cálculo que uses
-        #     tiempo_espera_estimado=tiempo_espera,
-        #     activo=True
-        # )
+        # Crear entrada en la cola
+        posicion = ColaTurnos.objects.filter(
+            servicio=servicio,
+            turno__sucursal=sucursal,
+            activo=True
+        ).count() + 1
+        
+        ColaTurnos.objects.create(
+            turno=turno,
+            servicio=servicio,
+            posicion_cola=posicion,
+            tiempo_espera_estimado=tiempo_espera,
+            activo=True
+        )
 
         return turno
 
@@ -276,4 +282,36 @@ class GestorTurnos:
             activo=True
         )
 
+        return turno
+
+    @staticmethod
+    @transaction.atomic
+    def iniciar_atencion_turno(turno_id):
+        from ..models import Turno
+        """
+        Marca un turno como "En Atención"
+        """
+        turno = Turno.objects.get(id=turno_id)
+        if turno.estado != Turno.EstadoTurno.LLAMADO:
+            raise ValueError("El turno debe ser llamado primero.")
+        
+        turno.estado = Turno.EstadoTurno.EN_ATENCION
+        turno.fecha_inicio_atencion = timezone.now()
+        turno.save()
+        return turno
+
+    @staticmethod
+    @transaction.atomic
+    def finalizar_atencion_turno(turno_id):
+        from ..models import Turno
+        """
+        Marca un turno como "Finalizado"
+        """
+        turno = Turno.objects.get(id=turno_id)
+        if turno.estado != Turno.EstadoTurno.EN_ATENCION:
+            raise ValueError("El turno debe estar en atención.")
+            
+        turno.estado = Turno.EstadoTurno.FINALIZADO
+        turno.fecha_finalizacion = timezone.now()
+        turno.save()
         return turno

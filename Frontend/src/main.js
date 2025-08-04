@@ -34,9 +34,20 @@ library.add(
   faCheckCircle
 )
 
+import axios from 'axios'
+
 // Creamos la store y la app
 const Pinia = createPinia()
 const app = createApp(App)
+
+// Axios interceptor
+axios.interceptors.request.use(config => {
+  const token = localStorage.getItem('access') || sessionStorage.getItem('access')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
 // Registrar el componente FontAwesomeIcon globalmente
 app.component('font-awesome-icon', FontAwesomeIcon)

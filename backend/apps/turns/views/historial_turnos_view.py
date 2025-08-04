@@ -19,10 +19,13 @@ class HistorialTurnosView(generics.ListAPIView):
         # Estados que consideramos como históricos
         estados_historicos = ['finalizado', 'cancelado', 'ausente']
         
-        # Filtrar turnos que ya han sido completados o cancelados
+        # Filtrar turnos por cédula del usuario autenticado
+        if not self.request.user.cedula:
+            return Turno.objects.none()
+            
         queryset = Turno.objects.filter(
-            usuario=self.request.user,
-        estado__in=estados_historicos
+            numero_cedula=self.request.user.cedula,
+            estado__in=estados_historicos
         )
         
         # Filtro adicional por rango de fechas si se proporciona

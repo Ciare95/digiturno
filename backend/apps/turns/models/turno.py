@@ -44,6 +44,13 @@ class Turno(models.Model):
     fecha_creacion = models.DateTimeField(_('fecha de creación'), auto_now_add=True)
     fecha_inicio_atencion = models.DateTimeField(_('fecha de inicio de atención'), null=True, blank=True)
     fecha_finalizacion = models.DateTimeField(_('fecha de finalización'), null=True, blank=True)
+    empleado = models.ForeignKey(
+        'users.Empleado',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='turnos_atendidos'
+    )
 
     class Meta:
         db_table = 'turnos'

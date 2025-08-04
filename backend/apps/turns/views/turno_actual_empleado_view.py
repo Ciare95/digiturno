@@ -15,7 +15,7 @@ class TurnoActualEmpleadoView(generics.GenericAPIView):
         try:
             empleado = request.user.perfil_empleado
             turno_actual = Turno.objects.get(
-                empleado_actual=empleado,
+                empleado=empleado,
                 estado=Turno.EstadoTurno.EN_ATENCION
             )
             serializer = self.get_serializer(turno_actual)
