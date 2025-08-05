@@ -104,16 +104,27 @@ class EmpleadoService {
   }
 
   async finalizarAtencion(turnoId) {
-    const response = await axios.post(`${API_URL}/finalizar-atencion/`, { turno_id: turnoId })
-    return {
-      id: response.data.id,
-      numero: response.data.numero_turno,
-      servicio: response.data.servicio_nombre,
-      cliente: response.data.nombre_cliente || 'Cliente no disponible',
-      estado: response.data.estado_display,
-      fecha_creacion: response.data.fecha_creacion
-    }
-  }
+    console.log('Finalizando turno ID:', turnoId);
+    const response = await axios.post(`${API_URL}/finalizar-atencion/`, { turno_id: turnoId });
+    console.log('Finalizar atencion - raw response:', response);
+    console.log('Finalizar atencion - response data:', response.data);
+
+    const turnoData = response.data;
+    const formattedData = {
+        id: turnoData.id,
+        numero: turnoData.numero_turno,
+        servicio: turnoData.servicio_nombre || 'Servicio no disponible',
+        cliente: turnoData.nombre_cliente || 'Cliente no disponible',
+        estado: 'Atendido',
+        fecha_creacion: turnoData.fecha_creacion,
+        hora: turnoData.fecha_finalizacion ?
+            new Date(turnoData.fecha_finalizacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) :
+            new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    console.log('Finalizar atencion - formatted data:', formattedData);
+    return formattedData;
+}
 
   async obtenerHistorial() {
     try {

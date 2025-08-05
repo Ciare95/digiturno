@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..models import Turno
 from ..services.logic import GestorTurnos
+from ..serializers import TurnoSerializer
 
 import logging
 logger = logging.getLogger(__name__)
@@ -16,13 +17,16 @@ class FinalizarAtencionView(APIView):
             return Response({'error': 'turno_id es requerido'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            from ..models import Turno
             turno = Turno.objects.get(id=turno_id)
             logger.info(f"Current turno state before finalizing: {turno.estado}")
             
             gestor = GestorTurnos()
             gestor.finalizar_atencion_turno(turno_id)
-            return Response({'message': 'Atención finalizada correctamente'}, status=status.HTTP_200_OK)
+
+            turno_actualizado = Turno.objects.get(id=turno_id)
+            serializer = TurnoSerializer(turno_actualizado)
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Turno.DoesNotExist:
             logger.error(f"Turno not found with id: {turno_id}")
             return Response({'error': 'Turno no encontrado'}, status=status.HTTP_404_NOT_FOUND)

@@ -46,7 +46,7 @@ class UltimosTurnosFinalizadosView(generics.ListAPIView):
                 
                 formatted_data.append({
                     'id': turno['id'],
-                    'numero': turno['numero_turno'],
+                    'numero_turno': turno['numero_turno'],
                     'servicio': servicio_nombre,
                     'cliente': turno.get('nombre_cliente', 'Cliente no disponible'),
                     'estado': 'Atendido',

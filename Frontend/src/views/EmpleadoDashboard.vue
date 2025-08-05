@@ -409,9 +409,14 @@ export default {
 
     // Historial reciente (últimos 5 turnos)
     const historialReciente = computed(() => {
-      return [...historial.value]
+      const sorted = [...historial.value]
         .sort((a, b) => new Date(`1970/01/01 ${b.hora}`) - new Date(`1970/01/01 ${a.hora}`))
         .slice(0, 5);
+      
+      console.log('Historial reciente calculado:', sorted);
+      console.log('Datos completos del historial:', historial.value);
+      
+      return sorted;
     });
 
     // Estadísticas
@@ -523,19 +528,27 @@ export default {
     const finalizarTurno = async () => {
       if (turnoActual.value) {
         try {
-          // Primero finalizar el turno actual
-          const turnoFinalizado = await EmpleadoService.finalizarAtencion(turnoActual.value.id);
+          console.log('Iniciando finalizarTurno con turnoActual:', turnoActual.value);
           
-          // Agregar directamente al historial sin recargar toda la página
-          historial.value.unshift({
+          // Finalizar el turno actual y obtener datos completos
+          const turnoFinalizado = await EmpleadoService.finalizarAtencion(turnoActual.value.id);
+          console.log('Turno finalizado recibido:', turnoFinalizado);
+          
+          // Crear entrada para historial
+          const historialEntry = {
             id: turnoFinalizado.id,
             numero: turnoFinalizado.numero,
             servicio: turnoFinalizado.servicio,
             cliente: turnoFinalizado.cliente,
-            estado: 'Atendido',
-            fecha_creacion: new Date(),
-            hora: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-          });
+            estado: turnoFinalizado.estado,
+            fecha_creacion: turnoFinalizado.fecha_creacion,
+            hora: turnoFinalizado.hora
+          };
+          console.log('Nueva entrada de historial:', historialEntry);
+          
+          // Agregar al historial
+          historial.value.unshift(historialEntry);
+          console.log('Historial actualizado:', historial.value);
 
           // Mantener solo los últimos 5 turnos
           if (historial.value.length > 5) {
