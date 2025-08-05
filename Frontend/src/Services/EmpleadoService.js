@@ -117,8 +117,27 @@ class EmpleadoService {
 
   async obtenerHistorial() {
     try {
-      const response = await axios.get(`${API_URL}/turnos/historial/`)
-      return response.data ? (Array.isArray(response.data) ? response.data : [response.data]) : []
+      console.log('Fetching recent history from API...')
+      const response = await axios.get(`${API_URL}/ultimos-turnos-finalizados/`)
+      console.log('API response:', response)
+      
+      if (!response.data) {
+        console.log('No data in response')
+        return []
+      }
+      
+      const data = Array.isArray(response.data) ? response.data : [response.data]
+      console.log('Processed data:', data)
+      
+      return data.map(turno => ({
+        id: turno.id,
+        numero: turno.numero_turno,
+        servicio: turno.servicio || 'Servicio no disponible',
+        cliente: turno.cliente || 'Cliente no disponible',
+        estado: turno.estado || 'Finalizado',
+        fecha_creacion: turno.fecha_creacion,
+        hora: turno.hora || '--:--'
+      }))
     } catch (error) {
       console.error('Error getting history:', error)
       return []

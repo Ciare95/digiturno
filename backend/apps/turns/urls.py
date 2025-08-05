@@ -16,7 +16,8 @@ from .views import (
     EstadisticasEmpleadoView,
     ListarColaTurnosView,
     IniciarAtencionView,
-    FinalizarAtencionView
+    FinalizarAtencionView,
+    UltimosTurnosFinalizadosView
 )
 
 urlpatterns = [
@@ -42,4 +43,5 @@ urlpatterns = [
     path('estadisticas-empleado/', EstadisticasEmpleadoView.as_view(), name='estadisticas_empleado'),
     path('iniciar-atencion/', IniciarAtencionView.as_view(), name='iniciar_atencion'),
     path('finalizar-atencion/', FinalizarAtencionView.as_view(), name='finalizar_atencion'),
+    path('ultimos-turnos-finalizados/', UltimosTurnosFinalizadosView.as_view(), name='ultimos_turnos_finalizados'),
 ]

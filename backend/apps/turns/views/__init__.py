@@ -16,3 +16,4 @@ from .transferir_turno_empleado_view import TransferirTurnoEmpleadoView
 from .turno_actual_empleado_view import TurnoActualEmpleadoView
 from .iniciar_atencion_view import IniciarAtencionView
 from .finalizar_atencion_view import FinalizarAtencionView
+from .ultimos_turnos_finalizados_view import UltimosTurnosFinalizadosView

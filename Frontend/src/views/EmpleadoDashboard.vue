@@ -359,17 +359,19 @@ export default {
     // Cargar datos iniciales
     onMounted(async () => {
       try {
-        const [stats, pendientes, actual, infoEmpleado] = await Promise.all([
+        const [stats, pendientes, actual, infoEmpleado, initialHistorial] = await Promise.all([
           EmpleadoService.obtenerEstadisticas(),
           EmpleadoService.obtenerTurnosPendientes(),
           EmpleadoService.obtenerTurnoActual(),
-          EmpleadoService.obtenerInfoEmpleado()
+          EmpleadoService.obtenerInfoEmpleado(),
+          EmpleadoService.obtenerHistorial()
         ]);
         
         console.log('Datos cargados:', { stats, pendientes, actual, infoEmpleado }); // Debugging
         estadisticasServidor.value = stats;
         sucursalActual.value = stats.sucursal || {};
         turnos.value = Array.isArray(pendientes) ? pendientes : [];
+        historial.value = Array.isArray(initialHistorial) ? initialHistorial : [];
         if (actual) {
           turnoActual.value = actual;
           iniciarTemporizador();
@@ -521,18 +523,33 @@ export default {
     const finalizarTurno = async () => {
       if (turnoActual.value) {
         try {
-          await EmpleadoService.finalizarAtencion(turnoActual.value.id);
+          // Primero finalizar el turno actual
+          const turnoFinalizado = await EmpleadoService.finalizarAtencion(turnoActual.value.id);
           
-          // Recargar datos para reflejar el cambio
-          const [stats, updatedTurnos, updatedHistorial] = await Promise.all([
+          // Agregar directamente al historial sin recargar toda la página
+          historial.value.unshift({
+            id: turnoFinalizado.id,
+            numero: turnoFinalizado.numero,
+            servicio: turnoFinalizado.servicio,
+            cliente: turnoFinalizado.cliente,
+            estado: 'Atendido',
+            fecha_creacion: new Date(),
+            hora: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+          });
+
+          // Mantener solo los últimos 5 turnos
+          if (historial.value.length > 5) {
+            historial.value = historial.value.slice(0, 5);
+          }
+
+          // Actualizar solo las estadísticas y lista de pendientes
+          const [stats, updatedTurnos] = await Promise.all([
             EmpleadoService.obtenerEstadisticas(),
-            EmpleadoService.obtenerTurnosPendientes(),
-            EmpleadoService.obtenerHistorial()
+            EmpleadoService.obtenerTurnosPendientes()
           ]);
 
           estadisticasServidor.value = stats;
           turnos.value = Array.isArray(updatedTurnos) ? updatedTurnos : [];
-          historial.value = Array.isArray(updatedHistorial) ? updatedHistorial : [];
           
           turnoActual.value = null;
           clearInterval(intervalo);
