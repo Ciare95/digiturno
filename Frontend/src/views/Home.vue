@@ -1,5 +1,6 @@
 <template>
   <div class="home">
+
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
@@ -87,6 +88,11 @@
         </div>
       </div>
     </section>
+    <footer>
+      <div class="container" style="text-align: center; padding: 2rem 0; color: var(--text-light); font-size: 0.875rem;">
+        &copy; 2025 Digiturno. Todos los derechos reservados.
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -99,12 +105,12 @@ export default {
         { icon: 'fa-clock', title: 'Ahorro de Tiempo', description: 'Reducción de hasta un 60% en tiempos de espera' },
         { icon: 'fa-chart-line', title: 'Métricas en Tiempo Real', description: 'Toma decisiones basadas en datos actualizados' },
         { icon: 'fa-users', title: 'Satisfacción del Cliente', description: 'Mejora la experiencia de tus clientes significativamente' },
-        { icon: 'fa-bolt', title: 'Implementación Rápida', description: 'Comienza en menos de 24 horas' },
+        { icon: 'fa-bolt', title: 'Implementación Rápida', description: 'Comienza en menos de 24 horas' }, 
         { icon: 'fa-mobile-alt', title: 'Acceso Móvil', description: 'Gestiona desde cualquier dispositivo' },
         { icon: 'fa-shield-alt', title: 'Seguro y Confiable', description: 'Tus datos siempre protegidos' }
       ],
       industries: [
-        { name: 'Bancos', icon: 'fa-bank' },
+        { name: 'Bancos', icon: 'fa-gopuram' },
         { name: 'Restaurantes', icon: 'fa-utensils' },
         { name: 'Gobierno', icon: 'fa-landmark' },
         { name: 'Tiendas', icon: 'fa-shopping-bag' },
@@ -193,7 +199,7 @@ body {
 }
 
 .hero {
-  min-height: 70vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
