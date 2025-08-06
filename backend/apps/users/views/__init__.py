@@ -5,5 +5,4 @@ from .inicio_sesion_empleado_view import InicioSesionEmpleadoView
 from .inicio_sesion_admin_view import InicioSesionAdminView
 from .verificar_rol_view import VerificarRolView
 from .registro_empleado_view import RegistroEmpleadoView
-
-
+from .info_empleado_view import InfoEmpleadoView

@@ -104,24 +104,74 @@ class EmpleadoService {
   }
 
   async finalizarAtencion(turnoId) {
-    const response = await axios.post(`${API_URL}/finalizar-atencion/`, { turno_id: turnoId })
-    return {
-      id: response.data.id,
-      numero: response.data.numero_turno,
-      servicio: response.data.servicio_nombre,
-      cliente: response.data.nombre_cliente || 'Cliente no disponible',
-      estado: response.data.estado_display,
-      fecha_creacion: response.data.fecha_creacion
-    }
-  }
+    console.log('Finalizando turno ID:', turnoId);
+    const response = await axios.post(`${API_URL}/finalizar-atencion/`, { turno_id: turnoId });
+    console.log('Finalizar atencion - raw response:', response);
+    console.log('Finalizar atencion - response data:', response.data);
+
+    const turnoData = response.data;
+    const formattedData = {
+        id: turnoData.id,
+        numero: turnoData.numero_turno,
+        servicio: turnoData.servicio_nombre || 'Servicio no disponible',
+        cliente: turnoData.nombre_cliente || 'Cliente no disponible',
+        estado: 'Atendido',
+        fecha_creacion: turnoData.fecha_creacion,
+        hora: turnoData.fecha_finalizacion ?
+            new Date(turnoData.fecha_finalizacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) :
+            new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    console.log('Finalizar atencion - formatted data:', formattedData);
+    return formattedData;
+}
 
   async obtenerHistorial() {
     try {
-      const response = await axios.get(`${API_URL}/turnos/historial/`)
-      return response.data ? (Array.isArray(response.data) ? response.data : [response.data]) : []
+      console.log('Fetching recent history from API...')
+      const response = await axios.get(`${API_URL}/ultimos-turnos-finalizados/`)
+      console.log('API response:', response)
+      
+      if (!response.data) {
+        console.log('No data in response')
+        return []
+      }
+      
+      const data = Array.isArray(response.data) ? response.data : [response.data]
+      console.log('Processed data:', data)
+      
+      return data.map(turno => ({
+        id: turno.id,
+        numero: turno.numero_turno,
+        servicio: turno.servicio || 'Servicio no disponible',
+        cliente: turno.cliente || 'Cliente no disponible',
+        estado: turno.estado || 'Finalizado',
+        fecha_creacion: turno.fecha_creacion,
+        hora: turno.hora || '--:--'
+      }))
     } catch (error) {
       console.error('Error getting history:', error)
       return []
+    }
+  }
+
+  async obtenerInfoEmpleado() {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/empleado/info/")
+      return response.data || {
+        nombre: '',
+        codigo_empleado: '',
+        ventanilla_asignada: '',
+        estado_conexion: false
+      }
+    } catch (error) {
+      console.error('Error getting employee info:', error)
+      return {
+        nombre: '',
+        codigo_empleado: '',
+        ventanilla_asignada: '',
+        estado_conexion: false
+      }
     }
   }
 }

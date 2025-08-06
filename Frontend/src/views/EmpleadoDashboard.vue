@@ -41,9 +41,36 @@
           <div>
             <h1 class="text-2xl font-bold text-gray-900">Panel de Turnos</h1>
             <p class="mt-1 text-sm text-gray-600">Gestiona los turnos de la sucursal</p>
+            
+            <!-- Información del empleado -->
+            <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Información del Empleado</h3>
+              <div class="flex flex-wrap gap-6">
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-500">Nombre:</p>
+                  <p class="font-medium">{{ empleadoInfo.nombre || 'No disponible' }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-500">Código:</p>
+                  <p class="font-medium">{{ empleadoInfo.codigo || 'No disponible' }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-500">Ventanilla:</p>
+                  <p class="font-medium">{{ empleadoInfo.ventanilla || 'No asignada' }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-500">Estado:</p>
+                  <p class="font-medium" :class="{
+                    'text-green-600': empleadoInfo.estado === 'Conectado',
+                    'text-gray-600': empleadoInfo.estado !== 'Conectado'
+                  }">
+                    {{ empleadoInfo.estado || 'Desconectado' }}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="mt-4 flex md:mt-0 md:ml-4
-          ">
+          <div class="mt-4 flex md:mt-0 md:ml-4">
             <div class="relative rounded-md shadow-sm">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <CalendarIcon class="h-5 w-5 text-gray-400" />
@@ -312,6 +339,7 @@ export default {
   setup() {
     const router = useRouter();
     const fechaSeleccionada = ref(new Date().toISOString().split('T')[0]);
+    const estadisticasServidor = ref({ turnos_atendidos_hoy: 0 });
     const tiempoInicio = ref(null);
     const tiempoTranscurrido = ref('00:00');
     let intervalo = null;
@@ -321,22 +349,40 @@ export default {
     const turnos = ref([]);
     const historial = ref([]);
     const isLoading = ref(true);
+    const empleadoInfo = ref({
+      nombre: '',
+      codigo: '',
+      ventanilla: '',
+      estado: 'Desconectado'
+    });
 
     // Cargar datos iniciales
     onMounted(async () => {
       try {
-        const [estadisticas, pendientes, actual] = await Promise.all([
+        const [stats, pendientes, actual, infoEmpleado, initialHistorial] = await Promise.all([
           EmpleadoService.obtenerEstadisticas(),
           EmpleadoService.obtenerTurnosPendientes(),
-          EmpleadoService.obtenerTurnoActual()
+          EmpleadoService.obtenerTurnoActual(),
+          EmpleadoService.obtenerInfoEmpleado(),
+          EmpleadoService.obtenerHistorial()
         ]);
         
-        console.log('Datos cargados:', { estadisticas, pendientes, actual }); // Debugging
-        sucursalActual.value = estadisticas.sucursal || {};
+        console.log('Datos cargados:', { stats, pendientes, actual, infoEmpleado }); // Debugging
+        estadisticasServidor.value = stats;
+        sucursalActual.value = stats.sucursal || {};
         turnos.value = Array.isArray(pendientes) ? pendientes : [];
+        historial.value = Array.isArray(initialHistorial) ? initialHistorial : [];
         if (actual) {
           turnoActual.value = actual;
           iniciarTemporizador();
+        }
+        if (infoEmpleado) {
+          empleadoInfo.value = {
+            nombre: infoEmpleado.nombre || '',
+            codigo: infoEmpleado.codigo_empleado || '',
+            ventanilla: infoEmpleado.ventanilla_asignada || '',
+            estado: infoEmpleado.estado_conexion ? 'Conectado' : 'Desconectado'
+          };
         }
       } catch (error) {
         console.error('Error cargando datos:', error);
@@ -363,21 +409,24 @@ export default {
 
     // Historial reciente (últimos 5 turnos)
     const historialReciente = computed(() => {
-      return [...historial.value]
+      const sorted = [...historial.value]
         .sort((a, b) => new Date(`1970/01/01 ${b.hora}`) - new Date(`1970/01/01 ${a.hora}`))
         .slice(0, 5);
+      
+      console.log('Historial reciente calculado:', sorted);
+      console.log('Datos completos del historial:', historial.value);
+      
+      return sorted;
     });
 
     // Estadísticas
     const estadisticas = computed(() => {
-      const hoy = new Date().toISOString().split('T')[0];
+      const atendidos = estadisticasServidor.value?.turnos_atendidos_hoy || 0;
+      const enEspera = turnosPendientes.value.length;
       return {
-        turnosHoy: turnos.value.length,
-        atendidosHoy: historial.value.filter(t => 
-          t.estado === 'Atendido' || 
-          t.estado === 'ATENDIDO'
-        ).length,
-        enEspera: turnosPendientes.value.length,
+        turnosHoy: atendidos + enEspera,
+        atendidosHoy: atendidos,
+        enEspera: enEspera,
         enAtencion: turnoActual.value ? 1 : 0
       };
     });
@@ -479,13 +528,41 @@ export default {
     const finalizarTurno = async () => {
       if (turnoActual.value) {
         try {
-          await EmpleadoService.finalizarAtencion(turnoActual.value.id);
+          console.log('Iniciando finalizarTurno con turnoActual:', turnoActual.value);
           
-          const updatedTurnos = await EmpleadoService.obtenerTurnosPendientes();
-          const updatedHistorial = await EmpleadoService.obtenerHistorial();
+          // Finalizar el turno actual y obtener datos completos
+          const turnoFinalizado = await EmpleadoService.finalizarAtencion(turnoActual.value.id);
+          console.log('Turno finalizado recibido:', turnoFinalizado);
           
+          // Crear entrada para historial
+          const historialEntry = {
+            id: turnoFinalizado.id,
+            numero: turnoFinalizado.numero,
+            servicio: turnoFinalizado.servicio,
+            cliente: turnoFinalizado.cliente,
+            estado: turnoFinalizado.estado,
+            fecha_creacion: turnoFinalizado.fecha_creacion,
+            hora: turnoFinalizado.hora
+          };
+          console.log('Nueva entrada de historial:', historialEntry);
+          
+          // Agregar al historial
+          historial.value.unshift(historialEntry);
+          console.log('Historial actualizado:', historial.value);
+
+          // Mantener solo los últimos 5 turnos
+          if (historial.value.length > 5) {
+            historial.value = historial.value.slice(0, 5);
+          }
+
+          // Actualizar solo las estadísticas y lista de pendientes
+          const [stats, updatedTurnos] = await Promise.all([
+            EmpleadoService.obtenerEstadisticas(),
+            EmpleadoService.obtenerTurnosPendientes()
+          ]);
+
+          estadisticasServidor.value = stats;
           turnos.value = Array.isArray(updatedTurnos) ? updatedTurnos : [];
-          historial.value = Array.isArray(updatedHistorial) ? updatedHistorial : [];
           
           turnoActual.value = null;
           clearInterval(intervalo);
@@ -550,6 +627,9 @@ export default {
       estadisticas,
       fechaSeleccionada,
       tiempoTranscurrido,
+      
+      // Datos
+      empleadoInfo,
       
       // Métodos
       atenderSiguiente,
