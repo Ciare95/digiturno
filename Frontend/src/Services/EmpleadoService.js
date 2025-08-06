@@ -162,7 +162,8 @@ class EmpleadoService {
         nombre: '',
         codigo_empleado: '',
         ventanilla_asignada: '',
-        estado_conexion: false
+        estado_conexion: false,
+        sucursal_nombre: ''
       }
     } catch (error) {
       console.error('Error getting employee info:', error)
@@ -170,7 +171,8 @@ class EmpleadoService {
         nombre: '',
         codigo_empleado: '',
         ventanilla_asignada: '',
-        estado_conexion: false
+        estado_conexion: false,
+        sucursal_nombre: ''
       }
     }
   }

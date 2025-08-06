@@ -6,12 +6,16 @@ class InfoEmpleadoSerializer(serializers.ModelSerializer):
     codigo_empleado = serializers.CharField()
     ventanilla_asignada = serializers.CharField()
     estado_conexion = serializers.BooleanField()
+    sucursal_nombre = serializers.SerializerMethodField()
 
     class Meta:
         model = Empleado
-        fields = ['nombre', 'codigo_empleado', 'ventanilla_asignada', 'estado_conexion']
+        fields = ['nombre', 'codigo_empleado', 'ventanilla_asignada', 'estado_conexion', 'sucursal_nombre']
 
     def get_nombre(self, obj):
         if obj.usuario.first_name and obj.usuario.last_name:
             return f"{obj.usuario.first_name} {obj.usuario.last_name}"
         return obj.usuario.username
+
+    def get_sucursal_nombre(self, obj):
+        return obj.sucursal.nombre if obj.sucursal else None

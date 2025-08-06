@@ -19,8 +19,8 @@
             </div>
           </div>
           <div class="hidden sm:ml-6 sm:flex sm:items-center">
-            <span v-if="sucursalActual?.nombre" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-4">
-              {{ sucursalActual.nombre }}
+            <span v-if="empleadoInfo.sucursal_nombre" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-4">
+              {{ empleadoInfo.sucursal_nombre }}
             </span>
             <span v-else class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 mr-4">
               Sucursal no disponible
@@ -345,7 +345,6 @@ export default {
     let intervalo = null;
 
     // Datos reales
-    const sucursalActual = ref({});
     const turnos = ref([]);
     const historial = ref([]);
     const isLoading = ref(true);
@@ -353,7 +352,8 @@ export default {
       nombre: '',
       codigo: '',
       ventanilla: '',
-      estado: 'Desconectado'
+      estado: 'Desconectado',
+      sucursal_nombre: ''
     });
 
     // Cargar datos iniciales
@@ -369,7 +369,6 @@ export default {
         
         console.log('Datos cargados:', { stats, pendientes, actual, infoEmpleado }); // Debugging
         estadisticasServidor.value = stats;
-        sucursalActual.value = stats.sucursal || {};
         turnos.value = Array.isArray(pendientes) ? pendientes : [];
         historial.value = Array.isArray(initialHistorial) ? initialHistorial : [];
         if (actual) {
@@ -381,7 +380,8 @@ export default {
             nombre: infoEmpleado.nombre || '',
             codigo: infoEmpleado.codigo_empleado || '',
             ventanilla: infoEmpleado.ventanilla_asignada || '',
-            estado: infoEmpleado.estado_conexion ? 'Conectado' : 'Desconectado'
+            estado: infoEmpleado.estado_conexion ? 'Conectado' : 'Desconectado',
+            sucursal_nombre: infoEmpleado.sucursal_nombre || ''
           };
         }
       } catch (error) {
@@ -619,7 +619,6 @@ export default {
 
     return {
       // Datos
-      sucursalActual,
       turnoActual,
       turnoEnProgreso,
       turnosPendientes,
