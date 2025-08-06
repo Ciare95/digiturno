@@ -7,8 +7,8 @@
     <main class="flex-grow py-12 px-4">
       <div class="max-w-2xl mx-auto">
         <!-- Encabezado -->
-        <div class="text-center mb-12">
-          <h1 class="text-xl font-bold text-gray-900 mb-2">Turno Generado Exitosamente</h1>
+        <div class="text-center mb-1">
+          <h1 class="text-x4 font-bold text-gray-900 mb-2">Turno Generado Exitosamente</h1>
         </div>
 
         <!-- Tarjeta del turno -->
