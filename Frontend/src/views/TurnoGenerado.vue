@@ -26,6 +26,19 @@
               <div class="bg-green-50 rounded-lg p-6">
                 <span class="text-6xl font-bold text-green-600">{{ turno.numero_turno }}</span>
               </div>
+              
+              <!-- Mensaje de ventanilla cuando está en atención -->
+              <div v-if="turno.estado_display === 'En Atención' && turno.ventanilla" 
+                   class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center justify-center gap-3">
+                  <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                  </svg>
+                  <p class="text-lg font-medium text-blue-800">
+                    Puede pasar a la ventanilla <span class="font-bold">{{ turno.ventanilla }}</span>
+                  </p>
+                </div>
+              </div>
             </div>
             
             <!-- Información del turno -->
@@ -181,26 +194,39 @@ const router = useRouter();
 const turno = ref(null);
 
 onMounted(() => {
-  // Obtener el turno desde los parámetros de la ruta o localStorage
-  if (route.params.turno) {
-    try {
-      turno.value = JSON.parse(route.params.turno);
-    } catch (error) {
-      console.error('Error al parsear el turno:', error);
-    }
-  }
-  
-  // Si no hay turno en los parámetros, intentar obtener desde localStorage
-  if (!turno.value) {
-    const turnoGuardado = localStorage.getItem('ultimoTurno');
-    if (turnoGuardado) {
+  // Función para cargar el turno
+  const cargarTurno = () => {
+    // Obtener el turno desde los parámetros de la ruta o localStorage
+    if (route.params.turno) {
       try {
-        turno.value = JSON.parse(turnoGuardado);
+        turno.value = JSON.parse(route.params.turno);
       } catch (error) {
-        console.error('Error al parsear el turno del localStorage:', error);
+        console.error('Error al parsear el turno:', error);
       }
     }
-  }
+    
+    // Si no hay turno en los parámetros, intentar obtener desde localStorage
+    if (!turno.value) {
+      const turnoGuardado = localStorage.getItem('ultimoTurno');
+      if (turnoGuardado) {
+        try {
+          turno.value = JSON.parse(turnoGuardado);
+        } catch (error) {
+          console.error('Error al parsear el turno del localStorage:', error);
+        }
+      }
+    }
+  };
+
+  // Cargar inicialmente
+  cargarTurno();
+
+  // Escuchar cambios en localStorage
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'ultimoTurno') {
+      cargarTurno();
+    }
+  });
 });
 
 const calcularTiempoEspera = () => {
@@ -227,4 +253,4 @@ const verMisTurnos = () => {
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
-</style> 
+</style>

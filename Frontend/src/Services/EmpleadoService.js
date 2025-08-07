@@ -84,7 +84,8 @@ class EmpleadoService {
         servicio: response.data.servicio_nombre,
         cliente: response.data.nombre_cliente || 'Cliente no disponible',
         estado: response.data.estado_display,
-        fecha_creacion: response.data.fecha_creacion
+        fecha_creacion: response.data.fecha_creacion,
+        ventanilla: response.data.ventanilla
       }
     } catch (error) {
       console.error('Error starting attention:', error)
