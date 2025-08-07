@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Empleado, Administrador, UsuarioSinStaff
+from .models import Usuario, Empleado, Administrador, UsuarioSinStaff, EmpleadoServicio
 
 
 @admin.register(UsuarioSinStaff)
@@ -30,10 +30,15 @@ class UsuarioAdmin(UserAdmin):
     )
 
 
+class EmpleadoServicioInline(admin.TabularInline):
+    model = EmpleadoServicio
+    extra = 1
+
 @admin.register(Empleado)
 class EmpleadoAdmin(admin.ModelAdmin):
     """Configuración del administrador para el modelo Empleado"""
     list_display = ('usuario', 'codigo_empleado', 'sucursal', 'ventanilla_asignada', 'estado_conexion')
+    inlines = [EmpleadoServicioInline]
     list_filter = ('sucursal', 'estado_conexion')
     search_fields = ('usuario__username', 'usuario__email', 'codigo_empleado')
     raw_id_fields = ('usuario',)
@@ -49,6 +54,13 @@ class EmpleadoAdmin(admin.ModelAdmin):
         }),
     )
 
+
+@admin.register(EmpleadoServicio)
+class EmpleadoServicioAdmin(admin.ModelAdmin):
+    """Configuración del administrador para asignación de servicios"""
+    list_display = ('empleado', 'servicio', 'fecha_asignacion', 'activo')
+    list_filter = ('servicio', 'activo')
+    search_fields = ('empleado__codigo_empleado', 'servicio__nombre')
 
 @admin.register(Administrador)
 class AdministradorAdmin(admin.ModelAdmin):
