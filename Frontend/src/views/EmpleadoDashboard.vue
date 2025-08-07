@@ -356,25 +356,43 @@ export default {
       sucursal_nombre: ''
     });
 
-    // Cargar datos iniciales
-    onMounted(async () => {
+    // Función para actualizar datos de turnos
+    const actualizarTurnos = async () => {
       try {
-        const [stats, pendientes, actual, infoEmpleado, initialHistorial] = await Promise.all([
+        console.log('Actualizando datos de turnos...');
+        const [stats, pendientes, actual] = await Promise.all([
           EmpleadoService.obtenerEstadisticas(),
           EmpleadoService.obtenerTurnosPendientes(),
-          EmpleadoService.obtenerTurnoActual(),
+          EmpleadoService.obtenerTurnoActual()
+        ]);
+        
+        estadisticasServidor.value = stats;
+        turnos.value = Array.isArray(pendientes) ? pendientes : [];
+        
+        // Solo actualizar turno actual si hay cambios
+        if (actual && (!turnoActual.value || actual.id !== turnoActual.value.id)) {
+          turnoActual.value = actual;
+          iniciarTemporizador();
+        } else if (!actual && turnoActual.value) {
+          turnoActual.value = null;
+          clearInterval(intervalo);
+          tiempoTranscurrido.value = '00:00';
+        }
+      } catch (error) {
+        console.error('Error actualizando turnos:', error);
+      }
+    };
+
+    // Cargar datos iniciales y configurar polling
+    onMounted(async () => {
+      try {
+        await actualizarTurnos();
+        
+        const [infoEmpleado, initialHistorial] = await Promise.all([
           EmpleadoService.obtenerInfoEmpleado(),
           EmpleadoService.obtenerHistorial()
         ]);
         
-        console.log('Datos cargados:', { stats, pendientes, actual, infoEmpleado }); // Debugging
-        estadisticasServidor.value = stats;
-        turnos.value = Array.isArray(pendientes) ? pendientes : [];
-        historial.value = Array.isArray(initialHistorial) ? initialHistorial : [];
-        if (actual) {
-          turnoActual.value = actual;
-          iniciarTemporizador();
-        }
         if (infoEmpleado) {
           empleadoInfo.value = {
             nombre: infoEmpleado.nombre || '',
@@ -384,11 +402,22 @@ export default {
             sucursal_nombre: infoEmpleado.sucursal_nombre || ''
           };
         }
+        
+        historial.value = Array.isArray(initialHistorial) ? initialHistorial : [];
       } catch (error) {
         console.error('Error cargando datos:', error);
       } finally {
         isLoading.value = false;
       }
+
+      // Configurar polling cada 5 segundos
+      const pollingInterval = setInterval(actualizarTurnos, 5000);
+      
+      // Limpiar intervalo al desmontar
+      onUnmounted(() => {
+        clearInterval(pollingInterval);
+        clearInterval(intervalo);
+      });
     });
 
     // Turno actual en atención
