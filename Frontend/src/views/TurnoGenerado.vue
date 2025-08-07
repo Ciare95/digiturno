@@ -216,7 +216,7 @@ const volverASolicitar = () => {
 };
 
 const verMisTurnos = () => {
-  router.push('/mis-turnos');
+  router.push('/Historial');
 };
 
 const cancelarTurno = () => {
