@@ -184,7 +184,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import AppFooter from '@/components/layout/AppFooter.vue';
@@ -193,28 +193,77 @@ const route = useRoute();
 const router = useRouter();
 const turno = ref(null);
 
-onMounted(() => {
+onMounted(async () => {
   // Función para cargar el turno
   const cargarTurno = () => {
-    // Obtener el turno desde los parámetros de la ruta o localStorage
-    if (route.params.turno) {
+    console.log('Cargando turno...');
+    
+    // Primero intentar desde localStorage
+    const turnoGuardado = localStorage.getItem('ultimoTurno');
+    if (turnoGuardado) {
       try {
-        turno.value = JSON.parse(route.params.turno);
+        turno.value = JSON.parse(turnoGuardado);
+        console.log('Turno cargado desde localStorage:', turno.value);
+        return;
       } catch (error) {
-        console.error('Error al parsear el turno:', error);
+        console.error('Error al parsear el turno del localStorage:', error);
       }
     }
-    
-    // Si no hay turno en los parámetros, intentar obtener desde localStorage
-    if (!turno.value) {
-      const turnoGuardado = localStorage.getItem('ultimoTurno');
-      if (turnoGuardado) {
-        try {
-          turno.value = JSON.parse(turnoGuardado);
-        } catch (error) {
-          console.error('Error al parsear el turno del localStorage:', error);
-        }
+
+    // Si no hay en localStorage, intentar desde parámetros de ruta
+    if (route.params.turno) {
+      try {
+        // Si es string, parsear. Si ya es objeto, usar directamente
+        turno.value = typeof route.params.turno === 'string' 
+          ? JSON.parse(route.params.turno) 
+          : route.params.turno;
+        console.log('Turno cargado desde ruta:', turno.value);
+        
+        // Guardar en localStorage para futuras cargas
+        localStorage.setItem('ultimoTurno', JSON.stringify(turno.value));
+      } catch (error) {
+        console.error('Error al procesar turno de ruta:', error);
       }
+    }
+
+    if (!turno.value) {
+      console.warn('No se encontró información del turno');
+    }
+  };
+
+  // Función para actualizar el turno desde el servidor
+  const actualizarTurnoDesdeServidor = async () => {
+    if (!turno.value?.id) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`/api/turns/mis-turnos/${turno.value.id}/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.warn('Sesión expirada, redirigiendo a login...');
+          router.push('/login');
+        }
+        return;
+      }
+
+      const data = await response.json();
+      // Actualizar solo si hay cambios en estado o ventanilla
+      if (data.estado_display !== turno.value.estado_display || 
+          data.ventanilla !== turno.value.ventanilla) {
+        turno.value = { ...turno.value, ...data };
+        // Guardar también en localStorage para consistencia
+        localStorage.setItem('ultimoTurno', JSON.stringify(turno.value));
+      }
+    } catch (error) {
+      console.error('Error al actualizar turno:', error);
     }
   };
 
@@ -226,6 +275,18 @@ onMounted(() => {
     if (event.key === 'ultimoTurno') {
       cargarTurno();
     }
+  });
+
+  // Configurar polling cada 5 segundos
+  console.log('Iniciando polling...');
+  const pollingInterval = setInterval(() => {
+    console.log('Ejecutando polling...');
+    actualizarTurnoDesdeServidor();
+  }, 5000);
+
+  // Limpiar intervalo al desmontar el componente
+  onUnmounted(() => {
+    clearInterval(pollingInterval);
   });
 });
 
