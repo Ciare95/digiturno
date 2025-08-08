@@ -317,9 +317,9 @@ onMounted(async () => {
         turno.value = updatedTurno;
         localStorage.setItem('ultimoTurno', JSON.stringify(updatedTurno));
         
-        // Mostrar modal de calificación si el estado cambió a "Atendido"
-        if (data.estado_display === 'Atendido') {
-          console.log('Turno marcado como Atendido. Mostrando modal de calificación...');
+        // Mostrar modal de calificación si el estado cambió a "Atendido" o "Finalizado"
+        if (data.estado_display === 'Atendido' || data.estado_display === 'Finalizado') {
+          console.log(`Turno marcado como ${data.estado_display}. Mostrando modal de calificación...`);
           showRatingModal.value = true;
           localStorage.setItem('calificacionMostrada', 'true');
         }
