@@ -569,6 +569,7 @@ export default {
           // Finalizar el turno actual y obtener datos completos
           const turnoFinalizado = await EmpleadoService.finalizarAtencion(turnoActual.value.id);
           console.log('Turno finalizado recibido:', turnoFinalizado);
+          console.log('Estado del turno finalizado:', turnoFinalizado.estado, 'Estado display:', turnoFinalizado.estado_display);
           
           // Crear entrada para historial
           const historialEntry = {
@@ -577,6 +578,7 @@ export default {
             servicio: turnoFinalizado.servicio,
             cliente: turnoFinalizado.cliente,
             estado: turnoFinalizado.estado,
+            estado_display: turnoFinalizado.estado_display || 'Atendido',
             fecha_creacion: turnoFinalizado.fecha_creacion,
             hora: turnoFinalizado.hora
           };

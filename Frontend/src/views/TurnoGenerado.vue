@@ -181,6 +181,39 @@
     <!-- Footer -->
     <AppFooter />
   </div>
+
+  <!-- Modal de calificación -->
+  <div v-if="showRatingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Califica tu experiencia</h3>
+      <p class="text-gray-600 mb-4">¿Cómo calificarías el servicio recibido?</p>
+      
+      <div class="flex justify-center mb-6">
+        <div v-for="star in 5" :key="star" 
+             @click="rating = star" 
+             class="text-3xl cursor-pointer"
+             :class="star <= rating ? 'text-yellow-400' : 'text-gray-300'">
+          ★
+        </div>
+      </div>
+      
+      <textarea v-model="comentario" 
+                class="w-full border border-gray-300 rounded-md p-2 mb-4" 
+                placeholder="Opcional: Deja un comentario sobre tu experiencia"
+                rows="3"></textarea>
+      
+      <div class="flex justify-end gap-3">
+        <button @click="showRatingModal = false" 
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+          Cancelar
+        </button>
+        <button @click="enviarCalificacion" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Enviar Calificación
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -192,6 +225,9 @@ import AppFooter from '@/components/layout/AppFooter.vue';
 const route = useRoute();
 const router = useRouter();
 const turno = ref(null);
+const showRatingModal = ref(false);
+const rating = ref(0);
+const comentario = ref('');
 
 onMounted(async () => {
   // Función para cargar el turno
@@ -202,8 +238,17 @@ onMounted(async () => {
     const turnoGuardado = localStorage.getItem('ultimoTurno');
     if (turnoGuardado) {
       try {
-        turno.value = JSON.parse(turnoGuardado);
+        const parsedTurno = JSON.parse(turnoGuardado);
+        turno.value = parsedTurno;
         console.log('Turno cargado desde localStorage:', turno.value);
+        console.log('Estado actual del turno:', parsedTurno.estado, 'Estado display:', parsedTurno.estado_display);
+        
+        // Verificar si el turno acaba de ser atendido
+        if ((parsedTurno.estado === 'Atendido' || parsedTurno.estado_display === 'Atendido') && !localStorage.getItem('calificacionMostrada')) {
+          console.log('Mostrando modal de calificación para turno atendido');
+          showRatingModal.value = true;
+          localStorage.setItem('calificacionMostrada', 'true');
+        }
         return;
       } catch (error) {
         console.error('Error al parsear el turno del localStorage:', error);
@@ -214,13 +259,20 @@ onMounted(async () => {
     if (route.params.turno) {
       try {
         // Si es string, parsear. Si ya es objeto, usar directamente
-        turno.value = typeof route.params.turno === 'string' 
+        const parsedTurno = typeof route.params.turno === 'string' 
           ? JSON.parse(route.params.turno) 
           : route.params.turno;
+        turno.value = parsedTurno;
         console.log('Turno cargado desde ruta:', turno.value);
         
         // Guardar en localStorage para futuras cargas
         localStorage.setItem('ultimoTurno', JSON.stringify(turno.value));
+
+        // Verificar si el turno acaba de ser atendido
+        if (parsedTurno.estado_display === 'Atendido' && !localStorage.getItem('calificacionMostrada')) {
+          showRatingModal.value = true;
+          localStorage.setItem('calificacionMostrada', 'true');
+        }
       } catch (error) {
         console.error('Error al procesar turno de ruta:', error);
       }
@@ -233,34 +285,47 @@ onMounted(async () => {
 
   // Función para actualizar el turno desde el servidor
   const actualizarTurnoDesdeServidor = async () => {
-    if (!turno.value?.id) return;
-    
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    console.log('Iniciando polling para turno ID:', turno.value?.id);
+    if (!turno.value?.id) {
+      console.log('No hay ID de turno, saliendo...');
+      return;
+    }
 
     try {
-      const response = await fetch(`/api/turns/mis-turnos/${turno.value.id}/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      console.log('Realizando request al backend (endpoint público)...');
+      const response = await fetch(`/api/turns/public/turno/${turno.value.id}/status/`);
       
+      console.log('Response status:', response.status);
       if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Sesión expirada, redirigiendo a login...');
-          router.push('/login');
-        }
+        console.log('Response not OK:', response);
         return;
       }
 
       const data = await response.json();
-      // Actualizar solo si hay cambios en estado o ventanilla
-      if (data.estado_display !== turno.value.estado_display || 
-          data.ventanilla !== turno.value.ventanilla) {
-        turno.value = { ...turno.value, ...data };
-        // Guardar también en localStorage para consistencia
-        localStorage.setItem('ultimoTurno', JSON.stringify(turno.value));
+      console.log('Datos recibidos del backend:', data);
+      console.log('Estado actual:', turno.value?.estado_display, 'Nuevo estado:', data.estado_display);
+      
+      // Verificar cambios importantes
+      const estadoCambio = data.estado_display !== turno.value?.estado_display;
+      const ventanillaCambio = data.ventanilla !== turno.value?.ventanilla;
+      
+      console.log(`Cambios detectados - estado: ${estadoCambio} (${turno.value?.estado_display} -> ${data.estado_display}), ventanilla: ${ventanillaCambio}`);
+      
+      if (estadoCambio || ventanillaCambio) {
+        console.log('Actualizando datos del turno...');
+        const updatedTurno = { ...turno.value, ...data };
+        turno.value = updatedTurno;
+        localStorage.setItem('ultimoTurno', JSON.stringify(updatedTurno));
+        
+        // Mostrar modal de calificación si el estado cambió a "Atendido"
+        if (data.estado_display === 'Atendido') {
+          console.log('Turno marcado como Atendido. Mostrando modal de calificación...');
+          showRatingModal.value = true;
+          localStorage.setItem('calificacionMostrada', 'true');
+        }
+
+      } else {
+        console.log('No hay cambios relevantes en el turno');
       }
     } catch (error) {
       console.error('Error al actualizar turno:', error);
@@ -303,6 +368,39 @@ const volverASolicitar = () => {
 
 const verMisTurnos = () => {
   router.push('/mis-turnos');
+};
+
+const enviarCalificacion = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    const response = await fetch('/api/turns/calificar-servicio/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        turno_id: turno.value.id,
+        calificacion: rating.value,
+        comentario: comentario.value
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al enviar calificación');
+    }
+
+    showRatingModal.value = false;
+    alert('¡Gracias por calificar nuestro servicio!');
+  } catch (error) {
+    console.error('Error al calificar:', error);
+    alert('Ocurrió un error al enviar tu calificación');
+  }
 };
 </script>
 

@@ -117,10 +117,15 @@ class EmpleadoService {
         servicio: turnoData.servicio_nombre || 'Servicio no disponible',
         cliente: turnoData.nombre_cliente || 'Cliente no disponible',
         estado: 'Atendido',
+        estado_display: 'Atendido',
         fecha_creacion: turnoData.fecha_creacion,
         hora: turnoData.fecha_finalizacion ?
             new Date(turnoData.fecha_finalizacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) :
-            new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+            new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        numero_turno: turnoData.numero_turno,
+        servicio_nombre: turnoData.servicio_nombre,
+        nombre_cliente: turnoData.nombre_cliente,
+        fecha_finalizacion: turnoData.fecha_finalizacion
     };
 
     console.log('Finalizar atencion - formatted data:', formattedData);
