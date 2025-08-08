@@ -229,52 +229,56 @@ const showRatingModal = ref(false);
 const rating = ref(0);
 const comentario = ref('');
 
-onMounted(async () => {
-  // Función para cargar el turno
+onMounted(() => {
+  let pollingInterval = null;
+
+  const preguntarPorCalificacion = (turnoId) => {
+    const calificacionKey = `calificacionMostrada_${turnoId}`;
+    if (localStorage.getItem(calificacionKey)) {
+      console.log(`La pregunta de calificación para el turno ${turnoId} ya fue mostrada.`);
+      return;
+    }
+
+    console.log(`Mostrando pregunta de calificación para el turno ${turnoId}.`);
+    if (confirm('¿Desea calificar el servicio recibido?')) {
+      showRatingModal.value = true;
+    } else {
+      router.push('/solicitar-turno');
+    }
+    localStorage.setItem(calificacionKey, 'true');
+  };
+
+  const procesarDatosTurno = (data) => {
+    const estadoFinalizado = data.estado_display === 'Atendido' || data.estado_display === 'Finalizado';
+    
+    if (estadoFinalizado) {
+      preguntarPorCalificacion(data.id);
+    }
+  };
+
   const cargarTurno = () => {
     console.log('Cargando turno...');
-    
-    // Primero intentar desde localStorage
     const turnoGuardado = localStorage.getItem('ultimoTurno');
     if (turnoGuardado) {
       try {
         const parsedTurno = JSON.parse(turnoGuardado);
         turno.value = parsedTurno;
-        console.log('Turno cargado desde localStorage:', turno.value);
-        console.log('Estado actual del turno:', parsedTurno.estado, 'Estado display:', parsedTurno.estado_display);
-        
-        // Verificar si el turno acaba de ser atendido
-        if ((parsedTurno.estado === 'Atendido' || parsedTurno.estado_display === 'Atendido') && !localStorage.getItem('calificacionMostrada')) {
-          console.log('Mostrando modal de calificación para turno atendido');
-          showRatingModal.value = true;
-          localStorage.setItem('calificacionMostrada', 'true');
-        }
-        return;
-      } catch (error) {
-        console.error('Error al parsear el turno del localStorage:', error);
+        console.log('Turno cargado desde localStorage:', parsedTurno);
+        procesarDatosTurno(parsedTurno);
+      } catch (e) {
+        console.error('Error parseando turno desde localStorage', e);
       }
-    }
-
-    // Si no hay en localStorage, intentar desde parámetros de ruta
-    if (route.params.turno) {
+    } else if (route.params.turno) {
       try {
-        // Si es string, parsear. Si ya es objeto, usar directamente
         const parsedTurno = typeof route.params.turno === 'string' 
           ? JSON.parse(route.params.turno) 
           : route.params.turno;
         turno.value = parsedTurno;
-        console.log('Turno cargado desde ruta:', turno.value);
-        
-        // Guardar en localStorage para futuras cargas
-        localStorage.setItem('ultimoTurno', JSON.stringify(turno.value));
-
-        // Verificar si el turno acaba de ser atendido
-        if (parsedTurno.estado_display === 'Atendido' && !localStorage.getItem('calificacionMostrada')) {
-          showRatingModal.value = true;
-          localStorage.setItem('calificacionMostrada', 'true');
-        }
-      } catch (error) {
-        console.error('Error al procesar turno de ruta:', error);
+        localStorage.setItem('ultimoTurno', JSON.stringify(parsedTurno));
+        console.log('Turno cargado desde route.params:', parsedTurno);
+        procesarDatosTurno(parsedTurno);
+      } catch (e) {
+        console.error('Error parseando turno desde route.params', e);
       }
     }
 
@@ -283,74 +287,50 @@ onMounted(async () => {
     }
   };
 
-  // Función para actualizar el turno desde el servidor
   const actualizarTurnoDesdeServidor = async () => {
-    console.log('Iniciando polling para turno ID:', turno.value?.id);
     if (!turno.value?.id) {
-      console.log('No hay ID de turno, saliendo...');
+      console.log('Polling: No hay ID de turno, deteniendo.');
+      clearInterval(pollingInterval);
       return;
     }
 
+    console.log(`Polling: Verificando estado para turno ID: ${turno.value.id}`);
     try {
-      console.log('Realizando request al backend (endpoint público)...');
       const response = await fetch(`/api/turns/public/turno/${turno.value.id}/status/`);
-      
-      console.log('Response status:', response.status);
       if (!response.ok) {
-        console.log('Response not OK:', response);
+        console.warn(`Polling: Respuesta no OK (${response.status})`);
         return;
       }
-
       const data = await response.json();
-      console.log('Datos recibidos del backend:', data);
-      console.log('Estado actual:', turno.value?.estado_display, 'Nuevo estado:', data.estado_display);
-      
-      // Verificar cambios importantes
-      const estadoCambio = data.estado_display !== turno.value?.estado_display;
-      const ventanillaCambio = data.ventanilla !== turno.value?.ventanilla;
-      
-      console.log(`Cambios detectados - estado: ${estadoCambio} (${turno.value?.estado_display} -> ${data.estado_display}), ventanilla: ${ventanillaCambio}`);
-      
-      if (estadoCambio || ventanillaCambio) {
-        console.log('Actualizando datos del turno...');
-        const updatedTurno = { ...turno.value, ...data };
-        turno.value = updatedTurno;
-        localStorage.setItem('ultimoTurno', JSON.stringify(updatedTurno));
-        
-        // Mostrar modal de calificación si el estado cambió a "Atendido" o "Finalizado"
-        if (data.estado_display === 'Atendido' || data.estado_display === 'Finalizado') {
-          console.log(`Turno marcado como ${data.estado_display}. Mostrando modal de calificación...`);
-          showRatingModal.value = true;
-          localStorage.setItem('calificacionMostrada', 'true');
-        }
+      console.log('Polling: Datos recibidos:', data);
 
-      } else {
-        console.log('No hay cambios relevantes en el turno');
+      const estadoAnterior = turno.value.estado_display;
+      const estadoNuevo = data.estado_display;
+
+      if (estadoAnterior !== estadoNuevo || data.ventanilla !== turno.value.ventanilla) {
+        console.log(`Actualizando turno. Estado: ${estadoAnterior} -> ${estadoNuevo}.`);
+        turno.value = { ...turno.value, ...data };
+        localStorage.setItem('ultimoTurno', JSON.stringify(turno.value));
+        procesarDatosTurno(data);
       }
     } catch (error) {
-      console.error('Error al actualizar turno:', error);
+      console.error('Polling: Error al actualizar turno:', error);
     }
   };
 
-  // Cargar inicialmente
   cargarTurno();
 
-  // Escuchar cambios en localStorage
   window.addEventListener('storage', (event) => {
     if (event.key === 'ultimoTurno') {
+      console.log('Detectado cambio en localStorage, recargando turno.');
       cargarTurno();
     }
   });
 
-  // Configurar polling cada 5 segundos
-  console.log('Iniciando polling...');
-  const pollingInterval = setInterval(() => {
-    console.log('Ejecutando polling...');
-    actualizarTurnoDesdeServidor();
-  }, 5000);
+  pollingInterval = setInterval(actualizarTurnoDesdeServidor, 5000);
 
-  // Limpiar intervalo al desmontar el componente
   onUnmounted(() => {
+    console.log('Componente desmontado, limpiando intervalo de polling.');
     clearInterval(pollingInterval);
   });
 });
