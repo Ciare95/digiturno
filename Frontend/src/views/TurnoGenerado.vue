@@ -354,7 +354,7 @@ const enviarCalificacion = async () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/login');
+      router.push('/solicitar-turno');
       return;
     }
 

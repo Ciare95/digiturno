@@ -549,6 +549,13 @@ export default {
         const response = await EmpleadoService.iniciarAtencion(null);
         turnoActual.value = response;
         iniciarTemporizador();
+
+        // Guardar turno actualizado en localStorage para que el cliente lo vea
+        localStorage.setItem('ultimoTurno', JSON.stringify({
+          ...response,
+          estado_display: 'En Atención',
+          ventanilla: empleadoInfo.value.ventanilla
+        }));
         
         // Actualizar lista nuevamente después de atender
         turnos.value = await EmpleadoService.obtenerTurnosPendientes();
