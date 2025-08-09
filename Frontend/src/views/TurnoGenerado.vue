@@ -352,18 +352,30 @@ const verMisTurnos = () => {
 
 const enviarCalificacion = async () => {
   try {
+    console.log('Iniciando envío de calificación...');
+    console.log('Datos a enviar:', {
+      turno_id: turno.value.id,
+      calificacion: rating.value,
+      comentario: comentario.value
+    });
+
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/solicitar-turno');
-      return;
+      console.warn('No se encontró token - intentando enviar calificación sin autenticación');
+      // Permitir enviar calificación sin token como invitado
+      // El backend validará si se permite calificación anónima
     }
 
-    const response = await fetch('/api/turns/calificar-servicio/', {
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch('/api/turns/calificaciones/crear/', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
+      headers: headers,
       body: JSON.stringify({
         turno_id: turno.value.id,
         calificacion: rating.value,
@@ -371,15 +383,25 @@ const enviarCalificacion = async () => {
       })
     });
 
+    console.log('Respuesta del servidor:', {
+      status: response.status,
+      ok: response.ok
+    });
+
     if (!response.ok) {
-      throw new Error('Error al enviar calificación');
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error en la respuesta:', errorData);
+      throw new Error(errorData.detail || 'Error al enviar calificación');
     }
+
+    const responseData = await response.json();
+    console.log('Calificación enviada exitosamente:', responseData);
 
     showRatingModal.value = false;
     alert('¡Gracias por calificar nuestro servicio!');
   } catch (error) {
     console.error('Error al calificar:', error);
-    alert('Ocurrió un error al enviar tu calificación');
+    alert(`Ocurrió un error al enviar tu calificación: ${error.message}`);
   }
 };
 </script>

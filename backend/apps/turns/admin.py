@@ -60,14 +60,14 @@ class TurnoAdmin(admin.ModelAdmin):
 @admin.register(CalificacionServicio)
 class CalificacionServicioAdmin(admin.ModelAdmin):
     """Configuración del administrador para el modelo CalificacionServicio"""
-    list_display = ('turno', 'calificacion', 'servicio', 'empleado', 'fecha_calificacion')
-    list_filter = ('calificacion', 'servicio', 'fecha_calificacion')
+    list_display = ('turno', 'calificacion', 'servicio', 'sucursal', 'empleado', 'fecha_calificacion')
+    list_filter = ('calificacion', 'servicio', 'sucursal', 'fecha_calificacion')
     search_fields = ('comentario', 'turno__numero_turno')
     date_hierarchy = 'fecha_calificacion'
     ordering = ('-fecha_calificacion',)
     fieldsets = (
         ('Relaciones', {
-            'fields': ('turno', 'usuario', 'empleado', 'servicio')
+            'fields': ('turno', 'usuario', 'empleado', 'servicio', 'sucursal')
         }),
         ('Evaluación', {
             'fields': ('calificacion', 'comentario', 'aspectos_evaluados')

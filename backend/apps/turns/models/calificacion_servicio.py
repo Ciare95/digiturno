@@ -4,6 +4,8 @@ from apps.turns.models.turno import Turno
 from apps.users.models.usuario import Usuario
 from apps.users.models.empleado import Empleado
 from apps.core.models.servicio import Servicio
+from apps.core.models.sucursal import Sucursal
+
 
 class CalificacionServicio(models.Model):
     turno = models.OneToOneField(
@@ -30,6 +32,14 @@ class CalificacionServicio(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_('servicio')
     )
+    sucursal = models.ForeignKey(
+        Sucursal,
+        on_delete=models.CASCADE,
+        verbose_name=_('sucursal'),
+        null=True,
+        blank=True
+    )
+
     calificacion = models.IntegerField(_('calificación'))
     comentario = models.TextField(_('comentario'), blank=True, null=True)
     aspectos_evaluados = models.JSONField(_('aspectos evaluados'), default=dict, blank=True)
@@ -43,4 +53,4 @@ class CalificacionServicio(models.Model):
         ordering = ['-fecha_calificacion']
 
     def __str__(self):
-        return f"Calificación {self.calificacion} - Turno {self.turno.numero_turno}" 
+        return f"Calificación {self.calificacion} - Turno {self.turno.numero_turno}"
