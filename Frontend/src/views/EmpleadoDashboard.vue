@@ -267,6 +267,9 @@
                     <button @click="finalizarTurno" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                       Finalizar Atención
                     </button>
+                    <button @click="transferirTurno" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                      Transferir Turno
+                    </button>
                     <button @click="llamarSiguiente" :disabled="turnosPendientes.length === 0" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                       Llamar Siguiente
                     </button>
@@ -660,6 +663,51 @@ export default {
       }
     };
 
+    // Transferir turno a otro servicio
+    const transferirTurno = async () => {
+      if (!turnoActual.value) {
+        alert('No hay un turno en atención para transferir');
+        return;
+      }
+
+      try {
+        // Mostrar diálogo para seleccionar servicio
+        const serviciosDisponibles = empleadoInfo.value.servicios
+          .filter(s => s.id !== turnoActual.value.servicio_id);
+        
+        if (serviciosDisponibles.length === 0) {
+          alert('No hay otros servicios disponibles para transferir');
+          return;
+        }
+
+        const servicioSeleccionado = prompt(
+          `Transferir turno ${turnoActual.value.numero} a:\n` +
+          serviciosDisponibles.map(s => `${s.id}: ${s.nombre}`).join('\n') +
+          '\nIngrese el ID del servicio destino:'
+        );
+
+        if (!servicioSeleccionado) return;
+
+        // Transferir el turno
+        await EmpleadoService.transferirTurno(
+          turnoActual.value.id,
+          parseInt(servicioSeleccionado)
+        );
+
+        // Actualizar estado local
+        turnoActual.value = null;
+        clearInterval(intervalo);
+        tiempoTranscurrido.value = '00:00';
+        
+        // Actualizar lista de turnos
+        await actualizarTurnos();
+        alert('Turno transferido exitosamente');
+      } catch (error) {
+        console.error('Error al transferir turno:', error);
+        alert(error.message || 'Error al transferir el turno');
+      }
+    };
+
     // Cerrar sesión
     const cerrarSesion = () => {
       // Detener temporizador si está activo
@@ -697,6 +745,7 @@ export default {
       atenderSiguiente,
       llamarSiguiente,
       finalizarTurno,
+      transferirTurno,
       ausenteTurno,
       cerrarSesion
     };
