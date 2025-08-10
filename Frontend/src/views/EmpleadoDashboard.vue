@@ -43,7 +43,7 @@
             <p class="mt-1 text-sm text-gray-600">Gestiona los turnos de la sucursal</p>
             
             <!-- Información del empleado -->
-            <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <h3 class="text-lg font-medium text-gray-900 mb-2">Información del Empleado</h3>
               <div class="flex flex-wrap gap-6">
                 <div class="flex items-center gap-2">
@@ -67,6 +67,23 @@
                     {{ empleadoInfo.estado || 'Desconectado' }}
                   </p>
                 </div>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-500">Fecha:</p>
+                  <p class="font-medium">{{ new Date().toLocaleDateString('es-CO') }}</p>
+                </div>
+              </div>
+              
+              <!-- Servicios asignados -->
+              <div class="mt-4" v-if="empleadoInfo.servicios && empleadoInfo.servicios.length">
+                <h4 class="text-md font-medium text-gray-900 mb-2">Servicios Asignados</h4>
+                <div class="space-y-2">
+                  <div v-for="servicio in empleadoInfo.servicios" :key="servicio.id" class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span class="font-medium">{{ servicio.codigo_servicio }} - {{ servicio.nombre }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="mt-4 text-sm text-gray-500">
+                No hay servicios asignados
               </div>
             </div>
           </div>
@@ -338,7 +355,7 @@ export default {
   },
   setup() {
     const router = useRouter();
-    const fechaSeleccionada = ref(new Date().toISOString().split('T')[0]);
+    const fechaSeleccionada = ref(new Date().toLocaleDateString('es-CO'));
     const estadisticasServidor = ref({ turnos_atendidos_hoy: 0 });
     const tiempoInicio = ref(null);
     const tiempoTranscurrido = ref('00:00');
@@ -399,7 +416,8 @@ export default {
             codigo: infoEmpleado.codigo_empleado || '',
             ventanilla: infoEmpleado.ventanilla_asignada || '',
             estado: infoEmpleado.estado_conexion ? 'Conectado' : 'Desconectado',
-            sucursal_nombre: infoEmpleado.sucursal_nombre || ''
+            sucursal_nombre: infoEmpleado.sucursal_nombre || '',
+            servicios: infoEmpleado.servicios || []
           };
         }
         
