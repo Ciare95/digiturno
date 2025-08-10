@@ -10,7 +10,11 @@ class EmpleadoService {
 
   async obtenerTurnosPendientes() {
     try {
-      const response = await axios.get(`${API_URL}/cola-turnos-empleado/`)
+      const response = await axios.get(`${API_URL}/cola-turnos-empleado/`, {
+        params: {
+          _: new Date().getTime()
+        }
+      })
       console.log('Raw API response:', response.data)
       
       if (!response.data) return []

@@ -1,14 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Empleado, Administrador, UsuarioSinStaff, EmpleadoServicio
-
-
-@admin.register(UsuarioSinStaff)
-class UsuarioSinStaffAdmin(admin.ModelAdmin):
-    """Configuración simplificada para usuarios sin autenticación"""
-    list_display = ('cedula', 'telefono', 'email')
-    search_fields = ('cedula', 'telefono', 'email')
-    fields = ('cedula', 'telefono', 'email')
+from .models import Usuario, Empleado, Administrador, EmpleadoServicio
 
 
 @admin.register(Usuario)
@@ -53,13 +45,14 @@ class EmpleadoAdmin(admin.ModelAdmin):
             'fields': ('fecha_ingreso', 'configuracion_ui')
         }),
     )
+    exclude = ('servicios',)
 
 
 @admin.register(EmpleadoServicio)
 class EmpleadoServicioAdmin(admin.ModelAdmin):
     """Configuración del administrador para asignación de servicios"""
-    list_display = ('empleado', 'servicio', 'fecha_asignacion', 'activo')
-    list_filter = ('servicio', 'activo')
+    list_display = ('empleado', 'servicio')
+    list_filter = ('servicio',)
     search_fields = ('empleado__codigo_empleado', 'servicio__nombre')
 
 @admin.register(Administrador)

@@ -29,10 +29,5 @@ class InfoEmpleadoSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        # Filtrar solo servicios activos
-        if 'servicios' in data:
-            data['servicios'] = [
-                servicio for servicio in data['servicios']
-                if servicio and instance.asignaciones_servicio.filter(servicio_id=servicio['id'], activo=True).exists()
-            ]
+
         return data

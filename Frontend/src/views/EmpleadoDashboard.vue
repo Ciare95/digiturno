@@ -355,7 +355,7 @@ export default {
   },
   setup() {
     const router = useRouter();
-    const fechaSeleccionada = ref(new Date().toLocaleDateString('es-CO'));
+    const fechaSeleccionada = ref(new Date().toISOString().split('T')[0]);
     const estadisticasServidor = ref({ turnos_atendidos_hoy: 0 });
     const tiempoInicio = ref(null);
     const tiempoTranscurrido = ref('00:00');

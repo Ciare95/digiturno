@@ -19,9 +19,9 @@ class ListarColaTurnosEmpleadoView(generics.ListAPIView):
         
         return ColaTurnos.objects.filter(
             activo=True,
-            servicio__in=servicios_empleado,
+            turno__servicio__in=servicios_empleado,
             turno__sucursal=empleado.sucursal
         ).select_related(
             'turno', 
-            'servicio'
-        ).order_by('servicio', 'posicion_cola')
+            'turno__servicio'
+        ).order_by('turno__servicio', 'posicion_cola')

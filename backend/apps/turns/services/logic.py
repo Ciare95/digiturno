@@ -64,7 +64,7 @@ class GestorTurnos:
 
         # 1. Obtener turnos en espera para este servicio en esta sucursal
         turnos_en_espera = ColaTurnos.objects.filter(
-            servicio=servicio,
+            turno__servicio=servicio,
             turno__sucursal=sucursal,
             activo=True
         ).count()
@@ -177,14 +177,13 @@ class GestorTurnos:
         
         # Crear entrada en la cola
         posicion = ColaTurnos.objects.filter(
-            servicio=servicio,
+            turno__servicio=servicio,
             turno__sucursal=sucursal,
             activo=True
         ).count() + 1
         
         ColaTurnos.objects.create(
             turno=turno,
-            servicio=servicio,
             posicion_cola=posicion,
             tiempo_espera_estimado=tiempo_espera,
             activo=True
@@ -235,7 +234,7 @@ class GestorTurnos:
 
             # Reordenar la cola
             ColaTurnos.objects.filter(
-                servicio=turno.servicio,
+                turno__servicio=turno.servicio,
                 turno__sucursal=turno.sucursal,
                 activo=True,
                 posicion_cola__gt=cola_turno.posicion_cola
@@ -269,14 +268,13 @@ class GestorTurnos:
 
         # Calcular nueva posición en cola
         nueva_posicion = ColaTurnos.objects.filter(
-            servicio=nuevo_servicio,
+            turno__servicio=nuevo_servicio,
             activo=True
         ).count() + 1
 
         # Crear nueva entrada en la cola
         ColaTurnos.objects.create(
             turno=turno,
-            servicio=nuevo_servicio,
             posicion_cola=nueva_posicion,
             tiempo_espera_estimado=nuevo_servicio.tiempo_estimado_atencion * nueva_posicion,
             activo=True
