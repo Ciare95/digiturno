@@ -80,9 +80,6 @@
                         Nombre
                       </th>
                       <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Descripción
-                      </th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Duración
                       </th>
                       <th scope="col" class="relative px-6 py-3">
@@ -94,16 +91,10 @@
                     <tr v-for="servicio in servicios" :key="servicio.id">
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                          <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-md flex items-center justify-center">
-                            <component :is="servicio.icono" class="h-5 w-5 text-blue-600" />
-                          </div>
                           <div class="ml-4">
                             <div class="text-sm font-medium text-gray-900">{{ servicio.nombre }}</div>
                           </div>
                         </div>
-                      </td>
-                      <td class="px-6 py-4">
-                        <div class="text-sm text-gray-500">{{ servicio.descripcion }}</div>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -173,48 +164,6 @@
       </main>
     </div>
 
-    <!-- Modal de Servicio -->
-    <div v-if="mostrarModalServicio" class="fixed z-10 inset-0 overflow-y-auto">
-      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start">
-              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                  {{ esNuevoServicio ? 'Nuevo Servicio' : 'Editar Servicio' }}
-                </h3>
-                <div class="mt-5">
-                  <div class="mb-4">
-                    <label for="nombreServicio" class="block text-sm font-medium text-gray-700">Nombre</label>
-                    <input type="text" v-model="servicioActual.nombre" id="nombreServicio" class="mt-1 focus:ring-blue-500 focus:border focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                  </div>
-                  <div class="mb-4">
-                    <label for="descripcionServicio" class="block text-sm font-medium text-gray-700">Descripción</label>
-                    <textarea v-model="servicioActual.descripcion" id="descripcionServicio" rows="3" class="shadow-sm focus:ring-blue-500 focus:border focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"></textarea>
-                  </div>
-                  <div class="mb-4">
-                    <label for="duracionServicio" class="block text-sm font-medium text-gray-700">Duración (minutos)</label>
-                    <input type="number" v-model.number="servicioActual.duracion" id="duracionServicio" class="mt-1 focus:ring-blue-500 focus:border focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button @click="guardarServicio" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-              Guardar
-            </button>
-            <button @click="cerrarModalServicio" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-              Cancelar
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -222,6 +171,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ClockIcon, UserIcon, DocumentTextIcon, ShoppingBagIcon } from '@heroicons/vue/24/outline';
+import axios from 'axios';
 
 export default {
   name: 'AdminDashboard',
@@ -234,15 +184,6 @@ export default {
   setup() {
     const router = useRouter();
     const currentTab = ref('servicios');
-    const mostrarModalServicio = ref(false);
-    const esNuevoServicio = ref(true);
-    const servicioActual = ref({
-      id: null,
-      nombre: '',
-      descripcion: '',
-      duracion: 30,
-      icono: 'DocumentTextIcon'
-    });
 
     const tabs = [
       { name: 'servicios', label: 'Servicios' },
@@ -250,29 +191,7 @@ export default {
     ];
 
     // Datos de ejemplo
-    const servicios = ref([
-      {
-        id: 1,
-        nombre: 'Atención al Cliente',
-        descripcion: 'Atención personalizada para consultas generales',
-        duracion: 15,
-        icono: 'UserIcon'
-      },
-      {
-        id: 2,
-        nombre: 'Pagos',
-        descripcion: 'Pago de facturas y servicios',
-        duracion: 10,
-        icono: 'ShoppingBagIcon'
-      },
-      {
-        id: 3,
-        nombre: 'Asesoría Legal',
-        descripcion: 'Asesoría legal especializada',
-        duracion: 30,
-        icono: 'DocumentTextIcon'
-      }
-    ]);
+    const servicios = ref([]);
 
     const sucursales = ref([
       {
@@ -290,15 +209,7 @@ export default {
     ]);
 
     const abrirModalNuevoServicio = () => {
-      servicioActual.value = {
-        id: null,
-        nombre: '',
-        descripcion: '',
-        duracion: 30,
-        icono: 'DocumentTextIcon'
-      };
-      esNuevoServicio.value = true;
-      mostrarModalServicio.value = true;
+      alert('Función de nuevo servicio se implementará aquí');
     };
 
     const abrirModalNuevaSucursal = () => {
@@ -307,9 +218,7 @@ export default {
     };
 
     const editarServicio = (servicio) => {
-      servicioActual.value = { ...servicio };
-      esNuevoServicio.value = false;
-      mostrarModalServicio.value = true;
+      alert(`Editando servicio: ${servicio.nombre}`);
     };
 
     const editarSucursal = (sucursal) => {
@@ -329,27 +238,26 @@ export default {
       }
     };
 
-    const guardarServicio = () => {
-      if (esNuevoServicio.value) {
-        // Agregar nuevo servicio
-        const nuevoId = Math.max(...servicios.value.map(s => s.id), 0) + 1;
-        servicios.value.push({
-          ...servicioActual.value,
-          id: nuevoId
+    const getServicios = async () => {
+      try {
+        const response = await axios.get('/api/admin/servicios/', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
         });
-      } else {
-        // Actualizar servicio existente
-        const index = servicios.value.findIndex(s => s.id === servicioActual.value.id);
-        if (index !== -1) {
-          servicios.value[index] = { ...servicioActual.value };
-        }
+        servicios.value = response.data.results.map(servicio => ({
+          id: servicio.id,
+          nombre: servicio.nombre,
+          duracion: servicio.tiempo_estimado_atencion,
+        }));
+      } catch (error) {
+        console.error('Error fetching services:', error);
       }
-      cerrarModalServicio();
     };
 
-    const cerrarModalServicio = () => {
-      mostrarModalServicio.value = false;
-    };
+    onMounted(() => {
+      getServicios();
+    });
 
     const cerrarSesion = () => {
       // Eliminar token de autenticación (simulado)
@@ -363,17 +271,12 @@ export default {
       tabs,
       servicios,
       sucursales,
-      mostrarModalServicio,
-      servicioActual,
-      esNuevoServicio,
       abrirModalNuevoServicio,
       abrirModalNuevaSucursal,
       editarServicio,
       editarSucursal,
       eliminarServicio,
       eliminarSucursal,
-      guardarServicio,
-      cerrarModalServicio,
       cerrarSesion
     };
   }
@@ -381,25 +284,5 @@ export default {
 </script>
 
 <style>
-/* Estilos específicos del panel de administración */
-/* Transiciones suaves para los modales */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
-}
 
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-/* Estilos para las tarjetas de sucursales */
-.sucursal-card {
-  transition: all 0.2s ease-in-out;
-}
-
-.sucursal-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
 </style>
