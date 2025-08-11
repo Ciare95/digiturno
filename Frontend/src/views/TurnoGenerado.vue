@@ -258,28 +258,27 @@ onMounted(() => {
 
   const cargarTurno = () => {
     console.log('Cargando turno...');
+    const turnoId = route.params.id;
     const turnoGuardado = localStorage.getItem('ultimoTurno');
+
     if (turnoGuardado) {
       try {
         const parsedTurno = JSON.parse(turnoGuardado);
-        turno.value = parsedTurno;
-        console.log('Turno cargado desde localStorage:', parsedTurno);
-        procesarDatosTurno(parsedTurno);
+        // Si el turno en localStorage corresponde al de la URL, lo usamos
+        if (parsedTurno.id == turnoId) {
+          turno.value = parsedTurno;
+          console.log('Turno cargado desde localStorage:', parsedTurno);
+          procesarDatosTurno(parsedTurno);
+        }
       } catch (e) {
         console.error('Error parseando turno desde localStorage', e);
       }
-    } else if (route.params.turno) {
-      try {
-        const parsedTurno = typeof route.params.turno === 'string' 
-          ? JSON.parse(route.params.turno) 
-          : route.params.turno;
-        turno.value = parsedTurno;
-        localStorage.setItem('ultimoTurno', JSON.stringify(parsedTurno));
-        console.log('Turno cargado desde route.params:', parsedTurno);
-        procesarDatosTurno(parsedTurno);
-      } catch (e) {
-        console.error('Error parseando turno desde route.params', e);
-      }
+    }
+    
+    // Si no hay turno cargado (o no coincide), establecemos el ID para el polling
+    if (!turno.value && turnoId) {
+      turno.value = { id: turnoId };
+      console.log(`ID de turno ${turnoId} establecido desde la URL. Esperando polling...`);
     }
 
     if (!turno.value) {

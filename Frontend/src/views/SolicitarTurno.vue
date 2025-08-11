@@ -112,7 +112,7 @@
     // Redirigir a la vista del turno generado
     router.push({
       name: 'turno-generado',
-      params: { turno: JSON.stringify(nuevoTurno) }
+      params: { id: nuevoTurno.id }
     });
   };
   
