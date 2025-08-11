@@ -313,3 +313,38 @@ class GestorTurnos:
         turno.fecha_finalizacion = timezone.now()
         turno.save()
         return turno
+
+    @staticmethod
+    @transaction.atomic
+    def cancelar_turno(turno_id):
+        from ..models import Turno, ColaTurnos
+        """
+        Cancela un turno que está en espera.
+        """
+        turno = Turno.objects.select_for_update().get(id=turno_id)
+
+        if turno.estado not in [Turno.EstadoTurno.EN_ESPERA, Turno.EstadoTurno.LLAMADO]:
+            raise ValueError("Solo se pueden cancelar turnos que están en espera o han sido llamados.")
+
+        turno.estado = Turno.EstadoTurno.CANCELADO
+        turno.save()
+
+        # Desactivar de la cola y reordenar si es necesario
+        try:
+            cola_turno = ColaTurnos.objects.get(turno=turno, activo=True)
+            posicion_cancelada = cola_turno.posicion_cola
+            cola_turno.activo = False
+            cola_turno.save()
+
+            # Reordenar la cola para los turnos posteriores
+            ColaTurnos.objects.filter(
+                turno__servicio=turno.servicio,
+                turno__sucursal=turno.sucursal,
+                activo=True,
+                posicion_cola__gt=posicion_cancelada
+            ).update(posicion_cola=models.F('posicion_cola') - 1)
+        except ColaTurnos.DoesNotExist:
+            # Si no está en la cola (ya fue atendido o es un caso raro), no hacemos nada.
+            pass
+
+        return turno

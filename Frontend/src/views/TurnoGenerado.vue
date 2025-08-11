@@ -149,10 +149,11 @@
                   Solicitar Otro Turno
                 </button>
                 <button 
-                  @click="verMisTurnos"
-                  class="px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
+                  @click="cancelarTurno"
+                  class="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                  v-if="turno && turno.estado_display === 'En Espera'"
                 >
-                  Ver Mis Turnos
+                  Cancelar Turno
                 </button>
               </div>
             </div>
@@ -347,6 +348,32 @@ const volverASolicitar = () => {
 
 const verMisTurnos = () => {
   router.push('/mis-turnos');
+};
+
+const cancelarTurno = async () => {
+  if (!turno.value || !turno.value.id) return;
+
+  if (confirm('¿Estás seguro de que deseas cancelar este turno?')) {
+    try {
+      const response = await fetch(`/api/turns/public/turno/${turno.value.id}/cancelar/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al cancelar el turno');
+      }
+
+      alert('Turno cancelado exitosamente.');
+      router.push('/solicitar-turno');
+    } catch (error) {
+      console.error('Error al cancelar turno:', error);
+      alert(`Ocurrió un error: ${error.message}`);
+    }
+  }
 };
 
     const enviarCalificacion = async () => {

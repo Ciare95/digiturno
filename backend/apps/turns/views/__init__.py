@@ -18,3 +18,4 @@ from .transferir_turno_empleado_view import TransferirTurnoEmpleadoView
 from .turno_actual_empleado_view import TurnoActualEmpleadoView
 from .ultimos_turnos_finalizados_view import UltimosTurnosFinalizadosView
 from .public_turno_status_view import PublicTurnoStatusView
+from .cancelar_turno_view import CancelarTurnoView
