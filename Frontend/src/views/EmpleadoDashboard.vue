@@ -43,9 +43,9 @@
             <p class="mt-1 text-sm text-gray-600">Gestiona los turnos de la sucursal</p>
             
             <!-- Información del empleado -->
-              <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200 w-full">
               <h3 class="text-lg font-medium text-gray-900 mb-2">Información del Empleado</h3>
-              <div class="flex flex-wrap gap-6">
+              <div class="grid grid-cols-5 gap-4">
                 <div class="flex items-center gap-2">
                   <p class="text-sm text-gray-500">Nombre:</p>
                   <p class="font-medium">{{ empleadoInfo.nombre || 'No disponible' }}</p>
@@ -87,14 +87,7 @@
               </div>
             </div>
           </div>
-          <div class="mt-4 flex md:mt-0 md:ml-4">
-            <div class="relative rounded-md shadow-sm">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <CalendarIcon class="h-5 w-5 text-gray-400" />
-              </div>
-              <input type="date" v-model="fechaSeleccionada" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2">
-            </div>
-          </div>
+          
         </div>
 
         <!-- Estadísticas rápidas -->
