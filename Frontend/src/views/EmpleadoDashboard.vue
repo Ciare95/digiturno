@@ -332,6 +332,70 @@
         </div>
       </div>
     </div>
+    <!-- Modal de Transferencia de Turno -->
+    <div v-if="showTransferModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+      <div class="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+        <div class="px-6 py-4 border-b">
+          <h3 class="text-lg font-medium text-gray-900">
+            Transferir Turno {{ turnoActual?.numero }}
+          </h3>
+        </div>
+        <div class="px-6 py-4">
+          <div v-if="isLoadingServicios" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+          <div v-else>
+            <div v-if="transferError" class="mb-4 p-4 bg-red-50 text-red-700 rounded">
+              {{ transferError }}
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Seleccione el servicio de destino:
+              </label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                <div 
+                  v-for="servicio in serviciosDisponibles" 
+                  :key="servicio.id"
+                  @click="selectedServiceId = servicio.id"
+                  class="p-3 border rounded cursor-pointer transition-colors"
+                  :class="{
+                    'border-blue-500 bg-blue-50': selectedServiceId === servicio.id,
+                    'border-gray-200 hover:border-blue-300': selectedServiceId !== servicio.id
+                  }"
+                >
+                  <div class="font-medium">{{ servicio.codigo_servicio }} - {{ servicio.nombre }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="px-6 py-4 border-t flex justify-end space-x-3">
+          <button 
+            @click="closeTransferModal" 
+            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Cancelar
+          </button>
+          <button 
+            @click="confirmarTransferencia" 
+            :disabled="!selectedServiceId || isTransfiriendo"
+            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span v-if="isTransfiriendo">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Transferiendo...
+            </span>
+            <span v-else>
+              Confirmar Transferencia
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -346,6 +410,7 @@ import {
   CalendarIcon
 } from '@heroicons/vue/24/outline';
 import EmpleadoService from '@/Services/EmpleadoService';
+import { obtenerServicios } from '@/Services/Servicios';
 
 export default {
   name: 'EmpleadoDashboard',
@@ -375,6 +440,14 @@ export default {
       estado: 'Desconectado',
       sucursal_nombre: ''
     });
+
+    // Estado de modal de transferencia
+    const showTransferModal = ref(false);
+    const serviciosDisponibles = ref([]);
+    const isLoadingServicios = ref(false);
+    const selectedServiceId = ref(null);
+    const isTransfiriendo = ref(false);
+    const transferError = ref('');
 
     // Función para actualizar datos de turnos
     const actualizarTurnos = async () => {
@@ -663,48 +736,61 @@ export default {
       }
     };
 
-    // Transferir turno a otro servicio
+    // Transferir turno a otro servicio (modal)
     const transferirTurno = async () => {
       if (!turnoActual.value) {
-        alert('No hay un turno en atención para transferir');
+        transferError.value = 'No hay un turno en atención para transferir';
+        showTransferModal.value = true;
         return;
       }
 
+      showTransferModal.value = true;
+      transferError.value = '';
+      selectedServiceId.value = null;
+      isLoadingServicios.value = true;
+
       try {
-        // Mostrar diálogo para seleccionar servicio
-        const serviciosDisponibles = empleadoInfo.value.servicios
-          .filter(s => s.id !== turnoActual.value.servicio_id);
-        
-        if (serviciosDisponibles.length === 0) {
-          alert('No hay otros servicios disponibles para transferir');
-          return;
-        }
+        const servicios = await obtenerServicios();
+        // Mostrar todos los servicios disponibles
+        serviciosDisponibles.value = Array.isArray(servicios) ? servicios : [];
+      } catch (error) {
+        console.error('Error cargando servicios:', error);
+        transferError.value = error.message || 'Error al cargar los servicios';
+      } finally {
+        isLoadingServicios.value = false;
+      }
+    };
 
-        const servicioSeleccionado = prompt(
-          `Transferir turno ${turnoActual.value.numero} a:\n` +
-          serviciosDisponibles.map(s => `${s.id}: ${s.nombre}`).join('\n') +
-          '\nIngrese el ID del servicio destino:'
-        );
+    const closeTransferModal = () => {
+      showTransferModal.value = false;
+      transferError.value = '';
+      selectedServiceId.value = null;
+    };
 
-        if (!servicioSeleccionado) return;
-
-        // Transferir el turno
+    const confirmarTransferencia = async () => {
+      if (!turnoActual.value || !selectedServiceId.value) {
+        transferError.value = 'Seleccione un servicio de destino';
+        return;
+      }
+      isTransfiriendo.value = true;
+      try {
         await EmpleadoService.transferirTurno(
           turnoActual.value.id,
-          parseInt(servicioSeleccionado)
+          selectedServiceId.value
         );
-
-        // Actualizar estado local
+        // Limpiar estado local
         turnoActual.value = null;
         clearInterval(intervalo);
         tiempoTranscurrido.value = '00:00';
-        
-        // Actualizar lista de turnos
+
+        // Cerrar modal y actualizar lista
+        showTransferModal.value = false;
         await actualizarTurnos();
-        alert('Turno transferido exitosamente');
       } catch (error) {
         console.error('Error al transferir turno:', error);
-        alert(error.message || 'Error al transferir el turno');
+        transferError.value = error.message || 'Error al transferir el turno';
+      } finally {
+        isTransfiriendo.value = false;
       }
     };
 
@@ -740,12 +826,22 @@ export default {
       
       // Datos
       empleadoInfo,
+
+      // Modal transferencia
+      showTransferModal,
+      serviciosDisponibles,
+      selectedServiceId,
+      isLoadingServicios,
+      isTransfiriendo,
+      transferError,
       
       // Métodos
       atenderSiguiente,
       llamarSiguiente,
       finalizarTurno,
       transferirTurno,
+      confirmarTransferencia,
+      closeTransferModal,
       ausenteTurno,
       cerrarSesion
     };
