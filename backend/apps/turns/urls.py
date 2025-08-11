@@ -17,7 +17,8 @@ from .views import (
     ListarColaTurnosView,
     IniciarAtencionView,
     FinalizarAtencionView,
-    UltimosTurnosFinalizadosView
+    UltimosTurnosFinalizadosView,
+    PublicTurnoStatusView
 )
 
 urlpatterns = [
@@ -44,4 +45,7 @@ urlpatterns = [
     path('iniciar-atencion/', IniciarAtencionView.as_view(), name='iniciar_atencion'),
     path('finalizar-atencion/', FinalizarAtencionView.as_view(), name='finalizar_atencion'),
     path('ultimos-turnos-finalizados/', UltimosTurnosFinalizadosView.as_view(), name='ultimos_turnos_finalizados'),
+
+    # Ruta pública para consultar estado de turno
+    path('public/turno/<int:turno_id>/status/', PublicTurnoStatusView.as_view(), name='public_turno_status'),
 ]

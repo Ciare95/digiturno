@@ -4,7 +4,9 @@ from .crear_turno_view import CrearTurnoView
 from .detalle_calificacion_view import DetalleCalificacionView
 from .detalle_turno_usuario_view import DetalleTurnoUsuarioView
 from .estadisticas_empleado_view import EstadisticasEmpleadoView
+from .finalizar_atencion_view import FinalizarAtencionView
 from .historial_turnos_view import HistorialTurnosView
+from .iniciar_atencion_view import IniciarAtencionView
 from .listar_calificaciones_usuario_view import ListarCalificacionesUsuarioView
 from .listar_cola_turnos_empleado_view import ListarColaTurnosEmpleadoView
 from .listar_cola_turnos_view import ListarColaTurnosView
@@ -14,6 +16,5 @@ from .reporte_usuario_view import ReporteUsuariosView
 from .siguiente_turno_empleado_view import SiguienteTurnoEmpleadoView
 from .transferir_turno_empleado_view import TransferirTurnoEmpleadoView
 from .turno_actual_empleado_view import TurnoActualEmpleadoView
-from .iniciar_atencion_view import IniciarAtencionView
-from .finalizar_atencion_view import FinalizarAtencionView
 from .ultimos_turnos_finalizados_view import UltimosTurnosFinalizadosView
+from .public_turno_status_view import PublicTurnoStatusView

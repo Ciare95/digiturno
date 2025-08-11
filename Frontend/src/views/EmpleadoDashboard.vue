@@ -19,8 +19,8 @@
             </div>
           </div>
           <div class="hidden sm:ml-6 sm:flex sm:items-center">
-            <span v-if="sucursalActual?.nombre" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-4">
-              {{ sucursalActual.nombre }}
+            <span v-if="empleadoInfo.sucursal_nombre" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-4">
+              {{ empleadoInfo.sucursal_nombre }}
             </span>
             <span v-else class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 mr-4">
               Sucursal no disponible
@@ -43,7 +43,7 @@
             <p class="mt-1 text-sm text-gray-600">Gestiona los turnos de la sucursal</p>
             
             <!-- Información del empleado -->
-            <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <h3 class="text-lg font-medium text-gray-900 mb-2">Información del Empleado</h3>
               <div class="flex flex-wrap gap-6">
                 <div class="flex items-center gap-2">
@@ -67,6 +67,23 @@
                     {{ empleadoInfo.estado || 'Desconectado' }}
                   </p>
                 </div>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-500">Fecha:</p>
+                  <p class="font-medium">{{ new Date().toLocaleDateString('es-CO') }}</p>
+                </div>
+              </div>
+              
+              <!-- Servicios asignados -->
+              <div class="mt-4" v-if="empleadoInfo.servicios && empleadoInfo.servicios.length">
+                <h4 class="text-md font-medium text-gray-900 mb-2">Servicios Asignados</h4>
+                <div class="space-y-2">
+                  <div v-for="servicio in empleadoInfo.servicios" :key="servicio.id" class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <span class="font-medium">{{ servicio.codigo_servicio }} - {{ servicio.nombre }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="mt-4 text-sm text-gray-500">
+                No hay servicios asignados
               </div>
             </div>
           </div>
@@ -345,7 +362,6 @@ export default {
     let intervalo = null;
 
     // Datos reales
-    const sucursalActual = ref({});
     const turnos = ref([]);
     const historial = ref([]);
     const isLoading = ref(true);
@@ -353,42 +369,73 @@ export default {
       nombre: '',
       codigo: '',
       ventanilla: '',
-      estado: 'Desconectado'
+      estado: 'Desconectado',
+      sucursal_nombre: ''
     });
 
-    // Cargar datos iniciales
-    onMounted(async () => {
+    // Función para actualizar datos de turnos
+    const actualizarTurnos = async () => {
       try {
-        const [stats, pendientes, actual, infoEmpleado, initialHistorial] = await Promise.all([
+        console.log('Actualizando datos de turnos...');
+        const [stats, pendientes, actual] = await Promise.all([
           EmpleadoService.obtenerEstadisticas(),
           EmpleadoService.obtenerTurnosPendientes(),
-          EmpleadoService.obtenerTurnoActual(),
+          EmpleadoService.obtenerTurnoActual()
+        ]);
+        
+        estadisticasServidor.value = stats;
+        turnos.value = Array.isArray(pendientes) ? pendientes : [];
+        
+        // Solo actualizar turno actual si hay cambios
+        if (actual && (!turnoActual.value || actual.id !== turnoActual.value.id)) {
+          turnoActual.value = actual;
+          iniciarTemporizador();
+        } else if (!actual && turnoActual.value) {
+          turnoActual.value = null;
+          clearInterval(intervalo);
+          tiempoTranscurrido.value = '00:00';
+        }
+      } catch (error) {
+        console.error('Error actualizando turnos:', error);
+      }
+    };
+
+    // Cargar datos iniciales y configurar polling
+    onMounted(async () => {
+      try {
+        await actualizarTurnos();
+        
+        const [infoEmpleado, initialHistorial] = await Promise.all([
           EmpleadoService.obtenerInfoEmpleado(),
           EmpleadoService.obtenerHistorial()
         ]);
         
-        console.log('Datos cargados:', { stats, pendientes, actual, infoEmpleado }); // Debugging
-        estadisticasServidor.value = stats;
-        sucursalActual.value = stats.sucursal || {};
-        turnos.value = Array.isArray(pendientes) ? pendientes : [];
-        historial.value = Array.isArray(initialHistorial) ? initialHistorial : [];
-        if (actual) {
-          turnoActual.value = actual;
-          iniciarTemporizador();
-        }
         if (infoEmpleado) {
           empleadoInfo.value = {
             nombre: infoEmpleado.nombre || '',
             codigo: infoEmpleado.codigo_empleado || '',
             ventanilla: infoEmpleado.ventanilla_asignada || '',
-            estado: infoEmpleado.estado_conexion ? 'Conectado' : 'Desconectado'
+            estado: infoEmpleado.estado_conexion ? 'Conectado' : 'Desconectado',
+            sucursal_nombre: infoEmpleado.sucursal_nombre || '',
+            servicios: infoEmpleado.servicios || []
           };
         }
+        
+        historial.value = Array.isArray(initialHistorial) ? initialHistorial : [];
       } catch (error) {
         console.error('Error cargando datos:', error);
       } finally {
         isLoading.value = false;
       }
+
+      // Configurar polling cada 5 segundos
+      const pollingInterval = setInterval(actualizarTurnos, 5000);
+      
+      // Limpiar intervalo al desmontar
+      onUnmounted(() => {
+        clearInterval(pollingInterval);
+        clearInterval(intervalo);
+      });
     });
 
     // Turno actual en atención
@@ -480,6 +527,13 @@ export default {
         turnoActual.value = response;
         iniciarTemporizador();
 
+        // Guardar turno actualizado en localStorage para que el cliente lo vea
+        localStorage.setItem('ultimoTurno', JSON.stringify({
+          ...response,
+          estado_display: 'En Atención',
+          ventanilla: empleadoInfo.value.ventanilla
+        }));
+
         // Actualizar lista nuevamente después de atender
         turnos.value = await EmpleadoService.obtenerTurnosPendientes();
 
@@ -513,6 +567,13 @@ export default {
         const response = await EmpleadoService.iniciarAtencion(null);
         turnoActual.value = response;
         iniciarTemporizador();
+
+        // Guardar turno actualizado en localStorage para que el cliente lo vea
+        localStorage.setItem('ultimoTurno', JSON.stringify({
+          ...response,
+          estado_display: 'En Atención',
+          ventanilla: empleadoInfo.value.ventanilla
+        }));
         
         // Actualizar lista nuevamente después de atender
         turnos.value = await EmpleadoService.obtenerTurnosPendientes();
@@ -533,6 +594,7 @@ export default {
           // Finalizar el turno actual y obtener datos completos
           const turnoFinalizado = await EmpleadoService.finalizarAtencion(turnoActual.value.id);
           console.log('Turno finalizado recibido:', turnoFinalizado);
+          console.log('Estado del turno finalizado:', turnoFinalizado.estado, 'Estado display:', turnoFinalizado.estado_display);
           
           // Crear entrada para historial
           const historialEntry = {
@@ -541,6 +603,7 @@ export default {
             servicio: turnoFinalizado.servicio,
             cliente: turnoFinalizado.cliente,
             estado: turnoFinalizado.estado,
+            estado_display: turnoFinalizado.estado_display || 'Atendido',
             fecha_creacion: turnoFinalizado.fecha_creacion,
             hora: turnoFinalizado.hora
           };
@@ -619,7 +682,6 @@ export default {
 
     return {
       // Datos
-      sucursalActual,
       turnoActual,
       turnoEnProgreso,
       turnosPendientes,

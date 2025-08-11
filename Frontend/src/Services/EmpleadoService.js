@@ -10,7 +10,11 @@ class EmpleadoService {
 
   async obtenerTurnosPendientes() {
     try {
-      const response = await axios.get(`${API_URL}/cola-turnos-empleado/`)
+      const response = await axios.get(`${API_URL}/cola-turnos-empleado/`, {
+        params: {
+          _: new Date().getTime()
+        }
+      })
       console.log('Raw API response:', response.data)
       
       if (!response.data) return []
@@ -84,7 +88,8 @@ class EmpleadoService {
         servicio: response.data.servicio_nombre,
         cliente: response.data.nombre_cliente || 'Cliente no disponible',
         estado: response.data.estado_display,
-        fecha_creacion: response.data.fecha_creacion
+        fecha_creacion: response.data.fecha_creacion,
+        ventanilla: response.data.ventanilla
       }
     } catch (error) {
       console.error('Error starting attention:', error)
@@ -116,10 +121,15 @@ class EmpleadoService {
         servicio: turnoData.servicio_nombre || 'Servicio no disponible',
         cliente: turnoData.nombre_cliente || 'Cliente no disponible',
         estado: 'Atendido',
+        estado_display: 'Atendido',
         fecha_creacion: turnoData.fecha_creacion,
         hora: turnoData.fecha_finalizacion ?
             new Date(turnoData.fecha_finalizacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) :
-            new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+            new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        numero_turno: turnoData.numero_turno,
+        servicio_nombre: turnoData.servicio_nombre,
+        nombre_cliente: turnoData.nombre_cliente,
+        fecha_finalizacion: turnoData.fecha_finalizacion
     };
 
     console.log('Finalizar atencion - formatted data:', formattedData);
@@ -162,7 +172,8 @@ class EmpleadoService {
         nombre: '',
         codigo_empleado: '',
         ventanilla_asignada: '',
-        estado_conexion: false
+        estado_conexion: false,
+        sucursal_nombre: ''
       }
     } catch (error) {
       console.error('Error getting employee info:', error)
@@ -170,7 +181,8 @@ class EmpleadoService {
         nombre: '',
         codigo_empleado: '',
         ventanilla_asignada: '',
-        estado_conexion: false
+        estado_conexion: false,
+        sucursal_nombre: ''
       }
     }
   }

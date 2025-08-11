@@ -25,6 +25,19 @@
               <div class="bg-green-50 rounded-lg p-6">
                 <span class="text-5xl font-bold text-green-600">{{ turno.numero_turno }}</span>
               </div>
+              
+              <!-- Mensaje de ventanilla cuando está en atención -->
+              <div v-if="turno.estado_display === 'En Atención' && turno.ventanilla" 
+                   class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center justify-center gap-3">
+                  <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                  </svg>
+                  <p class="text-lg font-medium text-blue-800">
+                    Puede pasar a la ventanilla <span class="font-bold">{{ turno.ventanilla }}</span>
+                  </p>
+                </div>
+              </div>
             </div>
 
             <!-- Información del turno -->
@@ -169,10 +182,43 @@
     <!-- Footer -->
     <AppFooter />
   </div>
+
+  <!-- Modal de calificación -->
+  <div v-if="showRatingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Califica tu experiencia</h3>
+      <p class="text-gray-600 mb-4">¿Cómo calificarías el servicio recibido?</p>
+      
+      <div class="flex justify-center mb-6">
+        <div v-for="star in 5" :key="star" 
+             @click="rating = star" 
+             class="text-3xl cursor-pointer"
+             :class="star <= rating ? 'text-yellow-400' : 'text-gray-300'">
+          ★
+        </div>
+      </div>
+      
+      <textarea v-model="comentario" 
+                class="w-full border border-gray-300 rounded-md p-2 mb-4" 
+                placeholder="Opcional: Deja un comentario sobre tu experiencia"
+                rows="3"></textarea>
+      
+      <div class="flex justify-end gap-3">
+        <button @click="showRatingModal = false" 
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+          Cancelar
+        </button>
+        <button @click="enviarCalificacion" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Enviar Calificación
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import AppFooter from '@/components/layout/AppFooter.vue';
@@ -180,28 +226,105 @@ import AppFooter from '@/components/layout/AppFooter.vue';
 const route = useRoute();
 const router = useRouter();
 const turno = ref(null);
+const showRatingModal = ref(false);
+const rating = ref(0);
+const comentario = ref('');
 
 onMounted(() => {
-  // Obtener el turno desde los parámetros de la ruta o localStorage
-  if (route.params.turno) {
-    try {
-      turno.value = JSON.parse(route.params.turno);
-    } catch (error) {
-      console.error('Error al parsear el turno:', error);
+  let pollingInterval = null;
+
+  const preguntarPorCalificacion = (turnoId) => {
+    const calificacionKey = `calificacionMostrada_${turnoId}`;
+    if (localStorage.getItem(calificacionKey)) {
+      console.log(`La pregunta de calificación para el turno ${turnoId} ya fue mostrada.`);
+      return;
+    }
+
+    console.log(`Mostrando pregunta de calificación para el turno ${turnoId}.`);
+    if (confirm('¿Desea calificar el servicio recibido?')) {
+      showRatingModal.value = true;
+    } else {
+      router.push('/solicitar-turno');
     }
   }
-
+  
   // Si no hay turno en los parámetros, intentar obtener desde localStorage
   if (!turno.value) {
     const turnoGuardado = localStorage.getItem('ultimoTurno');
     if (turnoGuardado) {
       try {
-        turno.value = JSON.parse(turnoGuardado);
-      } catch (error) {
-        console.error('Error al parsear el turno del localStorage:', error);
+        const parsedTurno = JSON.parse(turnoGuardado);
+        turno.value = parsedTurno;
+        console.log('Turno cargado desde localStorage:', parsedTurno);
+        procesarDatosTurno(parsedTurno);
+      } catch (e) {
+        console.error('Error parseando turno desde localStorage', e);
+      }
+    } else if (route.params.turno) {
+      try {
+        const parsedTurno = typeof route.params.turno === 'string' 
+          ? JSON.parse(route.params.turno) 
+          : route.params.turno;
+        turno.value = parsedTurno;
+        localStorage.setItem('ultimoTurno', JSON.stringify(parsedTurno));
+        console.log('Turno cargado desde route.params:', parsedTurno);
+        procesarDatosTurno(parsedTurno);
+      } catch (e) {
+        console.error('Error parseando turno desde route.params', e);
       }
     }
-  }
+
+    if (!turno.value) {
+      console.warn('No se encontró información del turno');
+    }
+  };
+
+  const actualizarTurnoDesdeServidor = async () => {
+    if (!turno.value?.id) {
+      console.log('Polling: No hay ID de turno, deteniendo.');
+      clearInterval(pollingInterval);
+      return;
+    }
+
+    console.log(`Polling: Verificando estado para turno ID: ${turno.value.id}`);
+    try {
+      const response = await fetch(`/api/turns/public/turno/${turno.value.id}/status/`);
+      if (!response.ok) {
+        console.warn(`Polling: Respuesta no OK (${response.status})`);
+        return;
+      }
+      const data = await response.json();
+      console.log('Polling: Datos recibidos:', data);
+
+      const estadoAnterior = turno.value.estado_display;
+      const estadoNuevo = data.estado_display;
+
+      if (estadoAnterior !== estadoNuevo || data.ventanilla !== turno.value.ventanilla) {
+        console.log(`Actualizando turno. Estado: ${estadoAnterior} -> ${estadoNuevo}.`);
+        turno.value = { ...turno.value, ...data };
+        localStorage.setItem('ultimoTurno', JSON.stringify(turno.value));
+        procesarDatosTurno(data);
+      }
+    } catch (error) {
+      console.error('Polling: Error al actualizar turno:', error);
+    }
+  };
+
+  cargarTurno();
+
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'ultimoTurno') {
+      console.log('Detectado cambio en localStorage, recargando turno.');
+      cargarTurno();
+    }
+  });
+
+  pollingInterval = setInterval(actualizarTurnoDesdeServidor, 5000);
+
+  onUnmounted(() => {
+    console.log('Componente desmontado, limpiando intervalo de polling.');
+    clearInterval(pollingInterval);
+  });
 });
 
 const calcularTiempoEspera = () => {
@@ -216,11 +339,7 @@ const volverASolicitar = () => {
 };
 
 const verMisTurnos = () => {
-  router.push('/Historial');
-};
-
-const cancelarTurno = () => {
-  router.push('/');
+  router.push('/mis-turnos');
 };
 </script>
 
@@ -235,4 +354,4 @@ const cancelarTurno = () => {
 .fade-leave-to {
   opacity: 0;
 }
-</style>
+</style> 
