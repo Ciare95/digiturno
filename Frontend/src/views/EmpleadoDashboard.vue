@@ -43,9 +43,11 @@
             <p class="mt-1 text-sm text-gray-600">Gestiona los turnos de la sucursal</p>
             
             <!-- Información del empleado -->
-              <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200 w-full">
+            <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200 w-full">
               <h3 class="text-lg font-medium text-gray-900 mb-2">Información del Empleado</h3>
-              <div class="grid grid-cols-5 gap-4">
+              
+              <!-- Usamos columnas personalizadas -->
+              <div class="grid gap-5" style="grid-template-columns: repeat(5, 1fr) 1.5fr;">
                 <div class="flex items-center gap-2">
                   <p class="text-sm text-gray-500">Nombre:</p>
                   <p class="font-medium">{{ empleadoInfo.nombre || 'No disponible' }}</p>
@@ -71,23 +73,22 @@
                   <p class="text-sm text-gray-500">Fecha:</p>
                   <p class="font-medium">{{ new Date().toLocaleDateString('es-CO') }}</p>
                 </div>
-              </div>
-              
-              <!-- Servicios asignados -->
-              <div class="mt-4" v-if="empleadoInfo.servicios && empleadoInfo.servicios.length">
-                <h4 class="text-md font-medium text-gray-900 mb-2">Servicios Asignados</h4>
-                <div class="space-y-2">
-                  <div v-for="servicio in empleadoInfo.servicios" :key="servicio.id" class="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <span class="font-medium">{{ servicio.codigo_servicio }} - {{ servicio.nombre }}</span>
+                <!-- Servicios asignados (más ancho) -->
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-500">Servicios Asignados:</p>
+                  <div v-if="empleadoInfo.servicios && empleadoInfo.servicios.length" class="flex flex-wrap gap-1">
+                    <span v-for="servicio in empleadoInfo.servicios" :key="servicio.id" class="bg-gray-50 px-2 py-0.5 rounded text-sm">
+                      {{ servicio.codigo_servicio }} - {{ servicio.nombre }}
+                    </span>
                   </div>
+                  <p v-else class="text-sm text-gray-500">No hay servicios asignados</p>
                 </div>
               </div>
-              <div v-else class="mt-4 text-sm text-gray-500">
-                No hay servicios asignados
-              </div>
             </div>
-          </div>
-          
+
+  
+
+          </div>    
         </div>
 
         <!-- Estadísticas rápidas -->
