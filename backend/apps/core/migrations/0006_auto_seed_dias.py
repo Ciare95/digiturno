@@ -9,7 +9,7 @@ def seed_dias(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),  # ajusta al nombre de tu migración inicial
+        ('core', '0003_diassemana_sucursal_descripcion'),  # ajusta al nombre de tu migración inicial
     ]
 
     operations = [
