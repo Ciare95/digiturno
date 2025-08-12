@@ -6,8 +6,7 @@ from .views import (
     ServicioAdminViewSet,
     SucursalAdminViewSet,
     ConfiguracionAdminViewSet,
-    ListarDiasSemanaView,
-    ListarDiasSucursalesView
+    ListarDiasSemanaView
 )
 
 # Crear el router para los endpoints de administración
@@ -25,6 +24,5 @@ urlpatterns = [
     
     # Rutas de administración
     path('', include(router.urls)),
-    path('dias-semana/', ListarDiasSemanaView.as_view(), name='listar_dias_semana'),
-    path('dias-sucursales/', ListarDiasSucursalesView.as_view(), name='listar_dias_sucursales'),
+    path('dias-semana/', ListarDiasSemanaView.as_view(), name='listar_dias_semana')
 ]

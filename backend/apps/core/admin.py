@@ -1,11 +1,12 @@
 from django.contrib import admin
-from .models import Sucursal, Servicio, Configuracion, DiaSucursal
+from .models import Sucursal, Servicio, Configuracion, HorarioSucursal
 from django.db.models import Count
 
 
 class ConfiguracionInline(admin.TabularInline):
     model = Configuracion
     extra = 1
+
 
 
 @admin.register(Sucursal)
@@ -59,8 +60,8 @@ class ConfiguracionAdmin(admin.ModelAdmin):
         }),
     )
 
-@admin.register(DiaSucursal)
-class DiaSucursalAdmin(admin.ModelAdmin):
+@admin.register(HorarioSucursal)
+class HorarioSucursalAdmin(admin.ModelAdmin):
     list_display = ('sucursal', 'dia_semana', 'hora_apertura', 'hora_cierre', 'activo')
     list_filter = ('sucursal', 'dia_semana')
     search_fields = ('sucursal__nombre', 'dia_semana__nombre')
