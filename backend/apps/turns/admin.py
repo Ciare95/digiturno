@@ -60,14 +60,14 @@ class TurnoAdmin(admin.ModelAdmin):
 @admin.register(CalificacionServicio)
 class CalificacionServicioAdmin(admin.ModelAdmin):
     """Configuración del administrador para el modelo CalificacionServicio"""
-    list_display = ('turno', 'calificacion', 'servicio', 'empleado', 'fecha_calificacion')
-    list_filter = ('calificacion', 'servicio', 'fecha_calificacion')
+    list_display = ('turno', 'calificacion', 'servicio', 'sucursal', 'empleado', 'fecha_calificacion')
+    list_filter = ('calificacion', 'servicio', 'sucursal', 'fecha_calificacion')
     search_fields = ('comentario', 'turno__numero_turno')
     date_hierarchy = 'fecha_calificacion'
     ordering = ('-fecha_calificacion',)
     fieldsets = (
         ('Relaciones', {
-            'fields': ('turno', 'usuario', 'empleado', 'servicio')
+            'fields': ('turno', 'usuario', 'empleado', 'servicio', 'sucursal')
         }),
         ('Evaluación', {
             'fields': ('calificacion', 'comentario', 'aspectos_evaluados')
@@ -82,14 +82,14 @@ class CalificacionServicioAdmin(admin.ModelAdmin):
 @admin.register(ColaTurnos)
 class ColaTurnosAdmin(admin.ModelAdmin):
     """Configuración del administrador para el modelo ColaTurnos"""
-    list_display = ('turno', 'servicio', 'posicion_cola', 'fecha_ingreso_cola', 'activo')
-    list_filter = ('servicio', 'activo')
+    list_display = ('turno', 'posicion_cola', 'fecha_ingreso_cola', 'activo')
+    list_filter = ('activo',)
     search_fields = ('turno__numero_turno',)
     date_hierarchy = 'fecha_ingreso_cola'
     ordering = ('posicion_cola',)
     fieldsets = (
         ('Información básica', {
-            'fields': ('turno', 'servicio', 'posicion_cola')
+            'fields': ('turno', 'posicion_cola')
         }),
         ('Estado', {
             'fields': ('activo', 'tiempo_espera_estimado')

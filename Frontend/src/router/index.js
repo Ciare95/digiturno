@@ -7,6 +7,7 @@ import TurnoGenerado from "../views/TurnoGenerado.vue";
 import Login from "../views/Login.vue";
 import AdminDashboard from "../views/AdminDashboard.vue";
 import EmpleadoDashboard from "../views/EmpleadoDashboard.vue";
+import Historial from "../views/HistorialTurnos.vue";
 
 //Creamos las rutas
 const routes = [
@@ -40,7 +41,13 @@ const routes = [
         path: '/empleado',
         component: EmpleadoDashboard,
         meta: { requiresAuth: true, requiresEmpleado: true }
-    }
+    },
+    {
+        path: '/historial',
+        name: 'historial',
+        component: Historial,
+        meta: { requiresAuth: true }
+    },
 ]
 
 //Creamos el router con las rutas

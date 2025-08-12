@@ -9,11 +9,6 @@ class ColaTurnos(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_('turno')
     )
-    servicio = models.ForeignKey(
-        Servicio,
-        on_delete=models.CASCADE,
-        verbose_name=_('servicio')
-    )
     posicion_cola = models.IntegerField(_('posición en cola'))
     fecha_ingreso_cola = models.DateTimeField(_('fecha de ingreso a cola'), auto_now_add=True)
     tiempo_espera_estimado = models.IntegerField(_('tiempo de espera estimado (min)'), null=True, blank=True)
@@ -28,4 +23,4 @@ class ColaTurnos(models.Model):
         ordering = ['posicion_cola']
 
     def __str__(self):
-        return f"Posición {self.posicion_cola} - {self.turno.numero_turno}" 
+        return f"Posición {self.posicion_cola} - {self.turno.numero_turno}"
