@@ -164,7 +164,52 @@
       </main>
     </div>
 
-  </div>
+    <!-- Modal simplificado para nuevo servicio -->
+    <div v-if="showModalServicio" class="fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+      <div class="bg-white rounded-lg shadow-xl p-6">
+          <div>
+            <div class="mt-3 text-center sm:mt-5">
+              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                Nuevo Servicio
+              </h3>
+              <div class="mt-2">
+                <div class="space-y-4">
+                  <div>
+                    <label for="nombre" class="block text-sm font-medium text-gray-700 text-left">Nombre del servicio</label>
+                    <input type="text" v-model="nuevoServicio.nombre" id="nombre" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                  </div>
+                  <div>
+                    <label for="codigo" class="block text-sm font-medium text-gray-700 text-left">Código del servicio</label>
+                    <input type="text" v-model="nuevoServicio.codigo_servicio" id="codigo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                  </div>
+                  <div>
+                    <label for="sucursal" class="block text-sm font-medium text-gray-700 text-left">Sucursal</label>
+                    <select v-model="nuevoServicio.sucursal" id="sucursal" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                      <option v-for="sucursal in sucursales" :key="sucursal.id" :value="sucursal.id">
+                        {{ sucursal.nombre }}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="duracion" class="block text-sm font-medium text-gray-700 text-left">Duración (minutos)</label>
+                    <input type="number" v-model="nuevoServicio.duracion" id="duracion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+            <button type="button" @click="crearServicio" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+              Crear Servicio
+            </button>
+            <button type="button" @click="cerrarModalServicio" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+ 
 </template>
 
 <script>
@@ -193,23 +238,65 @@ export default {
     // Datos de ejemplo
     const servicios = ref([]);
 
-    const sucursales = ref([
-      {
-        id: 1,
-        nombre: 'Sucursal Centro',
-        direccion: 'Av. Principal #123',
-        horario: 'Lun-Vie 9:00 - 18:00'
-      },
-      {
-        id: 2,
-        nombre: 'Sucursal Norte',
-        direccion: 'Calle Norte #456',
-        horario: 'Lun-Vie 8:00 - 17:00'
-      }
-    ]);
+    const sucursales = ref([]);
+
+    const showModalServicio = ref(false);
+    const nuevoServicio = ref({
+      nombre: '',
+      codigo_servicio: '',
+      sucursal: null,
+      duracion: 30
+    });
 
     const abrirModalNuevoServicio = () => {
-      alert('Función de nuevo servicio se implementará aquí');
+      console.log('Intentando abrir modal...');
+      showModalServicio.value = true;
+      console.log('Modal abierto:', showModalServicio.value);
+    };
+
+    const cerrarModalServicio = () => {
+      console.log('Cerrando modal...');
+      showModalServicio.value = false;
+      nuevoServicio.value = {
+        nombre: '',
+        duracion: 30
+      };
+    };
+
+    const crearServicio = async () => {
+      try {
+        const payload = {
+          nombre: nuevoServicio.value.nombre,
+          codigo_servicio: nuevoServicio.value.codigo_servicio,
+          sucursal: nuevoServicio.value.sucursal,
+          tiempo_estimado_atencion: nuevoServicio.value.duracion
+        };
+        
+        console.log('Request payload:', payload);
+        
+        const response = await axios.post('/api/admin/servicios/', payload, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        servicios.value.push({
+          id: response.data.id,
+          nombre: response.data.nombre,
+          duracion: response.data.tiempo_estimado_atencion
+        });
+        
+        cerrarModalServicio();
+      } catch (error) {
+        console.error('Error creando servicio:', error);
+        if (error.response) {
+          console.error('Error details:', error.response.data);
+          alert(`Error al crear el servicio: ${JSON.stringify(error.response.data)}`);
+        } else {
+          alert('Error al crear el servicio');
+        }
+      }
     };
 
     const abrirModalNuevaSucursal = () => {
@@ -255,8 +342,22 @@ export default {
       }
     };
 
+    const getSucursales = async () => {
+      try {
+        const response = await axios.get('/api/admin/sucursales/', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        sucursales.value = response.data.results;
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+
     onMounted(() => {
       getServicios();
+      getSucursales();
     });
 
     const cerrarSesion = () => {
@@ -277,7 +378,11 @@ export default {
       editarSucursal,
       eliminarServicio,
       eliminarSucursal,
-      cerrarSesion
+      cerrarSesion,
+      showModalServicio,
+      nuevoServicio,
+      cerrarModalServicio,
+      crearServicio
     };
   }
 };
