@@ -253,8 +253,62 @@
             </button>
           </div>
         </div>
+    </div>
+
+    <!-- Modal para nueva sucursal -->
+    <div v-if="showModalSucursal" class="fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+      <div class="bg-white rounded-lg shadow-xl p-6">
+        <div>
+          <div class="mt-3 text-center sm:mt-5">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Nueva Sucursal</h3>
+            <div class="mt-2">
+              <div class="space-y-4">
+                <div>
+                  <label for="sucursal-nombre" class="block text-sm font-medium text-gray-700 text-left">Nombre</label>
+                  <input type="text" v-model="nuevaSucursal.nombre" id="sucursal-nombre" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-direccion" class="block text-sm font-medium text-gray-700 text-left">Dirección</label>
+                  <input type="text" v-model="nuevaSucursal.direccion" id="sucursal-direccion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-descripcion" class="block text-sm font-medium text-gray-700 text-left">Descripción</label>
+                  <textarea v-model="nuevaSucursal.descripcion" id="sucursal-descripcion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+                </div>
+                <div>
+                  <label for="sucursal-codigo" class="block text-sm font-medium text-gray-700 text-left">Código</label>
+                  <input type="text" v-model="nuevaSucursal.codigo_sucursal" id="sucursal-codigo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-telefono" class="block text-sm font-medium text-gray-700 text-left">Teléfono</label>
+                  <input type="text" v-model="nuevaSucursal.telefono" id="sucursal-telefono" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-ciudad" class="block text-sm font-medium text-gray-700 text-left">Ciudad</label>
+                  <input type="text" v-model="nuevaSucursal.ciudad" id="sucursal-ciudad" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-departamento" class="block text-sm font-medium text-gray-700 text-left">Departamento</label>
+                  <input type="text" v-model="nuevaSucursal.departamento" id="sucursal-departamento" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" v-model="nuevaSucursal.activa" id="sucursal-activa" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                  <label for="sucursal-activa" class="ml-2 block text-sm text-gray-700">Activa</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+          <button type="button" @click="crearSucursal" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+            Crear Sucursal
+          </button>
+          <button type="button" @click="showModalSucursal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+            Cancelar
+          </button>
+        </div>
       </div>
- 
+    </div>
 </template>
 
 <script>
@@ -287,6 +341,7 @@ export default {
 
     const showModalServicio = ref(false);
     const showEditModalServicio = ref(false);
+    const showModalSucursal = ref(false);
     const nuevoServicio = ref({
       nombre: '',
       codigo_servicio: '',
@@ -299,6 +354,16 @@ export default {
       codigo_servicio: '',
       sucursal: null,
       duracion: 30
+    });
+    const nuevaSucursal = ref({
+      nombre: '',
+      direccion: '',
+      descripcion: '',
+      codigo_sucursal: '',
+      telefono: '',
+      ciudad: '',
+      departamento: '',
+      activa: true
     });
 
     const abrirModalNuevoServicio = () => {
@@ -353,8 +418,39 @@ export default {
     };
 
     const abrirModalNuevaSucursal = () => {
-      // Implementar lógica para nueva sucursal
-      alert('Función de nueva sucursal se implementará aquí');
+      nuevaSucursal.value = {
+        nombre: '',
+        direccion: '',
+        descripcion: '',
+        codigo_sucursal: '',
+        telefono: '',
+        ciudad: '',
+        departamento: '',
+        activa: true
+      };
+      showModalSucursal.value = true;
+    };
+
+    const crearSucursal = async () => {
+      try {
+        const response = await axios.post('/api/admin/sucursales/', nuevaSucursal.value, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        sucursales.value.push(response.data);
+        showModalSucursal.value = false;
+      } catch (error) {
+        console.error('Error creando sucursal:', error);
+        if (error.response) {
+          console.error('Error details:', error.response.data);
+          alert(`Error al crear la sucursal: ${JSON.stringify(error.response.data)}`);
+        } else {
+          alert('Error al crear la sucursal');
+        }
+      }
     };
 
     const editarServicio = (servicio) => {
@@ -494,11 +590,14 @@ export default {
       cerrarSesion,
       showModalServicio,
       showEditModalServicio,
+      showModalSucursal,
       nuevoServicio,
       servicioEditando,
+      nuevaSucursal,
       cerrarModalServicio,
       crearServicio,
-      actualizarServicio
+      actualizarServicio,
+      crearSucursal
     };
   }
 };

@@ -16,15 +16,9 @@ class SucursalAdminViewSet(viewsets.ModelViewSet):
     ordering = ['nombre']
 
     def perform_create(self, serializer):
-        """Guarda la sucursal con configuración por defecto"""
-        serializer.save(
-            configuracion=serializer.validated_data.get('configuracion', {})
-        )
+        """Guarda la sucursal"""
+        serializer.save()
 
     def perform_update(self, serializer):
-        """Actualiza la sucursal manteniendo la configuración existente"""
-        instance = self.get_object()
-        config_actual = instance.configuracion
-        nueva_config = serializer.validated_data.get('configuracion', {})
-        config_actualizada = {**config_actual, **nueva_config}
-        serializer.save(configuracion=config_actualizada)
+        """Actualiza la sucursal"""
+        serializer.save()
