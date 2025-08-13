@@ -410,9 +410,25 @@ export default {
       alert(`Editando sucursal: ${sucursal.nombre}`);
     };
 
-    const eliminarServicio = (id) => {
+    const eliminarServicio = async (id) => {
       if (confirm('¿Estás seguro de eliminar este servicio?')) {
-        servicios.value = servicios.value.filter(s => s.id !== id);
+        try {
+          await axios.delete(`/api/admin/servicios/${id}/`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          servicios.value = servicios.value.filter(s => s.id !== id);
+        } catch (error) {
+          console.error('Error eliminando servicio:', error);
+          if (error.response) {
+            console.error('Error details:', error.response.data);
+            alert(`Error al eliminar el servicio: ${JSON.stringify(error.response.data)}`);
+          } else {
+            alert('Error al eliminar el servicio');
+          }
+        }
       }
     };
 
