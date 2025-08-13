@@ -6,18 +6,19 @@
     <!-- Contenido Principal -->
     <main class="flex-grow py-12 px-4">
       <div class="max-w-2xl mx-auto">
-        <!-- Encabezado -->
-        <div class="text-center mb-1">
-          <h1 class="text-x4 font-bold text-gray-900 mb-2">Turno Generado Exitosamente</h1>
-        </div>
 
         <!-- Tarjeta del turno -->
         <div v-if="turno" class="bg-white rounded-2xl shadow-xl overflow-hidden">
+          
+          <div class="text-center mb-1">
+            <h1 class="text-x4 font-bold text-gray-900 mb-2">Turno Generado Exitosamente</h1>
+          </div>
+          <NotificationContainer />
           <div class="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
             <h2 class="text-2xl font-bold text-white">Información de tu turno</h2>
             <!--<p class="text-green-100 mt-1">Información completa de tu turno</p>-->
-          </div>
-
+          </div> 
+ 
           <div class="p-8">
             <!-- Número de turno destacado -->
             <div class="text-center mb-4">
@@ -143,15 +144,21 @@
             <!-- Botones de acción -->
             <div class="mt-8 pt-6 border-t border-gray-200">
               <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button @click="volverASolicitar"
-                  class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                <button
+                  type="button"
+                  @click="volverASolicitar"
+                  class="px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors">
                   Solicitar Otro Turno
                 </button>
-                <button @click="verMisTurnos"
+                <button 
+                  type="button"
+                  @click="verMisTurnos"
                   class="px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors">
                   Ver Mis Turnos
                 </button>
-                <button @click="cancelarTurno"
+                <button
+                  type="button"
+                  @click="cancelarTurno"
                   class="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
                   Cancelar Turno
                 </button>
@@ -170,7 +177,9 @@
             </svg>
             <h3 class="text-lg font-medium text-red-800 mb-2">No se encontró información del turno</h3>
             <p class="text-red-700">Por favor, solicita un nuevo turno.</p>
-            <button @click="volverASolicitar"
+            <button
+              type="button"
+              @click="irSolicitarTurno"
               class="mt-4 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors">
               Solicitar Turno
             </button>
@@ -222,6 +231,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import AppFooter from '@/components/layout/AppFooter.vue';
+import NotificationContainer from '@/components/ui/NotificationContainer.vue'
 
 const route = useRoute();
 const router = useRouter();
@@ -229,6 +239,34 @@ const turno = ref(null);
 const showRatingModal = ref(false);
 const rating = ref(0);
 const comentario = ref('');
+
+function irSolicitarTurno() {
+  // Usa la MISMA ruta que en tus definiciones (recomiendo guiones)
+  router.push('/solicitar-turno')
+  // o por nombre (mejor):
+  // router.push({ name: 'solicitar-turno' })
+}
+
+function cancelarTurno() {
+  // Usa la MISMA ruta que en tus definiciones (recomiendo guiones)
+  router.push('/')
+  // o por nombre (mejor):
+  // router.push({ name: 'solicitar-turno' })
+}
+
+function verMisTurnos() {
+  // Usa la MISMA ruta que en tus definiciones (recomiendo guiones)
+  router.push('/historial')
+  // o por nombre (mejor):
+  // router.push({ name: 'solicitar-turno' })
+}
+
+function volverASolicitar() {
+  // Usa la MISMA ruta que en tus definiciones (recomiendo guiones)
+  router.push('/solicitar-turno')
+  // o por nombre (mejor):
+  // router.push({ name: 'solicitar-turno' })
+}
 
 onMounted(() => {
   let pollingInterval = null;
@@ -311,7 +349,7 @@ onMounted(() => {
   };
 
   cargarTurno();
-
+  
   window.addEventListener('storage', (event) => {
     if (event.key === 'ultimoTurno') {
       console.log('Detectado cambio en localStorage, recargando turno.');
@@ -334,13 +372,7 @@ const calcularTiempoEspera = () => {
   return turno.value.tiempo_espera_estimado || 0;
 };
 
-const volverASolicitar = () => {
-  router.push('/solicitar-turno');
-};
 
-const verMisTurnos = () => {
-  router.push('/mis-turnos');
-};
 </script>
 
 <style scoped>

@@ -10,8 +10,5 @@ import NotificationContainer from '@/components/ui/NotificationContainer.vue';
 
 export default {
   name: 'App',
-  components: {
-    NotificationContainer
-  }
 }
 </script>
