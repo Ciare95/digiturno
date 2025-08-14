@@ -309,6 +309,61 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal para editar sucursal -->
+    <div v-if="showEditModalSucursal" class="fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+      <div class="bg-white rounded-lg shadow-xl p-6">
+        <div>
+          <div class="mt-3 text-center sm:mt-5">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Editar Sucursal</h3>
+            <div class="mt-2">
+              <div class="space-y-4">
+                <div>
+                  <label for="edit-sucursal-nombre" class="block text-sm font-medium text-gray-700 text-left">Nombre</label>
+                  <input type="text" v-model="sucursalEditando.nombre" id="edit-sucursal-nombre" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-direccion" class="block text-sm font-medium text-gray-700 text-left">Dirección</label>
+                  <input type="text" v-model="sucursalEditando.direccion" id="edit-sucursal-direccion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-descripcion" class="block text-sm font-medium text-gray-700 text-left">Descripción</label>
+                  <textarea v-model="sucursalEditando.descripcion" id="edit-sucursal-descripcion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+                </div>
+                <div>
+                  <label for="edit-sucursal-codigo" class="block text-sm font-medium text-gray-700 text-left">Código</label>
+                  <input type="text" v-model="sucursalEditando.codigo_sucursal" id="edit-sucursal-codigo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-telefono" class="block text-sm font-medium text-gray-700 text-left">Teléfono</label>
+                  <input type="text" v-model="sucursalEditando.telefono" id="edit-sucursal-telefono" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-ciudad" class="block text-sm font-medium text-gray-700 text-left">Ciudad</label>
+                  <input type="text" v-model="sucursalEditando.ciudad" id="edit-sucursal-ciudad" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-departamento" class="block text-sm font-medium text-gray-700 text-left">Departamento</label>
+                  <input type="text" v-model="sucursalEditando.departamento" id="edit-sucursal-departamento" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" v-model="sucursalEditando.activa" id="edit-sucursal-activa" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                  <label for="edit-sucursal-activa" class="ml-2 block text-sm text-gray-700">Activa</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+          <button type="button" @click="actualizarSucursal" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+            Guardar Cambios
+          </button>
+          <button type="button" @click="showEditModalSucursal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
 </template>
 
 <script>
@@ -342,6 +397,7 @@ export default {
     const showModalServicio = ref(false);
     const showEditModalServicio = ref(false);
     const showModalSucursal = ref(false);
+    const showEditModalSucursal = ref(false);
     const nuevoServicio = ref({
       nombre: '',
       codigo_servicio: '',
@@ -356,6 +412,18 @@ export default {
       duracion: 30
     });
     const nuevaSucursal = ref({
+      nombre: '',
+      direccion: '',
+      descripcion: '',
+      codigo_sucursal: '',
+      telefono: '',
+      ciudad: '',
+      departamento: '',
+      activa: true
+    });
+    
+    const sucursalEditando = ref({
+      id: null,
       nombre: '',
       direccion: '',
       descripcion: '',
@@ -502,8 +570,44 @@ export default {
     };
 
     const editarSucursal = (sucursal) => {
-      // Implementar lógica para editar sucursal
-      alert(`Editando sucursal: ${sucursal.nombre}`);
+      sucursalEditando.value = {
+        id: sucursal.id,
+        nombre: sucursal.nombre,
+        direccion: sucursal.direccion,
+        descripcion: sucursal.descripcion,
+        codigo_sucursal: sucursal.codigo_sucursal,
+        telefono: sucursal.telefono,
+        ciudad: sucursal.ciudad,
+        departamento: sucursal.departamento,
+        activa: sucursal.activa
+      };
+      showEditModalSucursal.value = true;
+    };
+
+    const actualizarSucursal = async () => {
+      try {
+        const response = await axios.put(`/api/admin/sucursales/${sucursalEditando.value.id}/`, sucursalEditando.value, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const index = sucursales.value.findIndex(s => s.id === sucursalEditando.value.id);
+        if (index !== -1) {
+          sucursales.value[index] = response.data;
+        }
+        
+        showEditModalSucursal.value = false;
+      } catch (error) {
+        console.error('Error actualizando sucursal:', error);
+        if (error.response) {
+          console.error('Error details:', error.response.data);
+          alert(`Error al actualizar la sucursal: ${JSON.stringify(error.response.data)}`);
+        } else {
+          alert('Error al actualizar la sucursal');
+        }
+      }
     };
 
     const eliminarServicio = async (id) => {
@@ -591,13 +695,16 @@ export default {
       showModalServicio,
       showEditModalServicio,
       showModalSucursal,
+      showEditModalSucursal,
       nuevoServicio,
       servicioEditando,
       nuevaSucursal,
+      sucursalEditando,
       cerrarModalServicio,
       crearServicio,
       actualizarServicio,
-      crearSucursal
+      crearSucursal,
+      actualizarSucursal
     };
   }
 };
