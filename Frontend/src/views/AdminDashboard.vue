@@ -150,8 +150,16 @@
                         <button @click="editarSucursal(sucursal)" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                           Editar
                         </button>
-                        <button @click="eliminarSucursal(sucursal.id)" class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                          Eliminar
+                        <button 
+                          @click="toggleActivarSucursal(sucursal)" 
+                          :class="[
+                            sucursal.activa 
+                              ? 'bg-yellow-500 hover:bg-yellow-600' 
+                              : 'bg-green-500 hover:bg-green-600',
+                            'inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+                          ]"
+                        >
+                          {{ sucursal.activa ? 'Desactivar' : 'Activar' }}
                         </button>
                       </div>
                     </div>
@@ -632,9 +640,35 @@ export default {
       }
     };
 
-    const eliminarSucursal = (id) => {
-      if (confirm('¿Estás seguro de eliminar esta sucursal?')) {
-        sucursales.value = sucursales.value.filter(s => s.id !== id);
+    const toggleActivarSucursal = async (sucursal) => {
+      const action = sucursal.activa ? 'desactivar' : 'activar';
+      if (confirm(`¿Estás seguro de ${action} esta sucursal?`)) {
+        try {
+          const updatedSucursal = {
+            ...sucursal,
+            activa: !sucursal.activa
+          };
+          
+          const response = await axios.put(`/api/admin/sucursales/${sucursal.id}/`, updatedSucursal, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const index = sucursales.value.findIndex(s => s.id === sucursal.id);
+          if (index !== -1) {
+            sucursales.value[index] = response.data;
+          }
+        } catch (error) {
+          console.error('Error actualizando estado de sucursal:', error);
+          if (error.response) {
+            console.error('Error details:', error.response.data);
+            alert(`Error al ${action} la sucursal: ${JSON.stringify(error.response.data)}`);
+          } else {
+            alert(`Error al ${action} la sucursal`);
+          }
+        }
       }
     };
 
@@ -690,7 +724,7 @@ export default {
       editarServicio,
       editarSucursal,
       eliminarServicio,
-      eliminarSucursal,
+      toggleActivarSucursal,
       cerrarSesion,
       showModalServicio,
       showEditModalServicio,
