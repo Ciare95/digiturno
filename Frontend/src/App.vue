@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <router-view></router-view>
-    <NotificationContainer />
+    <!--Añadir el container de notificaion-->
+      <!--NotificacionContainer-->
   </div>
 </template>
 

@@ -13,7 +13,6 @@
           <div class="text-center mb-1">
             <h1 class="text-x4 font-bold text-gray-900 mb-2">Turno Generado Exitosamente</h1>
           </div>
-          <NotificationContainer />
           <div class="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
             <h2 class="text-2xl font-bold text-white">Información de tu turno</h2>
             <!--<p class="text-green-100 mt-1">Información completa de tu turno</p>-->
