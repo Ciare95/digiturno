@@ -165,6 +165,32 @@ class EmpleadoService {
     }
   }
 
+  async transferirTurno(turnoId, nuevoServicioId) {
+    try {
+      console.log(`Transfering turn ${turnoId} to service ${nuevoServicioId}`);
+      const response = await axios.post(
+        `${API_URL}/empleado/turnos/${turnoId}/transferir/`,
+        {
+          nuevo_servicio_id: nuevoServicioId
+        }
+      );
+      console.log('Transfer response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error transferring turn:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        if (error.response.status === 400) {
+          throw new Error(error.response.data.detail || 'Error al transferir el turno');
+        }
+        if (error.response.status === 404) {
+          throw new Error('Turno no encontrado');
+        }
+      }
+      throw error;
+    }
+  }
+
   async obtenerInfoEmpleado() {
     try {
       const response = await axios.get("http://127.0.0.1:8000/api/empleado/info/")
@@ -186,6 +212,7 @@ class EmpleadoService {
       }
     }
   }
+
 }
 
 export default new EmpleadoService()

@@ -4,8 +4,7 @@
     <nav class="bg-white shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-          <div class="flex items-center
-          ">
+          <div class="flex items-center">
             <div class="flex-shrink-0 flex items-center">
               <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <ClockIcon class="h-5 w-5 text-white" />
@@ -43,9 +42,11 @@
             <p class="mt-1 text-sm text-gray-600">Gestiona los turnos de la sucursal</p>
             
             <!-- Información del empleado -->
-              <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200 w-full">
               <h3 class="text-lg font-medium text-gray-900 mb-2">Información del Empleado</h3>
-              <div class="flex flex-wrap gap-6">
+              
+              <!-- Usamos columnas personalizadas -->
+              <div class="grid gap-5" style="grid-template-columns: repeat(5, 1fr) 1.5fr;">
                 <div class="flex items-center gap-2">
                   <p class="text-sm text-gray-500">Nombre:</p>
                   <p class="font-medium">{{ empleadoInfo.nombre || 'No disponible' }}</p>
@@ -71,30 +72,22 @@
                   <p class="text-sm text-gray-500">Fecha:</p>
                   <p class="font-medium">{{ new Date().toLocaleDateString('es-CO') }}</p>
                 </div>
-              </div>
-              
-              <!-- Servicios asignados -->
-              <div class="mt-4" v-if="empleadoInfo.servicios && empleadoInfo.servicios.length">
-                <h4 class="text-md font-medium text-gray-900 mb-2">Servicios Asignados</h4>
-                <div class="space-y-2">
-                  <div v-for="servicio in empleadoInfo.servicios" :key="servicio.id" class="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <span class="font-medium">{{ servicio.codigo_servicio }} - {{ servicio.nombre }}</span>
+                <!-- Servicios asignados (más ancho) -->
+                <div class="flex items-center gap-2">
+                  <p class="text-sm text-gray-500">Servicios Asignados:</p>
+                  <div v-if="empleadoInfo.servicios && empleadoInfo.servicios.length" class="flex flex-wrap gap-1">
+                    <span v-for="servicio in empleadoInfo.servicios" :key="servicio.id" class="bg-gray-50 px-2 py-0.5 rounded text-sm">
+                      {{ servicio.codigo_servicio }} - {{ servicio.nombre }}
+                    </span>
                   </div>
+                  <p v-else class="text-sm text-gray-500">No hay servicios asignados</p>
                 </div>
               </div>
-              <div v-else class="mt-4 text-sm text-gray-500">
-                No hay servicios asignados
-              </div>
             </div>
-          </div>
-          <div class="mt-4 flex md:mt-0 md:ml-4">
-            <div class="relative rounded-md shadow-sm">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <CalendarIcon class="h-5 w-5 text-gray-400" />
-              </div>
-              <input type="date" v-model="fechaSeleccionada" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2">
-            </div>
-          </div>
+
+  
+
+          </div>    
         </div>
 
         <!-- Estadísticas rápidas -->
@@ -267,6 +260,9 @@
                     <button @click="finalizarTurno" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                       Finalizar Atención
                     </button>
+                    <button @click="transferirTurno" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                      Transferir Turno
+                    </button>
                     <button @click="llamarSiguiente" :disabled="turnosPendientes.length === 0" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                       Llamar Siguiente
                     </button>
@@ -329,6 +325,70 @@
         </div>
       </div>
     </div>
+    <!-- Modal de Transferencia de Turno -->
+    <div v-if="showTransferModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+      <div class="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+        <div class="px-6 py-4 border-b">
+          <h3 class="text-lg font-medium text-gray-900">
+            Transferir Turno {{ turnoActual?.numero }}
+          </h3>
+        </div>
+        <div class="px-6 py-4">
+          <div v-if="isLoadingServicios" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+          <div v-else>
+            <div v-if="transferError" class="mb-4 p-4 bg-red-50 text-red-700 rounded">
+              {{ transferError }}
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Seleccione el servicio de destino:
+              </label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                <div 
+                  v-for="servicio in serviciosDisponibles" 
+                  :key="servicio.id"
+                  @click="selectedServiceId = servicio.id"
+                  class="p-3 border rounded cursor-pointer transition-colors"
+                  :class="{
+                    'border-blue-500 bg-blue-50': selectedServiceId === servicio.id,
+                    'border-gray-200 hover:border-blue-300': selectedServiceId !== servicio.id
+                  }"
+                >
+                  <div class="font-medium">{{ servicio.codigo_servicio }} - {{ servicio.nombre }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="px-6 py-4 border-t flex justify-end space-x-3">
+          <button 
+            @click="closeTransferModal" 
+            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Cancelar
+          </button>
+          <button 
+            @click="confirmarTransferencia" 
+            :disabled="!selectedServiceId || isTransfiriendo"
+            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span v-if="isTransfiriendo">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Transferiendo...
+            </span>
+            <span v-else>
+              Confirmar Transferencia
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -343,6 +403,7 @@ import {
   CalendarIcon
 } from '@heroicons/vue/24/outline';
 import EmpleadoService from '@/Services/EmpleadoService';
+import { obtenerServicios } from '@/Services/Servicios';
 
 export default {
   name: 'EmpleadoDashboard',
@@ -372,6 +433,14 @@ export default {
       estado: 'Desconectado',
       sucursal_nombre: ''
     });
+
+    // Estado de modal de transferencia
+    const showTransferModal = ref(false);
+    const serviciosDisponibles = ref([]);
+    const isLoadingServicios = ref(false);
+    const selectedServiceId = ref(null);
+    const isTransfiriendo = ref(false);
+    const transferError = ref('');
 
     // Función para actualizar datos de turnos
     const actualizarTurnos = async () => {
@@ -660,6 +729,64 @@ export default {
       }
     };
 
+    // Transferir turno a otro servicio (modal)
+    const transferirTurno = async () => {
+      if (!turnoActual.value) {
+        transferError.value = 'No hay un turno en atención para transferir';
+        showTransferModal.value = true;
+        return;
+      }
+
+      showTransferModal.value = true;
+      transferError.value = '';
+      selectedServiceId.value = null;
+      isLoadingServicios.value = true;
+
+      try {
+        const servicios = await obtenerServicios();
+        // Mostrar todos los servicios disponibles
+        serviciosDisponibles.value = Array.isArray(servicios) ? servicios : [];
+      } catch (error) {
+        console.error('Error cargando servicios:', error);
+        transferError.value = error.message || 'Error al cargar los servicios';
+      } finally {
+        isLoadingServicios.value = false;
+      }
+    };
+
+    const closeTransferModal = () => {
+      showTransferModal.value = false;
+      transferError.value = '';
+      selectedServiceId.value = null;
+    };
+
+    const confirmarTransferencia = async () => {
+      if (!turnoActual.value || !selectedServiceId.value) {
+        transferError.value = 'Seleccione un servicio de destino';
+        return;
+      }
+      isTransfiriendo.value = true;
+      try {
+        await EmpleadoService.transferirTurno(
+          turnoActual.value.id,
+          selectedServiceId.value
+        );
+        // Limpiar estado local
+        turnoActual.value = null;
+        clearInterval(intervalo);
+        tiempoTranscurrido.value = '00:00';
+
+        // Cerrar modal y actualizar lista
+        showTransferModal.value = false;
+        await actualizarTurnos();
+      } catch (error) {
+        console.error('Error al transferir turno:', error);
+        transferError.value = error.message || 'Error al transferir el turno';
+      } finally {
+        isTransfiriendo.value = false;
+      }
+    };
+
     // Cerrar sesión
     const cerrarSesion = () => {
       // Detener temporizador si está activo
@@ -692,11 +819,22 @@ export default {
       
       // Datos
       empleadoInfo,
+
+      // Modal transferencia
+      showTransferModal,
+      serviciosDisponibles,
+      selectedServiceId,
+      isLoadingServicios,
+      isTransfiriendo,
+      transferError,
       
       // Métodos
       atenderSiguiente,
       llamarSiguiente,
       finalizarTurno,
+      transferirTurno,
+      confirmarTransferencia,
+      closeTransferModal,
       ausenteTurno,
       cerrarSesion
     };

@@ -150,9 +150,9 @@
                   Solicitar Otro Turno
                 </button>
                 <button 
-                  type="button"
                   @click="verMisTurnos"
-                  class="px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors">
+                  class="px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
+                >
                   Ver Mis Turnos
                 </button>
                 <button
@@ -283,32 +283,39 @@ onMounted(() => {
     } else {
       router.push('/solicitar-turno');
     }
-  }
-  
-  // Si no hay turno en los parámetros, intentar obtener desde localStorage
-  if (!turno.value) {
+    localStorage.setItem(calificacionKey, 'true');
+  };
+
+  const procesarDatosTurno = (data) => {
+    const estadoFinalizado = data.estado_display === 'Atendido' || data.estado_display === 'Finalizado';
+    
+    if (estadoFinalizado) {
+      preguntarPorCalificacion(data.id);
+    }
+  };
+
+  const cargarTurno = () => {
+    console.log('Cargando turno...');
     const turnoGuardado = localStorage.getItem('ultimoTurno');
+
     if (turnoGuardado) {
       try {
         const parsedTurno = JSON.parse(turnoGuardado);
-        turno.value = parsedTurno;
-        console.log('Turno cargado desde localStorage:', parsedTurno);
-        procesarDatosTurno(parsedTurno);
+        // Si el turno en localStorage corresponde al de la URL, lo usamos
+        if (parsedTurno.id == turnoId) {
+          turno.value = parsedTurno;
+          console.log('Turno cargado desde localStorage:', parsedTurno);
+          procesarDatosTurno(parsedTurno);
+        }
       } catch (e) {
         console.error('Error parseando turno desde localStorage', e);
       }
-    } else if (route.params.turno) {
-      try {
-        const parsedTurno = typeof route.params.turno === 'string' 
-          ? JSON.parse(route.params.turno) 
-          : route.params.turno;
-        turno.value = parsedTurno;
-        localStorage.setItem('ultimoTurno', JSON.stringify(parsedTurno));
-        console.log('Turno cargado desde route.params:', parsedTurno);
-        procesarDatosTurno(parsedTurno);
-      } catch (e) {
-        console.error('Error parseando turno desde route.params', e);
-      }
+    }
+    
+    // Si no hay turno cargado (o no coincide), establecemos el ID para el polling
+    if (!turno.value && turnoId) {
+      turno.value = { id: turnoId };
+      console.log(`ID de turno ${turnoId} establecido desde la URL. Esperando polling...`);
     }
 
     if (!turno.value) {
@@ -371,7 +378,69 @@ const calcularTiempoEspera = () => {
   return turno.value.tiempo_espera_estimado || 0;
 };
 
+const volverASolicitar = () => {
+  router.push('/solicitar-turno');
+};
 
+const verMisTurnos = () => {
+  router.push('/mis-turnos');
+};
+
+    const enviarCalificacion = async () => {
+      try {
+        console.log('Iniciando envío de calificación...');
+        console.log('Datos a enviar:', {
+          turno_id: turno.value.id,
+          calificacion: rating.value,
+          comentario: comentario.value
+        });
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.warn('No se encontró token - intentando enviar calificación sin autenticación');
+          // Permitir enviar calificación sin token como invitado
+          // El backend validará si se permite calificación anónima
+        }
+
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch('/api/turns/calificaciones/crear/', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            turno_id: turno.value.id,
+            calificacion: rating.value,
+            comentario: comentario.value
+          })
+        });
+
+        console.log('Respuesta del servidor:', {
+          status: response.status,
+          ok: response.ok
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Error en la respuesta:', errorData);
+          throw new Error(errorData.detail || 'Error al enviar calificación');
+        }
+
+        const responseData = await response.json();
+        console.log('Calificación enviada exitosamente:', responseData);
+
+        showRatingModal.value = false;
+        alert('¡Gracias por calificar nuestro servicio!');
+        router.push('/solicitar-turno');
+      } catch (error) {
+        console.error('Error al calificar:', error);
+        alert(`Ocurrió un error al enviar tu calificación: ${error.message}`);
+      }
+    };
 </script>
 
 <style scoped>

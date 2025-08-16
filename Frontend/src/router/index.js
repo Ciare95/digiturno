@@ -22,9 +22,10 @@ const routes = [
         meta: { requiresAuth: true },
     },
     {
-        path: '/turno-generado',
+        path: '/turno-generado/:id',
         name: 'turno-generado',
         component: TurnoGenerado,
+        props: true,
         meta: { requiresAuth: true },
     },
     {
