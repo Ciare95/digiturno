@@ -244,9 +244,17 @@ let pollingInterval = null;
 
 // --- Navegación ---
 function irSolicitarTurno() { router.push('/solicitar-turno'); }
-function cancelarTurno() { router.push('/'); }
 function verMisTurnos() { router.push('/historial'); }
 function volverASolicitar() { router.push('/solicitar-turno'); }
+
+function cancelarTurno() {
+  const numero = turno.value?.numero_turno ? ` ${turno.value.numero_turno}` : '';
+  if (confirm(`¿Seguro que deseas cancelar el turno${numero}?`)) {
+    // (opcional) Limpia el almacenamiento del turno
+    // localStorage.removeItem('ultimoTurno');
+    router.push('/');
+  }
+}
 
 // --- Utilidades ---
 function leerTurnoSeguro() {
@@ -314,13 +322,36 @@ async function actualizarTurnoDesdeServidor() {
     return;
   }
 
-  console.log(`Polling: Verificando estado para turno ID: ${turno.value.id}`);
+  const id = turno.value.id;
+  // Asegura que el id vaya bien codificado
+  const url = new URL(`/api/turns/public/turno/${encodeURIComponent(id)}/status/`, window.location.origin);
+  console.log(`Polling: Verificando estado → ${url}`);
+
   try {
-    const response = await fetch(`/api/turns/public/turno/${turno.value.id}/status/`);
+    const response = await fetch(url.toString(), {
+      headers: { 'Accept': 'application/json' }
+    });
+
     if (!response.ok) {
-      console.warn(`Polling: Respuesta no OK (${response.status})`);
+      // Intenta leer el cuerpo aunque sea HTML; ayuda a ver el stacktrace del backend
+      const text = await response.text().catch(() => '');
+      console.warn(`Polling: Respuesta no OK (${response.status})\n${text?.slice(0, 1000)}`);
+
+      // Si es 5xx, evita machacar al servidor: pausa 30s el polling
+      if (response.status >= 500) {
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = setInterval(actualizarTurnoDesdeServidor, 30000);
+        console.warn('Polling: 5xx -> aumento el intervalo a 30s temporalmente.');
+      }
       return;
     }
+
+    // Si todo bien, vuelve a intervalo normal (5s) si lo habías ampliado
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = setInterval(actualizarTurnoDesdeServidor, 5000);
+    }
+
     const data = await response.json();
     console.log('Polling: Datos recibidos:', data);
 
@@ -334,7 +365,7 @@ async function actualizarTurnoDesdeServidor() {
       procesarDatosTurno(data);
     }
   } catch (error) {
-    console.error('Polling: Error al actualizar turno:', error);
+    console.error('Polling: Error al actualizar turno (network/runtime):', error);
   }
 }
 
