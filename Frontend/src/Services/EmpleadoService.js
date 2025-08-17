@@ -1,28 +1,20 @@
-import axios from "axios"
+// src/Services/EmpleadoService.js
+import api from './api';
 
-const API_URL = "http://127.0.0.1:8000/api/turns"
+const API_URL = '/turns'; // ya tenemos baseURL en api
 
 class EmpleadoService {
   async obtenerEstadisticas() {
-    const response = await axios.get(`${API_URL}/estadisticas-empleado/`)
-    return response.data
+    const { data } = await api.get(`${API_URL}/estadisticas-empleado/`);
+    return data;
   }
 
   async obtenerTurnosPendientes() {
     try {
-      const response = await axios.get(`${API_URL}/cola-turnos-empleado/`, {
-        params: {
-          _: new Date().getTime()
-        }
-      })
-      console.log('Raw API response:', response.data)
-      
-      if (!response.data) return []
-      const results = response.data.results || response.data
+      const { data } = await api.get(`${API_URL}/cola-turnos-empleado/`, { params: { _: Date.now() } });
+      const results = data?.results || data;
       if (Array.isArray(results)) {
-        const mapped = results.map(item => {
-          console.log('Raw turn item:', item);
-          // Handle both direct turn objects and queue items with nested turno
+        return results.map((item) => {
           const turnoData = item.turno ? {
             id: item.turno,
             numero: item.turno_numero,
@@ -48,109 +40,80 @@ class EmpleadoService {
             rawData: item
           };
         });
-        console.log('Mapped turns:', mapped)
-        return mapped
       }
-      return []
+      return [];
     } catch (error) {
-      console.error('Error getting pending turns:', error)
-      return []
+      console.error('Error getting pending turns:', error);
+      return [];
     }
   }
 
   async obtenerTurnoActual() {
-    const response = await axios.get(`${API_URL}/turno-actual-empleado/`)
-    return response.data ? {
-      id: response.data.id,
-      numero: response.data.numero_turno,
-      servicio: response.data.servicio_nombre,
-      cliente: response.data.nombre_cliente || 'Cliente no disponible',
-      estado: response.data.estado_display,
-      fecha_creacion: response.data.fecha_creacion
-    } : null
+    const { data } = await api.get(`${API_URL}/turno-actual-empleado/`);
+    return data ? {
+      id: data.id,
+      numero: data.numero_turno,
+      servicio: data.servicio_nombre,
+      cliente: data.nombre_cliente || 'Cliente no disponible',
+      estado: data.estado_display,
+      fecha_creacion: data.fecha_creacion
+    } : null;
   }
 
   async iniciarAtencion(turnoId) {
     try {
-      console.log('Starting attention for turn ID:', turnoId)
-      const requestData = turnoId ? { turno_id: turnoId } : {}
-      
-      const response = await axios.post(`${API_URL}/empleado/turnos/siguiente/`, requestData)
-      console.log('Start attention response:', response.data)
-      
-      if (response.status === 204) {
-        throw new Error("No hay turnos disponibles en la cola.")
-      }
+      const payload = turnoId ? { turno_id: turnoId } : {};
+      const res = await api.post(`${API_URL}/empleado/turnos/siguiente/`, payload);
 
+      if (res.status === 204) throw new Error('No hay turnos disponibles en la cola.');
+
+      const d = res.data;
       return {
-        id: response.data.id,
-        numero: response.data.numero_turno,
-        servicio: response.data.servicio_nombre,
-        cliente: response.data.nombre_cliente || 'Cliente no disponible',
-        estado: response.data.estado_display,
-        fecha_creacion: response.data.fecha_creacion,
-        ventanilla: response.data.ventanilla
-      }
+        id: d.id,
+        numero: d.numero_turno,
+        servicio: d.servicio_nombre,
+        cliente: d.nombre_cliente || 'Cliente no disponible',
+        estado: d.estado_display,
+        fecha_creacion: d.fecha_creacion,
+        ventanilla: d.ventanilla
+      };
     } catch (error) {
-      console.error('Error starting attention:', error)
       if (error.response) {
-        console.error('Error response:', error.response.data);
-        if (error.response.status === 400) {
-          throw new Error(error.response.data.detail || 'Error al procesar el turno')
-        }
+        if (error.response.status === 400) throw new Error(error.response.data.detail || 'Error al procesar el turno');
         if (error.response.status === 404) {
           const availableTurns = error.response.data?.available_turns || [];
-          throw new Error(`Turno no encontrado. Turnos disponibles: ${JSON.stringify(availableTurns)}`)
+          throw new Error(`Turno no encontrado. Turnos disponibles: ${JSON.stringify(availableTurns)}`);
         }
       }
-      console.error('Full error object:', error);
-      throw error.message ? error : new Error('Error al procesar el turno')
+      throw error.message ? error : new Error('Error al procesar el turno');
     }
   }
 
   async finalizarAtencion(turnoId) {
-    console.log('Finalizando turno ID:', turnoId);
-    const response = await axios.post(`${API_URL}/finalizar-atencion/`, { turno_id: turnoId });
-    console.log('Finalizar atencion - raw response:', response);
-    console.log('Finalizar atencion - response data:', response.data);
-
-    const turnoData = response.data;
-    const formattedData = {
-        id: turnoData.id,
-        numero: turnoData.numero_turno,
-        servicio: turnoData.servicio_nombre || 'Servicio no disponible',
-        cliente: turnoData.nombre_cliente || 'Cliente no disponible',
-        estado: 'Atendido',
-        estado_display: 'Atendido',
-        fecha_creacion: turnoData.fecha_creacion,
-        hora: turnoData.fecha_finalizacion ?
-            new Date(turnoData.fecha_finalizacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) :
-            new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-        numero_turno: turnoData.numero_turno,
-        servicio_nombre: turnoData.servicio_nombre,
-        nombre_cliente: turnoData.nombre_cliente,
-        fecha_finalizacion: turnoData.fecha_finalizacion
+    const { data } = await api.post(`${API_URL}/finalizar-atencion/`, { turno_id: turnoId });
+    return {
+      id: data.id,
+      numero: data.numero_turno,
+      servicio: data.servicio_nombre || 'Servicio no disponible',
+      cliente: data.nombre_cliente || 'Cliente no disponible',
+      estado: 'Atendido',
+      estado_display: 'Atendido',
+      fecha_creacion: data.fecha_creacion,
+      hora: data.fecha_finalizacion
+        ? new Date(data.fecha_finalizacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+        : new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+      numero_turno: data.numero_turno,
+      servicio_nombre: data.servicio_nombre,
+      nombre_cliente: data.nombre_cliente,
+      fecha_finalizacion: data.fecha_finalizacion
     };
-
-    console.log('Finalizar atencion - formatted data:', formattedData);
-    return formattedData;
-}
+  }
 
   async obtenerHistorial() {
     try {
-      console.log('Fetching recent history from API...')
-      const response = await axios.get(`${API_URL}/ultimos-turnos-finalizados/`)
-      console.log('API response:', response)
-      
-      if (!response.data) {
-        console.log('No data in response')
-        return []
-      }
-      
-      const data = Array.isArray(response.data) ? response.data : [response.data]
-      console.log('Processed data:', data)
-      
-      return data.map(turno => ({
+      const { data } = await api.get(`${API_URL}/ultimos-turnos-finalizados/`);
+      const list = Array.isArray(data) ? data : [data].filter(Boolean);
+      return list.map((turno) => ({
         id: turno.id,
         numero: turno.numero_turno,
         servicio: turno.servicio || 'Servicio no disponible',
@@ -158,34 +121,23 @@ class EmpleadoService {
         estado: turno.estado || 'Finalizado',
         fecha_creacion: turno.fecha_creacion,
         hora: turno.hora || '--:--'
-      }))
+      }));
     } catch (error) {
-      console.error('Error getting history:', error)
-      return []
+      console.error('Error getting history:', error);
+      return [];
     }
   }
 
   async transferirTurno(turnoId, nuevoServicioId) {
     try {
-      console.log(`Transfering turn ${turnoId} to service ${nuevoServicioId}`);
-      const response = await axios.post(
-        `${API_URL}/empleado/turnos/${turnoId}/transferir/`,
-        {
-          nuevo_servicio_id: nuevoServicioId
-        }
-      );
-      console.log('Transfer response:', response.data);
-      return response.data;
+      const { data } = await api.post(`${API_URL}/empleado/turnos/${turnoId}/transferir/`, {
+        nuevo_servicio_id: nuevoServicioId
+      });
+      return data;
     } catch (error) {
-      console.error('Error transferring turn:', error);
       if (error.response) {
-        console.error('Error response:', error.response.data);
-        if (error.response.status === 400) {
-          throw new Error(error.response.data.detail || 'Error al transferir el turno');
-        }
-        if (error.response.status === 404) {
-          throw new Error('Turno no encontrado');
-        }
+        if (error.response.status === 400) throw new Error(error.response.data.detail || 'Error al transferir el turno');
+        if (error.response.status === 404) throw new Error('Turno no encontrado');
       }
       throw error;
     }
@@ -193,26 +145,25 @@ class EmpleadoService {
 
   async obtenerInfoEmpleado() {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/empleado/info/")
-      return response.data || {
+      const { data } = await api.get(`/empleado/info/`);
+      return data || {
         nombre: '',
         codigo_empleado: '',
         ventanilla_asignada: '',
         estado_conexion: false,
         sucursal_nombre: ''
-      }
+      };
     } catch (error) {
-      console.error('Error getting employee info:', error)
+      console.error('Error getting employee info:', error);
       return {
         nombre: '',
         codigo_empleado: '',
         ventanilla_asignada: '',
         estado_conexion: false,
         sucursal_nombre: ''
-      }
+      };
     }
   }
-
 }
 
-export default new EmpleadoService()
+export default new EmpleadoService();

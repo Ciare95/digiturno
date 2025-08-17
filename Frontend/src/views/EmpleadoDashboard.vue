@@ -404,6 +404,8 @@ import {
 } from '@heroicons/vue/24/outline';
 import EmpleadoService from '@/Services/EmpleadoService';
 import { obtenerServicios } from '@/Services/Servicios';
+import AuthService from '@/Services/AuthService';
+
 
 export default {
   name: 'EmpleadoDashboard',
@@ -788,18 +790,13 @@ export default {
     };
 
     // Cerrar sesión
-    const cerrarSesion = () => {
-      // Detener temporizador si está activo
-      if (turnoActual.value) {
-        finalizarTurno();
+    const cerrarSesion = async () => {
+      try {
+        if (turnoActual.value) await finalizarTurno();
+        await AuthService.logout();
+      } finally {
+        router.push('/login');
       }
-      
-      // Eliminar datos de sesión (simulado)
-      localStorage.removeItem('token');
-      localStorage.removeItem('userRole');
-      
-      // Redirigir al login
-      router.push('/login');
     };
 
     // Limpiar intervalo al desmontar el componente
