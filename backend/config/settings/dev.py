@@ -26,7 +26,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Configuración de hosts permitidos para desarrollo
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.2.4']
+print("ALLOWED_HOSTS desde dev.py:", ALLOWED_HOSTS)
+
 
 # Configuración de CSRF para desarrollo
 CSRF_TRUSTED_ORIGINS = [

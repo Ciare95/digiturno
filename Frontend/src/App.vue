@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <router-view></router-view>
-    <NotificationContainer />
+    <!--Añadir el container de notificaion-->
+      <!--NotificacionContainer-->
   </div>
 </template>
 
@@ -10,8 +11,5 @@ import NotificationContainer from '@/components/ui/NotificationContainer.vue';
 
 export default {
   name: 'App',
-  components: {
-    NotificationContainer
-  }
 }
 </script>
