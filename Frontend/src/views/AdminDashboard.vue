@@ -61,8 +61,82 @@
 
           <!-- Contenido de las pestañas -->
           <div class="mt-6">
+            <!-- Estadísticas -->
+            <div v-if="currentTab === 'estadisticas'" class="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div class="px-4 py-5 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Estadísticas de Turnos</h3>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500">Resumen de actividad diaria</p>
+              </div>
+              <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                  <!-- Tarjeta Turnos Totales -->
+                  <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                          <ClockIcon class="h-6 w-6 text-white" />
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Turnos Totales</dt>
+                            <dd class="flex items-baseline">
+                              <div class="text-2xl font-semibold text-gray-900">
+                                {{ estadisticas.turnosHoy }}
+                              </div>
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tarjeta Turnos Atendidos -->
+                  <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                          <UserIcon class="h-6 w-6 text-white" />
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Turnos Atendidos</dt>
+                            <dd class="flex items-baseline">
+                              <div class="text-2xl font-semibold text-gray-900">
+                                {{ estadisticas.turnosAtendidos }}
+                              </div>
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Tarjeta Turnos Pendientes -->
+                  <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                          <DocumentTextIcon class="h-6 w-6 text-white" />
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Turnos Pendientes</dt>
+                            <dd class="flex items-baseline">
+                              <div class="text-2xl font-semibold text-gray-900">
+                                {{ estadisticas.turnosPendientes }}
+                              </div>
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Gestión de Servicios -->
-            <div v-if="currentTab === 'servicios'" class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div v-else-if="currentTab === 'servicios'" class="bg-white shadow overflow-hidden sm:rounded-lg">
               <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
                 <div>
                   <h3 class="text-lg leading-6 font-medium text-gray-900">Servicios</h3>
@@ -394,8 +468,28 @@ export default {
 
     const tabs = [
       { name: 'servicios', label: 'Servicios' },
-      { name: 'sucursales', label: 'Sucursales' }
+      { name: 'sucursales', label: 'Sucursales' },
+      { name: 'estadisticas', label: 'Estadísticas' }
     ];
+
+    const estadisticas = ref({
+      turnosHoy: 0,
+      turnosAtendidos: 0,
+      turnosPendientes: 0
+    });
+
+    const getEstadisticasTurnos = async () => {
+      try {
+        const response = await axios.get('/api/admin/estadisticas/turnos/', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        estadisticas.value = response.data;
+      } catch (error) {
+        console.error('Error obteniendo estadísticas:', error);
+      }
+    };
 
     // Datos de ejemplo
     const servicios = ref([]);

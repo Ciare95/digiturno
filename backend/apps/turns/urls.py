@@ -19,7 +19,8 @@ from .views import (
     FinalizarAtencionView,
     UltimosTurnosFinalizadosView,
     PublicTurnoStatusView,
-    CancelarTurnoView
+    CancelarTurnoView,
+    EstadisticasTurnosView
 )
 
 urlpatterns = [
@@ -50,4 +51,7 @@ urlpatterns = [
     # Ruta pública para consultar estado de turno
     path('public/turno/<int:turno_id>/status/', PublicTurnoStatusView.as_view(), name='public_turno_status'),
     path('public/turno/<int:turno_id>/cancelar/', CancelarTurnoView.as_view(), name='public_cancelar_turno'),
+    
+    # Estadísticas de turnos
+    path('estadisticas/turnos/', EstadisticasTurnosView.as_view(), name='estadisticas_turnos'),
 ]
