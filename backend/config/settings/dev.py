@@ -4,93 +4,84 @@ Configuración de Django para el entorno de desarrollo.
 
 from .base import *
 
-# Se redefine el MIDDLEWARE para excluir explícitamente la protección CSRF.
-# Esta es la solución definitiva para el error 403 en el entorno de desarrollo,
-# permitiendo el uso de herramientas de API como Postman sin conflictos.
-MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware', # Excluido intencionalmente
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-
 # Configuración específica para desarrollo
 DEBUG = True
 
-# Configuración de CORS más permisiva para desarrollo
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-
 # Configuración de hosts permitidos para desarrollo
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.2.4']
-print("ALLOWED_HOSTS desde dev.py:", ALLOWED_HOSTS)
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
+# Configuración de CORS para desarrollo
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+]
 
 # Configuración de CSRF para desarrollo
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
     'http://localhost:8080',
     'http://127.0.0.1:8080',
 ]
 
 # Configuración de logging para desarrollo
-LOGGING['loggers']['django'] = {
-    'level': 'WARNING',
-    'handlers': ['console'],
-    'propagate': False
-}
-LOGGING['loggers']['django.db.backends'] = {'level': 'WARNING'}
-LOGGING['loggers']['django.template'] = {'level': 'WARNING'}
-LOGGING['loggers']['django.utils.autoreload'] = {'level': 'WARNING'}
-LOGGING['loggers']['apps'] = {'level': 'WARNING'}
-LOGGING['loggers']['debug_toolbar'] = {'level': 'WARNING'}
+LOGGING['loggers']['django']['level'] = 'DEBUG'
+LOGGING['loggers']['apps']['level'] = 'DEBUG'
+LOGGING['loggers']['django.db.backends']['level'] = 'DEBUG'
 
-# Configuración de caché para desarrollo (más rápido)
+# Configuración de caché para desarrollo (memoria local)
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutos
     }
 }
 
-# Configuración de sesiones para desarrollo
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-
-# Configuración de Channels para desarrollo
+# Configuración de Channels para desarrollo (memoria local)
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 
+# Configuración de JWT para desarrollo (tokens más largos)
+SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(hours=24)
+SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'] = timedelta(days=30)
+SIMPLE_JWT['ROTATE_REFRESH_TOKENS'] = False
+SIMPLE_JWT['BLACKLIST_AFTER_ROTATION'] = False
+
+# Configuración de base de datos para desarrollo
+DATABASES['default']['CONN_MAX_AGE'] = 0  # Sin pool de conexiones en desarrollo
+
 # Configuración de email para desarrollo (consola)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# Configuración de debug toolbar (deshabilitada para evitar conflictos con CSRF)
-# if DEBUG:
-#     INSTALLED_APPS += ['debug_toolbar']
-#     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
-#     INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
 # Configuración de archivos estáticos para desarrollo
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-# Configuración de media para desarrollo
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Configuración de debug toolbar (solo en desarrollo)
+if DEBUG:
+    INSTALLED_APPS += ['debug_toolbar']
+    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
+    INTERNAL_IPS = ['127.0.0.1', 'localhost']
 
-# Configuración de JWT para desarrollo (tokens más largos)
-SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(days=1)
-SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'] = timedelta(days=30)
-
-# Configuración de REST Framework para desarrollo
-REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
-    'rest_framework.renderers.JSONRenderer',
+# Configuración de CORS para desarrollo
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]

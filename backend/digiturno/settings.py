@@ -24,7 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@ww19(01%!-55x5z1l5i$lv5n_ekeocw*no5rqy!sbs^z_l@$b'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("DJANGO_SECRET_KEY debe estar configurada en las variables de entorno")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -92,20 +94,27 @@ WSGI_APPLICATION = 'digiturno.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'digiturno'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
         'ATOMIC_REQUESTS': True,
         'OPTIONS': {
             'client_encoding': 'UTF8',
+            'connect_timeout': 10,
+            'application_name': 'digiturno',
         },
+        'CONN_MAX_AGE': 600,
         'TEST': {
             'ATOMIC_REQUESTS': True,
         },
     }
 }
+
+# Validar configuración de base de datos
+if not all([os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASSWORD')]):
+    raise ValueError("DB_NAME, DB_USER y DB_PASSWORD deben estar configuradas en las variables de entorno")
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
