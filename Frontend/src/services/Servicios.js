@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const url = "http://localhost:8000/api/";
+const url = "http://127.0.0.1:8000/api/";
 
 export async function obtenerServicios() {
     const response = await axios.get(url + "servicios/");
