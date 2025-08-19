@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://192.168.2.4:8000/api/turns/";
+const API_URL = "http://127.0.0.1:8000/api/turns/";
 
 export const solicitarTurno = async (turno) => {
     try {

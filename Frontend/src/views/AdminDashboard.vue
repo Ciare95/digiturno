@@ -80,9 +80,6 @@
                         Nombre
                       </th>
                       <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Descripción
-                      </th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Duración
                       </th>
                       <th scope="col" class="relative px-6 py-3">
@@ -94,16 +91,10 @@
                     <tr v-for="servicio in servicios" :key="servicio.id">
                       <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
-                          <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-md flex items-center justify-center">
-                            <component :is="servicio.icono" class="h-5 w-5 text-blue-600" />
-                          </div>
                           <div class="ml-4">
                             <div class="text-sm font-medium text-gray-900">{{ servicio.nombre }}</div>
                           </div>
                         </div>
-                      </td>
-                      <td class="px-6 py-4">
-                        <div class="text-sm text-gray-500">{{ servicio.descripcion }}</div>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -159,8 +150,16 @@
                         <button @click="editarSucursal(sucursal)" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                           Editar
                         </button>
-                        <button @click="eliminarSucursal(sucursal.id)" class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                          Eliminar
+                        <button 
+                          @click="toggleActivarSucursal(sucursal)" 
+                          :class="[
+                            sucursal.activa 
+                              ? 'bg-yellow-500 hover:bg-yellow-600' 
+                              : 'bg-green-500 hover:bg-green-600',
+                            'inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+                          ]"
+                        >
+                          {{ sucursal.activa ? 'Desactivar' : 'Activar' }}
                         </button>
                       </div>
                     </div>
@@ -173,55 +172,213 @@
       </main>
     </div>
 
-    <!-- Modal de Servicio -->
-    <div v-if="mostrarModalServicio" class="fixed z-10 inset-0 overflow-y-auto">
-      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start">
-              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                  {{ esNuevoServicio ? 'Nuevo Servicio' : 'Editar Servicio' }}
-                </h3>
-                <div class="mt-5">
-                  <div class="mb-4">
-                    <label for="nombreServicio" class="block text-sm font-medium text-gray-700">Nombre</label>
-                    <input type="text" v-model="servicioActual.nombre" id="nombreServicio" class="mt-1 focus:ring-blue-500 focus:border focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+    <!-- Modal simplificado para nuevo servicio -->
+    <div v-if="showModalServicio" class="fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+      <div class="bg-white rounded-lg shadow-xl p-6">
+          <div>
+            <div class="mt-3 text-center sm:mt-5">
+              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                Nuevo Servicio
+              </h3>
+              <div class="mt-2">
+                <div class="space-y-4">
+                  <div>
+                    <label for="nombre" class="block text-sm font-medium text-gray-700 text-left">Nombre del servicio</label>
+                    <input type="text" v-model="nuevoServicio.nombre" id="nombre" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                   </div>
-                  <div class="mb-4">
-                    <label for="descripcionServicio" class="block text-sm font-medium text-gray-700">Descripción</label>
-                    <textarea v-model="servicioActual.descripcion" id="descripcionServicio" rows="3" class="shadow-sm focus:ring-blue-500 focus:border focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"></textarea>
+                  <div>
+                    <label for="codigo" class="block text-sm font-medium text-gray-700 text-left">Código del servicio</label>
+                    <input type="text" v-model="nuevoServicio.codigo_servicio" id="codigo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                   </div>
-                  <div class="mb-4">
-                    <label for="duracionServicio" class="block text-sm font-medium text-gray-700">Duración (minutos)</label>
-                    <input type="number" v-model.number="servicioActual.duracion" id="duracionServicio" class="mt-1 focus:ring-blue-500 focus:border focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                  <div>
+                    <label for="sucursal" class="block text-sm font-medium text-gray-700 text-left">Sucursal</label>
+                    <select v-model="nuevoServicio.sucursal" id="sucursal" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                      <option v-for="sucursal in sucursales" :key="sucursal.id" :value="sucursal.id">
+                        {{ sucursal.nombre }}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="duracion" class="block text-sm font-medium text-gray-700 text-left">Duración (minutos)</label>
+                    <input type="number" v-model="nuevoServicio.duracion" id="duracion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button @click="guardarServicio" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-              Guardar
+          <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+            <button type="button" @click="crearServicio" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+              Crear Servicio
             </button>
-            <button @click="cerrarModalServicio" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+            <button type="button" @click="cerrarModalServicio" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
               Cancelar
             </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- Modal para editar servicio -->
+    <div v-if="showEditModalServicio" class="fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+      <div class="bg-white rounded-lg shadow-xl p-6">
+          <div>
+            <div class="mt-3 text-center sm:mt-5">
+              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                Editar Servicio
+              </h3>
+              <div class="mt-2">
+                <div class="space-y-4">
+                  <div>
+                    <label for="edit-nombre" class="block text-sm font-medium text-gray-700 text-left">Nombre del servicio</label>
+                    <input type="text" v-model="servicioEditando.nombre" id="edit-nombre" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                  </div>
+                  <div>
+                    <label for="edit-codigo" class="block text-sm font-medium text-gray-700 text-left">Código del servicio</label>
+                    <input type="text" v-model="servicioEditando.codigo_servicio" id="edit-codigo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                  </div>
+                  <div>
+                    <label for="edit-sucursal" class="block text-sm font-medium text-gray-700 text-left">Sucursal</label>
+                    <select v-model="servicioEditando.sucursal" id="edit-sucursal" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                      <option v-for="sucursal in sucursales" :key="sucursal.id" :value="sucursal.id">
+                        {{ sucursal.nombre }}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="edit-duracion" class="block text-sm font-medium text-gray-700 text-left">Duración (minutos)</label>
+                    <input type="number" v-model="servicioEditando.duracion" id="edit-duracion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+            <button type="button" @click="actualizarServicio" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+              Guardar Cambios
+            </button>
+            <button type="button" @click="showEditModalServicio = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+              Cancelar
+            </button>
+          </div>
+        </div>
+    </div>
+
+    <!-- Modal para nueva sucursal -->
+    <div v-if="showModalSucursal" class="fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+      <div class="bg-white rounded-lg shadow-xl p-6">
+        <div>
+          <div class="mt-3 text-center sm:mt-5">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Nueva Sucursal</h3>
+            <div class="mt-2">
+              <div class="space-y-4">
+                <div>
+                  <label for="sucursal-nombre" class="block text-sm font-medium text-gray-700 text-left">Nombre</label>
+                  <input type="text" v-model="nuevaSucursal.nombre" id="sucursal-nombre" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-direccion" class="block text-sm font-medium text-gray-700 text-left">Dirección</label>
+                  <input type="text" v-model="nuevaSucursal.direccion" id="sucursal-direccion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-descripcion" class="block text-sm font-medium text-gray-700 text-left">Descripción</label>
+                  <textarea v-model="nuevaSucursal.descripcion" id="sucursal-descripcion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+                </div>
+                <div>
+                  <label for="sucursal-codigo" class="block text-sm font-medium text-gray-700 text-left">Código</label>
+                  <input type="text" v-model="nuevaSucursal.codigo_sucursal" id="sucursal-codigo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-telefono" class="block text-sm font-medium text-gray-700 text-left">Teléfono</label>
+                  <input type="text" v-model="nuevaSucursal.telefono" id="sucursal-telefono" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-ciudad" class="block text-sm font-medium text-gray-700 text-left">Ciudad</label>
+                  <input type="text" v-model="nuevaSucursal.ciudad" id="sucursal-ciudad" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="sucursal-departamento" class="block text-sm font-medium text-gray-700 text-left">Departamento</label>
+                  <input type="text" v-model="nuevaSucursal.departamento" id="sucursal-departamento" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" v-model="nuevaSucursal.activa" id="sucursal-activa" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                  <label for="sucursal-activa" class="ml-2 block text-sm text-gray-700">Activa</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+          <button type="button" @click="crearSucursal" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+            Crear Sucursal
+          </button>
+          <button type="button" @click="showModalSucursal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para editar sucursal -->
+    <div v-if="showEditModalSucursal" class="fixed z-50 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md">
+      <div class="bg-white rounded-lg shadow-xl p-6">
+        <div>
+          <div class="mt-3 text-center sm:mt-5">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Editar Sucursal</h3>
+            <div class="mt-2">
+              <div class="space-y-4">
+                <div>
+                  <label for="edit-sucursal-nombre" class="block text-sm font-medium text-gray-700 text-left">Nombre</label>
+                  <input type="text" v-model="sucursalEditando.nombre" id="edit-sucursal-nombre" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-direccion" class="block text-sm font-medium text-gray-700 text-left">Dirección</label>
+                  <input type="text" v-model="sucursalEditando.direccion" id="edit-sucursal-direccion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-descripcion" class="block text-sm font-medium text-gray-700 text-left">Descripción</label>
+                  <textarea v-model="sucursalEditando.descripcion" id="edit-sucursal-descripcion" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+                </div>
+                <div>
+                  <label for="edit-sucursal-codigo" class="block text-sm font-medium text-gray-700 text-left">Código</label>
+                  <input type="text" v-model="sucursalEditando.codigo_sucursal" id="edit-sucursal-codigo" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-telefono" class="block text-sm font-medium text-gray-700 text-left">Teléfono</label>
+                  <input type="text" v-model="sucursalEditando.telefono" id="edit-sucursal-telefono" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-ciudad" class="block text-sm font-medium text-gray-700 text-left">Ciudad</label>
+                  <input type="text" v-model="sucursalEditando.ciudad" id="edit-sucursal-ciudad" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                  <label for="edit-sucursal-departamento" class="block text-sm font-medium text-gray-700 text-left">Departamento</label>
+                  <input type="text" v-model="sucursalEditando.departamento" id="edit-sucursal-departamento" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div class="flex items-center">
+                  <input type="checkbox" v-model="sucursalEditando.activa" id="edit-sucursal-activa" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                  <label for="edit-sucursal-activa" class="ml-2 block text-sm text-gray-700">Activa</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+          <button type="button" @click="actualizarSucursal" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+            Guardar Cambios
+          </button>
+          <button type="button" @click="showEditModalSucursal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ClockIcon, UserIcon, DocumentTextIcon, ShoppingBagIcon } from '@heroicons/vue/24/outline';
+import axios from 'axios';
 
 export default {
   name: 'AdminDashboard',
@@ -234,15 +391,6 @@ export default {
   setup() {
     const router = useRouter();
     const currentTab = ref('servicios');
-    const mostrarModalServicio = ref(false);
-    const esNuevoServicio = ref(true);
-    const servicioActual = ref({
-      id: null,
-      nombre: '',
-      descripcion: '',
-      duracion: 30,
-      icono: 'DocumentTextIcon'
-    });
 
     const tabs = [
       { name: 'servicios', label: 'Servicios' },
@@ -250,106 +398,314 @@ export default {
     ];
 
     // Datos de ejemplo
-    const servicios = ref([
-      {
-        id: 1,
-        nombre: 'Atención al Cliente',
-        descripcion: 'Atención personalizada para consultas generales',
-        duracion: 15,
-        icono: 'UserIcon'
-      },
-      {
-        id: 2,
-        nombre: 'Pagos',
-        descripcion: 'Pago de facturas y servicios',
-        duracion: 10,
-        icono: 'ShoppingBagIcon'
-      },
-      {
-        id: 3,
-        nombre: 'Asesoría Legal',
-        descripcion: 'Asesoría legal especializada',
-        duracion: 30,
-        icono: 'DocumentTextIcon'
-      }
-    ]);
+    const servicios = ref([]);
 
-    const sucursales = ref([
-      {
-        id: 1,
-        nombre: 'Sucursal Centro',
-        direccion: 'Av. Principal #123',
-        horario: 'Lun-Vie 9:00 - 18:00'
-      },
-      {
-        id: 2,
-        nombre: 'Sucursal Norte',
-        direccion: 'Calle Norte #456',
-        horario: 'Lun-Vie 8:00 - 17:00'
-      }
-    ]);
+    const sucursales = ref([]);
+
+    const showModalServicio = ref(false);
+    const showEditModalServicio = ref(false);
+    const showModalSucursal = ref(false);
+    const showEditModalSucursal = ref(false);
+    const nuevoServicio = ref({
+      nombre: '',
+      codigo_servicio: '',
+      sucursal: null,
+      duracion: 30
+    });
+    const servicioEditando = ref({
+      id: null,
+      nombre: '',
+      codigo_servicio: '',
+      sucursal: null,
+      duracion: 30
+    });
+    const nuevaSucursal = ref({
+      nombre: '',
+      direccion: '',
+      descripcion: '',
+      codigo_sucursal: '',
+      telefono: '',
+      ciudad: '',
+      departamento: '',
+      activa: true
+    });
+    
+    const sucursalEditando = ref({
+      id: null,
+      nombre: '',
+      direccion: '',
+      descripcion: '',
+      codigo_sucursal: '',
+      telefono: '',
+      ciudad: '',
+      departamento: '',
+      activa: true
+    });
 
     const abrirModalNuevoServicio = () => {
-      servicioActual.value = {
-        id: null,
-        nombre: '',
-        descripcion: '',
-        duracion: 30,
-        icono: 'DocumentTextIcon'
-      };
-      esNuevoServicio.value = true;
-      mostrarModalServicio.value = true;
-    };
-
-    const abrirModalNuevaSucursal = () => {
-      // Implementar lógica para nueva sucursal
-      alert('Función de nueva sucursal se implementará aquí');
-    };
-
-    const editarServicio = (servicio) => {
-      servicioActual.value = { ...servicio };
-      esNuevoServicio.value = false;
-      mostrarModalServicio.value = true;
-    };
-
-    const editarSucursal = (sucursal) => {
-      // Implementar lógica para editar sucursal
-      alert(`Editando sucursal: ${sucursal.nombre}`);
-    };
-
-    const eliminarServicio = (id) => {
-      if (confirm('¿Estás seguro de eliminar este servicio?')) {
-        servicios.value = servicios.value.filter(s => s.id !== id);
-      }
-    };
-
-    const eliminarSucursal = (id) => {
-      if (confirm('¿Estás seguro de eliminar esta sucursal?')) {
-        sucursales.value = sucursales.value.filter(s => s.id !== id);
-      }
-    };
-
-    const guardarServicio = () => {
-      if (esNuevoServicio.value) {
-        // Agregar nuevo servicio
-        const nuevoId = Math.max(...servicios.value.map(s => s.id), 0) + 1;
-        servicios.value.push({
-          ...servicioActual.value,
-          id: nuevoId
-        });
-      } else {
-        // Actualizar servicio existente
-        const index = servicios.value.findIndex(s => s.id === servicioActual.value.id);
-        if (index !== -1) {
-          servicios.value[index] = { ...servicioActual.value };
-        }
-      }
-      cerrarModalServicio();
+      console.log('Intentando abrir modal...');
+      showModalServicio.value = true;
+      console.log('Modal abierto:', showModalServicio.value);
     };
 
     const cerrarModalServicio = () => {
-      mostrarModalServicio.value = false;
+      console.log('Cerrando modal...');
+      showModalServicio.value = false;
+      nuevoServicio.value = {
+        nombre: '',
+        duracion: 30
+      };
     };
+
+    const crearServicio = async () => {
+      try {
+        const payload = {
+          nombre: nuevoServicio.value.nombre,
+          codigo_servicio: nuevoServicio.value.codigo_servicio,
+          sucursal: nuevoServicio.value.sucursal,
+          tiempo_estimado_atencion: nuevoServicio.value.duracion
+        };
+        
+        console.log('Request payload:', payload);
+        
+        const response = await axios.post('/api/admin/servicios/', payload, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        servicios.value.push({
+          id: response.data.id,
+          nombre: response.data.nombre,
+          duracion: response.data.tiempo_estimado_atencion
+        });
+        
+        cerrarModalServicio();
+      } catch (error) {
+        console.error('Error creando servicio:', error);
+        if (error.response) {
+          console.error('Error details:', error.response.data);
+          alert(`Error al crear el servicio: ${JSON.stringify(error.response.data)}`);
+        } else {
+          alert('Error al crear el servicio');
+        }
+      }
+    };
+
+    const abrirModalNuevaSucursal = () => {
+      nuevaSucursal.value = {
+        nombre: '',
+        direccion: '',
+        descripcion: '',
+        codigo_sucursal: '',
+        telefono: '',
+        ciudad: '',
+        departamento: '',
+        activa: true
+      };
+      showModalSucursal.value = true;
+    };
+
+    const crearSucursal = async () => {
+      try {
+        const response = await axios.post('/api/admin/sucursales/', nuevaSucursal.value, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        sucursales.value.push(response.data);
+        showModalSucursal.value = false;
+      } catch (error) {
+        console.error('Error creando sucursal:', error);
+        if (error.response) {
+          console.error('Error details:', error.response.data);
+          alert(`Error al crear la sucursal: ${JSON.stringify(error.response.data)}`);
+        } else {
+          alert('Error al crear la sucursal');
+        }
+      }
+    };
+
+    const editarServicio = (servicio) => {
+      servicioEditando.value = {
+        id: servicio.id,
+        nombre: servicio.nombre,
+        codigo_servicio: servicio.codigo_servicio || '',
+        sucursal: servicio.sucursal,
+        duracion: servicio.duracion
+      };
+      showEditModalServicio.value = true;
+    };
+
+    const actualizarServicio = async () => {
+      try {
+        const payload = {
+          nombre: servicioEditando.value.nombre,
+          codigo_servicio: servicioEditando.value.codigo_servicio,
+          sucursal: servicioEditando.value.sucursal,
+          tiempo_estimado_atencion: servicioEditando.value.duracion
+        };
+        
+        const response = await axios.put(`/api/admin/servicios/${servicioEditando.value.id}/`, payload, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const index = servicios.value.findIndex(s => s.id === servicioEditando.value.id);
+        if (index !== -1) {
+          servicios.value[index] = {
+            id: servicioEditando.value.id,
+            nombre: response.data.nombre,
+            duracion: response.data.tiempo_estimado_atencion
+          };
+        }
+        
+        showEditModalServicio.value = false;
+      } catch (error) {
+        console.error('Error actualizando servicio:', error);
+        if (error.response) {
+          console.error('Error details:', error.response.data);
+          alert(`Error al actualizar el servicio: ${JSON.stringify(error.response.data)}`);
+        } else {
+          alert('Error al actualizar el servicio');
+        }
+      }
+    };
+
+    const editarSucursal = (sucursal) => {
+      sucursalEditando.value = {
+        id: sucursal.id,
+        nombre: sucursal.nombre,
+        direccion: sucursal.direccion,
+        descripcion: sucursal.descripcion,
+        codigo_sucursal: sucursal.codigo_sucursal,
+        telefono: sucursal.telefono,
+        ciudad: sucursal.ciudad,
+        departamento: sucursal.departamento,
+        activa: sucursal.activa
+      };
+      showEditModalSucursal.value = true;
+    };
+
+    const actualizarSucursal = async () => {
+      try {
+        const response = await axios.put(`/api/admin/sucursales/${sucursalEditando.value.id}/`, sucursalEditando.value, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const index = sucursales.value.findIndex(s => s.id === sucursalEditando.value.id);
+        if (index !== -1) {
+          sucursales.value[index] = response.data;
+        }
+        
+        showEditModalSucursal.value = false;
+      } catch (error) {
+        console.error('Error actualizando sucursal:', error);
+        if (error.response) {
+          console.error('Error details:', error.response.data);
+          alert(`Error al actualizar la sucursal: ${JSON.stringify(error.response.data)}`);
+        } else {
+          alert('Error al actualizar la sucursal');
+        }
+      }
+    };
+
+    const eliminarServicio = async (id) => {
+      if (confirm('¿Estás seguro de eliminar este servicio?')) {
+        try {
+          await axios.delete(`/api/admin/servicios/${id}/`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          servicios.value = servicios.value.filter(s => s.id !== id);
+        } catch (error) {
+          console.error('Error eliminando servicio:', error);
+          if (error.response) {
+            console.error('Error details:', error.response.data);
+            alert(`Error al eliminar el servicio: ${JSON.stringify(error.response.data)}`);
+          } else {
+            alert('Error al eliminar el servicio');
+          }
+        }
+      }
+    };
+
+    const toggleActivarSucursal = async (sucursal) => {
+      const action = sucursal.activa ? 'desactivar' : 'activar';
+      if (confirm(`¿Estás seguro de ${action} esta sucursal?`)) {
+        try {
+          const updatedSucursal = {
+            ...sucursal,
+            activa: !sucursal.activa
+          };
+          
+          const response = await axios.put(`/api/admin/sucursales/${sucursal.id}/`, updatedSucursal, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const index = sucursales.value.findIndex(s => s.id === sucursal.id);
+          if (index !== -1) {
+            sucursales.value[index] = response.data;
+          }
+        } catch (error) {
+          console.error('Error actualizando estado de sucursal:', error);
+          if (error.response) {
+            console.error('Error details:', error.response.data);
+            alert(`Error al ${action} la sucursal: ${JSON.stringify(error.response.data)}`);
+          } else {
+            alert(`Error al ${action} la sucursal`);
+          }
+        }
+      }
+    };
+
+    const getServicios = async () => {
+      try {
+        const response = await axios.get('/api/admin/servicios/', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        servicios.value = response.data.results.map(servicio => ({
+          id: servicio.id,
+          nombre: servicio.nombre,
+          duracion: servicio.tiempo_estimado_atencion,
+        }));
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      }
+    };
+
+    const getSucursales = async () => {
+      try {
+        const response = await axios.get('/api/admin/sucursales/', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        sucursales.value = response.data.results;
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+
+    onMounted(() => {
+      getServicios();
+      getSucursales();
+    });
 
     const cerrarSesion = () => {
       // Eliminar token de autenticación (simulado)
@@ -363,43 +719,31 @@ export default {
       tabs,
       servicios,
       sucursales,
-      mostrarModalServicio,
-      servicioActual,
-      esNuevoServicio,
       abrirModalNuevoServicio,
       abrirModalNuevaSucursal,
       editarServicio,
       editarSucursal,
       eliminarServicio,
-      eliminarSucursal,
-      guardarServicio,
+      toggleActivarSucursal,
+      cerrarSesion,
+      showModalServicio,
+      showEditModalServicio,
+      showModalSucursal,
+      showEditModalSucursal,
+      nuevoServicio,
+      servicioEditando,
+      nuevaSucursal,
+      sucursalEditando,
       cerrarModalServicio,
-      cerrarSesion
+      crearServicio,
+      actualizarServicio,
+      crearSucursal,
+      actualizarSucursal
     };
   }
 };
 </script>
 
 <style>
-/* Estilos específicos del panel de administración */
-/* Transiciones suaves para los modales */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.3s ease;
-}
 
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-/* Estilos para las tarjetas de sucursales */
-.sucursal-card {
-  transition: all 0.2s ease-in-out;
-}
-
-.sucursal-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
 </style>
