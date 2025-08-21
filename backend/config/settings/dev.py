@@ -31,9 +31,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Configuración de logging para desarrollo
-LOGGING['loggers']['django']['level'] = 'DEBUG'
-LOGGING['loggers']['apps']['level'] = 'DEBUG'
-LOGGING['loggers']['django.db.backends']['level'] = 'DEBUG'
+LOGGING['loggers']['django']['level'] = 'INFO'
+LOGGING['loggers']['apps']['level'] = 'INFO'
+LOGGING['loggers']['django.db.backends']['level'] = 'INFO'
 
 # Configuración de caché para desarrollo (memoria local)
 CACHES = {
