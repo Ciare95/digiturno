@@ -67,7 +67,7 @@
                 <h3 class="text-lg leading-6 font-medium text-gray-900">Estadísticas de Turnos</h3>
                 <p class="mt-1 max-w-2xl text-sm text-gray-500">Resumen de actividad diaria</p>
               </div>
-              <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+              <div class="border-t border-gray-200 px-4 py-5 sm:p-0" v-if="estadisticas">
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
                   <!-- Tarjeta Turnos Totales -->
                   <div class="bg-white overflow-hidden shadow rounded-lg">
@@ -449,10 +449,11 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ClockIcon, UserIcon, DocumentTextIcon, ShoppingBagIcon } from '@heroicons/vue/24/outline';
 import axios from 'axios';
+import EmpleadoCharts from '../components/estadisticas/EmpleadoCharts.vue';
 
 export default {
   name: 'AdminDashboard',
@@ -460,7 +461,8 @@ export default {
     ClockIcon,
     UserIcon,
     DocumentTextIcon,
-    ShoppingBagIcon
+    ShoppingBagIcon,
+    EmpleadoCharts
   },
   setup() {
     const router = useRouter();
@@ -478,9 +480,12 @@ export default {
       turnosPendientes: 0
     });
 
+    const estadisticasEmpleados = ref([]);
+    const estadisticasGenerales = ref({});
+
     const getEstadisticasTurnos = async () => {
       try {
-        const response = await axios.get('/api/admin/estadisticas/turnos/', {
+        const response = await axios.get('/api/turns/estadisticas/turnos/', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -488,6 +493,20 @@ export default {
         estadisticas.value = response.data;
       } catch (error) {
         console.error('Error obteniendo estadísticas:', error);
+      }
+    };
+
+    const getEstadisticasEmpleados = async () => {
+      try {
+        const response = await axios.get('/api/turns/estadisticas/empleados/', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        estadisticasEmpleados.value = response.data.empleados;
+        estadisticasGenerales.value = response.data.estadisticas_generales;
+      } catch (error) {
+        console.error('Error obteniendo estadísticas de empleados:', error);
       }
     };
 
@@ -796,6 +815,14 @@ export default {
       }
     };
 
+    // Watcher para cargar estadísticas cuando se cambia a la pestaña de estadísticas
+    watch(currentTab, (newTab) => {
+      if (newTab === 'estadisticas') {
+        getEstadisticasTurnos();
+        getEstadisticasEmpleados();
+      }
+    });
+
     onMounted(() => {
       getServicios();
       getSucursales();
@@ -832,7 +859,8 @@ export default {
       crearServicio,
       actualizarServicio,
       crearSucursal,
-      actualizarSucursal
+      actualizarSucursal,
+      estadisticas
     };
   }
 };

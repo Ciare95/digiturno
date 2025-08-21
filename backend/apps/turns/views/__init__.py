@@ -4,6 +4,7 @@ from .crear_turno_view import CrearTurnoView
 from .detalle_calificacion_view import DetalleCalificacionView
 from .detalle_turno_usuario_view import DetalleTurnoUsuarioView
 from .estadisticas_empleado_view import EstadisticasEmpleadoView
+from .estadisticas_empleado_admin_view import EstadisticasEmpleadoAdminView
 from .finalizar_atencion_view import FinalizarAtencionView
 from .historial_turnos_view import HistorialTurnosView
 from .iniciar_atencion_view import IniciarAtencionView
