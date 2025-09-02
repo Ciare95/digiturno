@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div class="app-root">
     <router-view></router-view>
     <!--Añadir el container de notificaion-->
       <!--NotificacionContainer-->
