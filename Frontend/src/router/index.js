@@ -8,6 +8,7 @@ import Login from "../views/Login.vue";
 import AdminDashboard from "../views/AdminDashboard.vue";
 import EmpleadoDashboard from "../views/EmpleadoDashboard.vue";
 import Historial from "../views/HistorialTurnos.vue";
+import Calificacion from "../views/CalificarAtencion.vue";
 
 //Creamos las rutas
 const routes = [
@@ -48,6 +49,12 @@ const routes = [
         name: 'historial',
         component: Historial,
         meta: { requiresAuth: true }
+    },
+    {
+        path: '/calificacion',
+        name: 'calificacion',
+        component: Calificacion,
+        meta: { guestOnly: true }
     },
 ]
 

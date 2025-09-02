@@ -198,7 +198,7 @@
                 <ul class="divide-y divide-gray-200">
                   <li v-for="turno in turnosPendientes" :key="turno.id" class="px-6 py-4 hover:bg-gray-50">
                     <div class="flex items-center">
-                      <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <div class="flex-shrink-0 h-10 w-15 rounded-full bg-blue-100 flex items-center justify-center">
                         <span class="text-blue-600 font-medium">{{ turno.numero }}</span>
                       </div>
                       <div class="ml-4">
@@ -215,6 +215,7 @@
                         </span>
                       </div>
                       <div class="ml-4">
+                        <!--Llama a un turno en especifico de la cola-->
                         <button @click="atenderSiguiente(turno)" class="text-sm font-medium text-blue-600 hover:text-blue-500" :disabled="turnoEnProgreso">
                           Atender
                         </button>
@@ -298,7 +299,7 @@
               <div class="divide-y divide-gray-200">
                 <div v-for="turno in historialReciente" :key="turno.id" class="px-6 py-4">
                   <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <div class="flex-shrink-0 h-10 w-15 rounded-full bg-gray-100 flex items-center justify-center">
                       <span class="text-gray-600 font-medium">{{ turno.numero }}</span>
                     </div>
                     <div class="ml-4">
@@ -404,6 +405,8 @@ import {
 } from '@heroicons/vue/24/outline';
 import EmpleadoService from '@/Services/EmpleadoService';
 import { obtenerServicios } from '@/Services/Servicios';
+import AuthService from '@/Services/AuthService';
+
 
 export default {
   name: 'EmpleadoDashboard',
@@ -563,7 +566,7 @@ export default {
       }, 1000);
     };
 
-    // Atender siguiente turno
+    //Llama a un turno en especifico en la cola
     const atenderSiguiente = async (turno) => {
       try {
         if (turnoActual.value) {
@@ -788,18 +791,13 @@ export default {
     };
 
     // Cerrar sesión
-    const cerrarSesion = () => {
-      // Detener temporizador si está activo
-      if (turnoActual.value) {
-        finalizarTurno();
+    const cerrarSesion = async () => {
+      try {
+        if (turnoActual.value) await finalizarTurno();
+        await AuthService.logout();
+      } finally {
+        router.push('/login');
       }
-      
-      // Eliminar datos de sesión (simulado)
-      localStorage.removeItem('token');
-      localStorage.removeItem('userRole');
-      
-      // Redirigir al login
-      router.push('/login');
     };
 
     // Limpiar intervalo al desmontar el componente
